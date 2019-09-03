@@ -1,0 +1,15 @@
+.rowset{
+    display: flex;
+    flex-direction: column;
+    margin-right: -15px;
+    margin-left: -15px;
+}
+
+.solutionset{
+    display: flex;
+    flex-direction: column;
+}
+
+.solutionitem{
+    flex: 1;
+}

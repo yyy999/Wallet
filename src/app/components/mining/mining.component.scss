@@ -1,0 +1,73 @@
+mat-expansion-panel-header{
+    font-size: 15px;
+    color: #673ab7;
+    font-variant: small-caps;
+  }
+
+  .centerMiningButton{
+    height: 200px;
+    display: flex;
+    align-content: center;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+  .mineHeader{
+    flex: 1;
+    flex-grow: inherit;
+    height: 23px;
+    margin: auto;
+
+  }
+
+  .mineButton{
+    margin-bottom: 15px;
+  }
+
+.startMining{
+    width: 135px;
+    height: 124px;
+    background-image: url("assets/img/mine.png");
+    background-size: 135px 124px;
+    color:whitesmoke;
+    cursor: pointer;
+    outline-color: transparent;
+}
+
+.startMining:hover{
+    width: 135px;
+    height: 124px;
+    background-image: url("assets/img/mine.png");
+    background-size: 135px 124px;
+    color:whitesmoke;
+    cursor: pointer;
+    outline-color: transparent;
+    box-shadow: 0 0 26px #ffc107;
+}
+
+.stopMining{
+    width: 135px;
+    height: 124px;
+    background-image: url("assets/img/stop.png");
+    background-size: 135px 124px;
+    color:whitesmoke;
+    cursor: pointer;
+    outline-color: transparent;
+    box-shadow: 0 0 26px rgba(81, 203, 238, 1);
+}
+
+.positionStartButton{
+    display: block;
+    position: relative;
+    top:47px;
+    left:65px;
+}
+
+.positionStopButton{
+    display: block;
+    position: relative;
+    top:60px;
+    left:45px;
+}
+

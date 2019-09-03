@@ -1,0 +1,47 @@
+  <div *ngIf="lightDisplay">
+    <div *ngIf="!isSyncing" [tooltip]="TooltipContent" content-type="template" placement="top" show-delay="500" class="wallet-spinner"> 
+      <mat-progress-spinner  mode="determinate" diameter="30" value="100" strokeWidth="6">
+      </mat-progress-spinner>
+    </div>
+    <div *ngIf="isSyncing" [tooltip]="TooltipContent" content-type="template" placement="top" show-delay="500" class="wallet-spinner">
+      <mat-progress-spinner mode="determinate" diameter="30"
+        [value]="currentSyncUpdate.percentage * 100" strokeWidth="6"></mat-progress-spinner>
+    </div>
+  </div>
+
+  <div *ngIf="!lightDisplay" class="item">
+    <div *ngIf="!isSyncing">
+      <h2 class="row">
+          <div class="wallet-spinner-circle"> 
+              <mat-icon fontSet="far" fontIcon="fa-circle"></mat-icon>
+            </div>
+        <span><strong>{{currentSyncStatusPercentage}}%</strong></span><span>{{currentSyncStatusTitle | uppercase}}</span>
+      </h2>
+    </div>
+    <div *ngIf="isSyncing" class="column wallet-spinner">
+      <p>{{ 'sync.Syncing' | translate }} {{ 'wallet.Wallet' | translate }}... {{((currentSyncUpdate.percentage) * 100).toFixed(2) }}%</p>
+
+      <p class="updateText">Block {{currentSyncUpdate.currentBlockId}} / {{currentSyncUpdate.blockHeight}}</p>
+    <div class="wallet-spinner">
+      <mat-progress-spinner mode="determinate" diameter="75"
+        [value]="currentSyncUpdate.percentage * 100" strokeWidth="6">
+      </mat-progress-spinner>
+    </div>
+    </div>
+  </div>
+
+  <ng-template #TooltipContent>
+    <div *ngIf="!isSyncing">
+        {{ 'wallet.Wallet' | translate }} {{currentSyncStatusPercentage}}%
+    </div>
+    <div *ngIf="isSyncing" class="column wallet-spinner">
+      <p>{{ 'sync.Syncing' | translate }} {{ 'wallet.Wallet' | translate }}... {{((currentSyncUpdate.percentage) * 100).toFixed(2) }}%</p>
+
+      <p class="updateText">Block {{currentSyncUpdate.currentBlockId}} / {{currentSyncUpdate.blockHeight}}</p>
+      <div class="wallet-spinner">
+        <mat-progress-spinner mode="determinate" diameter="75"
+          [value]="currentSyncUpdate.percentage * 100" strokeWidth="6">
+        </mat-progress-spinner>
+      </div>
+    </div>
+  </ng-template>

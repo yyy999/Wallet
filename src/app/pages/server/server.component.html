@@ -1,0 +1,37 @@
+<app-page-title [title]="'server.Title' | translate" [icon]="icon" helpMessage="server.Explain"></app-page-title>
+
+<div>
+  <div class="server-commands">
+    <div mat-dialog-content>
+      <mat-divider></mat-divider>
+      <div *ngIf="showServerNotConnected">
+        {{ 'server.NotConnectedToServer' | translate }}
+        <button mat-button color="primary" (click)="startServer()"><i class="fas fa-check"></i>
+          {{ 'server.StartServer' | translate }}</button>
+      </div>
+      <div *ngIf="!showServerNotConnected">
+        {{ 'server.ServerRunning' | translate }}
+        <button mat-button color="primary" (click)="stopServer()"><i class="fas fa-check"></i>
+          {{ 'server.StopServer' | translate }}</button>
+      </div>
+    </div>
+  </div>
+  <div class="console console-view" #Console>
+    <div class="console-container">
+      <div class="line-element" *ngFor="let message of serverMessages">
+        <span class="line-sub-element console-elements">
+          [<span class="console-timestamp">{{message.timestamp | date:'yyyy-MM-dd HH:mm:ss'}}</span> - <span
+            class="console-level">{{message.level}}</span>]&nbsp;:&nbsp;<span
+            class="console-message">{{message.message}}</span>&nbsp;&#123;<span
+            class="console-thread">{{message.GetThread().key}}</span>=<span
+            class="console-thread-id">{{message.GetThread().value}}</span>&#125;
+        </span>
+      </div>
+    </div>
+    <div>
+
+    </div>
+
+
+
+  </div>

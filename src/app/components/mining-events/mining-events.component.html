@@ -1,0 +1,9 @@
+<mat-paginator [length]="count"
+              [pageSize]="pageSize"
+              [pageSizeOptions]="[5, 10, 25, 50, 100]"
+              (page)="pageEvent = $event">
+</mat-paginator>
+<mat-list role="list">
+  <mat-list-item class="listItem" *ngFor="let miningEvent of items"  role="listitem">
+    <span class="timestamp">{{miningEvent.timestamp | date:'yyyy-MM-dd HH:mm:ss'}}</span>&nbsp;:&nbsp;<span class="message">{{miningEvent.eventName}}</span></mat-list-item>
+</mat-list>

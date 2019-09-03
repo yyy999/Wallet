@@ -1,0 +1,20 @@
+<div class="centerMiningButton">
+  <span class="mineHeader">{{isMining ? ('mining.Stop' | translate) : ('mining.Start' | translate)}}</span>
+  <button class="mineButton" mat-icon-button [ngClass]="[isMining ? 'stopMining' : 'startMining']" (click)="toggleMining()">
+      
+  </button>
+</div>
+<mat-accordion>
+  <mat-expansion-panel>
+    <mat-expansion-panel-header>
+        Options
+    </mat-expansion-panel-header>
+
+    <mat-form-field>
+        <span matPrefix><i class="fas fa-user-circle"></i>&nbsp;</span>
+        <input matInput placeholder="Delegate account" [(ngModel)]="delegateAccount" name="delegateAccount">
+      </mat-form-field>
+      <button mat-button color="primary" (click)="save()"><i class="fas fa-check"></i> {{ 'app.Save' | translate }}</button>
+    
+  </mat-expansion-panel>
+</mat-accordion>  

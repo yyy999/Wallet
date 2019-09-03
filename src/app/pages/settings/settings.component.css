@@ -1,0 +1,13 @@
+.column {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .column > * {
+    padding-top: 1em;
+    flex-grow:1;
+  }
+
+  mat-card{
+    margin:1em;
+}

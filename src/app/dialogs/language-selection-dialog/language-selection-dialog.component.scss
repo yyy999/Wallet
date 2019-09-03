@@ -1,0 +1,37 @@
+
+
+.window-panel{
+    // background-image: url('../../../assets/img/lngi.png');
+    // background-repeat: no-repeat;
+    // background-position-x: right;
+    // background-position-y: top;
+}
+
+.button-container{
+    text-align: center;
+    margin-bottom: 0px;
+}
+
+.choice-button{
+    display: inline-block;
+    margin: 0 auto;
+}
+
+.lang-icon{
+    margin: 0 3px;
+}
+
+.red-button{
+    border-bottom: #FF6671 4px solid;
+    border-radius: 4px;
+}
+
+.blue-button{
+    border-bottom: #9FDEFF 4px solid;
+    border-radius: 4px;
+}
+
+.orange-button{
+    border-bottom: #FFD479 4px solid;
+    border-radius: 4px;
+}

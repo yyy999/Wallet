@@ -1,0 +1,41 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Node Process",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+           // "preLaunchTask": "npm: build:dev",
+            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron",
+            "windows": {
+              "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron.cmd"
+            },
+            "program": "${workspaceRoot}/main.js",
+            "protocol": "inspector"
+          },
+          {
+            "name": "Debug Angular Process",
+            "type": "chrome",
+            "request": "launch",
+            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron",
+            "windows": {
+              "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron.cmd"
+            },
+            "runtimeArgs": [
+              "${workspaceRoot}/main.js",
+              "--remote-debugging-port=9222"
+            ],
+            "webRoot": "${workspaceRoot}"
+      }
+    ],
+    "compounds": [
+        // {
+        //     "name": "Electron: All",
+        //     "configurations": [
+        //         "Electron: Main",
+        //         "Electron: Renderer"
+        //     ]
+        // }
+    ]
+}

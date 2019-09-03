@@ -1,0 +1,52 @@
+<app-page-title [title]="title" [icon]="icon" showNeuraliumsTotal="true" helpMessage="neuralium.Explain"></app-page-title>
+<mat-tab-group>
+    <mat-tab *ngIf="hasCurrentAccount && currentAccount.isActive ">
+        <!-- && currentAccount.status == 3 -->
+        <ng-template mat-tab-label>
+            <img src="./assets/img/mine_icon_s.png" class="img-fluid" />&nbsp; {{ 'mining.Mining' | translate }}
+        </ng-template>
+        <mat-divider></mat-divider>
+        <div class="row item">
+          <div class="item" style="width: 40%">
+            <mat-card *ngIf="currentAccount" style="margin-bottom:1em;">
+              {{ 'account.CurrentAccount' | translate }} : <span class="textHighlight">{{currentAccount.accountId}}</span>
+            </mat-card>
+            <mat-card style="flex-grow:1;">
+              <mat-card-title>{{ 'mining.Mining' | translate }}&nbsp;<app-help-icon [message]="'mining.Explain'"></app-help-icon></mat-card-title>
+              <mat-card-content>
+                <mat-divider></mat-divider>
+                <app-mining></app-mining>
+              </mat-card-content>
+            </mat-card>
+          </div>
+          <div class="item" style="width: 40%">
+            <mat-card>
+              <mat-card-title>{{ 'app.Events' | translate }}</mat-card-title>
+              <mat-card-content>
+                <mat-divider></mat-divider>
+                <app-mining-events></app-mining-events>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </div>
+      </mat-tab>
+
+  <mat-tab *ngIf="hasCurrentAccount">
+    <ng-template mat-tab-label>
+        <img src="./assets/img/debit_icon.png" class="img-fluid" />&nbsp; {{ 'send.Title' | translate }}
+    </ng-template>
+    <div class="container-centered">
+      <app-send-neuraliums [neuraliumTotal]="neuraliumTotal" [currentAccountUuId]="currentAccount.accountUuId"
+        (neuraliumsSent)="neuraliumsSent($event)"></app-send-neuraliums>
+
+    </div>
+  </mat-tab>
+  <mat-tab *ngIf="hasCurrentAccount" style="width: 100%">
+    <ng-template mat-tab-label>
+      <i class="fas fa-list-ul"></i>&nbsp; {{ 'neuralium.Timeline' | translate }}
+    </ng-template>
+    <app-neuraliums-history></app-neuraliums-history>
+  </mat-tab>
+
+
+</mat-tab-group>
