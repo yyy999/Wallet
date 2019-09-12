@@ -22,7 +22,7 @@ export class TestModeMessageComponent implements OnInit {
   showDetails(){
     setTimeout(() => {
       this.dialog.open(TestModeAlterDialogComponent, {
-        width: '350px'
+        width: '550px'
       });
     });
   }

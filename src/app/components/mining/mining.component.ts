@@ -11,6 +11,7 @@ export class MiningComponent implements OnInit {
 
   delegateAccount:string;
   isMining:boolean;
+  isConnectable:boolean;
 
 
   constructor(private miningService:MiningService,
@@ -19,7 +20,15 @@ export class MiningComponent implements OnInit {
   ngOnInit() {
     this.miningService.isMining.subscribe(mining =>{
       this.isMining = mining;
-    })
+    });
+
+    this.miningService.isMining.subscribe(mining =>{
+      this.isMining = mining;
+    });
+
+    this.miningService.isConnectable.subscribe(connectable =>{
+      this.isConnectable = connectable;
+    });
 
     this.delegateAccount = this.configService.delegateAccount;
   }

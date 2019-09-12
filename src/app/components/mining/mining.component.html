@@ -1,20 +1,38 @@
-<div class="centerMiningButton">
-  <span class="mineHeader">{{isMining ? ('mining.Stop' | translate) : ('mining.Start' | translate)}}</span>
-  <button class="mineButton" mat-icon-button [ngClass]="[isMining ? 'stopMining' : 'startMining']" (click)="toggleMining()">
-      
-  </button>
-</div>
-<mat-accordion>
-  <mat-expansion-panel>
-    <mat-expansion-panel-header>
-        Options
-    </mat-expansion-panel-header>
+<div class="top-wrapper">
+  <div style="margin: 6px;">
+    <div class="side-wrapper centerMiningButton" style="margin: 10px;">
+      <mat-card class="half-card" style="margin: 10px; height: 205px;">
 
-    <mat-form-field>
-        <span matPrefix><i class="fas fa-user-circle"></i>&nbsp;</span>
-        <input matInput placeholder="Delegate account" [(ngModel)]="delegateAccount" name="delegateAccount">
-      </mat-form-field>
-      <button mat-button color="primary" (click)="save()"><i class="fas fa-check"></i> {{ 'app.Save' | translate }}</button>
-    
-  </mat-expansion-panel>
-</mat-accordion>  
+        <div class="centerMiningButton">
+          <span class="mineHeader">{{isMining ? ('mining.Stop' | translate) : ('mining.Start' | translate)}}</span>
+          <button class="mineButton" mat-icon-button [ngClass]="[isMining ? 'stopMining' : 'startMining']"
+            (click)="toggleMining()">
+
+          </button>
+        </div>
+      </mat-card>
+      <mat-card class="half-card" style="margin: 10px;height: 205px;padding:10px;">
+        <span style="display: block;">Port 33888 connectable: {{isConnectable}}</span>
+        <div *ngIf="isConnectable !== true"> <span class="port-notice">{{ 'mining.Miningportalert' | translate }}</span></div>
+       
+      </mat-card>
+    </div>
+    <div style="margin: 23px 10px 10px 10px;">
+      <div>
+        <mat-accordion>
+          <mat-expansion-panel>
+            <mat-expansion-panel-header>
+              Options
+            </mat-expansion-panel-header>
+
+            <mat-form-field>
+              <span matPrefix><i class="fas fa-user-circle"></i>&nbsp;</span>
+              <input matInput placeholder="Delegate account" [(ngModel)]="delegateAccount" name="delegateAccount">
+            </mat-form-field>
+            <button mat-button color="primary" (click)="save()"><i class="fas fa-check"></i>
+              {{ 'app.Save' | translate }}</button>
+
+          </mat-expansion-panel>
+        </mat-accordion>
+      </div>
+    </div>

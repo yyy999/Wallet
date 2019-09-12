@@ -85,7 +85,7 @@ Message = 151,
 Error = 152,
 RequestCopyKeyFile = 153,
 Alert = 154,
-
+ConnectableStatusChanged = 155,
 
 AccountTotalUpdated = 1001,
 MiningBountyAllocated = 1002,

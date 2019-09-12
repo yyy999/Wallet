@@ -113,7 +113,7 @@
 	},
 	"event": {
 		"MiningBountyAllocated": "Recompensa de minado asignada",
-		"MiningElected": "Minado Seleccionado",
+		"MiningElected": "Minado Candidato",
 		"MiningEnded": "Finalizacion de Minado",
 		"MiningPrimeElected": "Minado ha sido elegido",
 		"MiningStarted": "Inicio de Minado",
@@ -137,7 +137,8 @@
 		"Mining": "Minar",
 		"Start" : "Empezar a minar",
 		"Stop" : "parar de minar",
-		"Explain" : "Here you can put your computer to work by making it perform mathematical puzzles to unlock new Neuraliums."
+		"Explain" : "Here you can put your computer to work by making it perform mathematical puzzles to unlock new Neuraliums.",
+		"Miningportalert" : "Nota: Para extraer, su puerto TCP 33888 debe ser conectable por otros nodos en el p2p. Asegúrese de abrir su firewall."
 	},
 	"neuralium": {
 		"Credit": "Crédito",
@@ -202,7 +203,7 @@
 		"ParagrahThree": "",
 		"ParagrahTwo": "En el modo TESTNET, todos los neuraliums obtenidos sólo tienen fines de prueba y no se pueden utilizar en la red de producción 'MainNet'. Los neuraliums obtenidos en el modo TESTNET también pueden perderse o restablecerse en cualquier momento sin previo aviso.",
 		"Warning": "El nodo y la cartera se encuentran actualmente en modo de prueba TestNet en una red separada.",
-		"Period": "TESTNET Trial run I durará del 3 de septiembre a las 19:00 (EST) al 4 de septiembre a las 19:00 (EST)"
+		"Period": "TESTNET Trial run I durará del 4 de septiembre a las 19:00 (EST) al 5 de septiembre a las 19:00 (EST)"
 	},
 	"wallet": {
 		"AccountCreation": "Creación de cuenta",

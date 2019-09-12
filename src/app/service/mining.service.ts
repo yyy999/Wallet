@@ -29,7 +29,8 @@ export class MiningService {
   public miningEventsList: Array<MiningEvent> = [];
   private miningEvents: BehaviorSubject<Array<MiningEvent>> = new BehaviorSubject<Array<MiningEvent>>(this.miningEventsList);
 
-  
+  isConnectable: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(null);
+
 
   constructor(
     private serverConnection: ServerConnectionService,
@@ -40,8 +41,7 @@ export class MiningService {
       this.checkServerIsMiningEnabled();
       this.startListeningMiningEvents();
     });
-    
-    
+
   }
 
   checkServerIsMiningEnabled() {
@@ -89,6 +89,10 @@ export class MiningService {
         case EventTypes.MiningStatusChanged:
           this.addEvent(this.translate.instant("event.MiningStatusChanged"));
           break;
+
+          case EventTypes.ConnectableStatusChanged:
+            this.isConnectable.next(event.message.connectable);
+            break;
         default:
           break;
       }

@@ -42,7 +42,7 @@
     "artifactName": "${productName}-linux.${ext}",
     "category" : "Office",
     "target": [
-      "AppImage"
+      "tar.gz"
     ]
   },
   "afterPack": "./afterPackHook.js"

@@ -113,9 +113,9 @@
 	},
 	"event": {
 		"MiningBountyAllocated": "Prime de mineur allouée",
-		"MiningElected": "Minageur Élu",
+		"MiningElected": "Mineur candidat",
 		"MiningEnded": "Minage Terminé",
-		"MiningPrimeElected": "Mineur élu comme primaire",
+		"MiningPrimeElected": "Mineur élu",
 		"MiningStarted": "Minage Commencé",
 		"MiningStatusChanged": "Statut de mineur modifié"
 	},
@@ -137,7 +137,8 @@
 		"Mining": "Minage",
 		"Start" : "Commencer à miner",
 		"Stop" : "Arrêter de miner",
-		"Explain" : "Ici, vous pouvez faire fonctionner votre ordinateur en lui faisant effectuer des énigmes mathématiques pour débloquer de nouveaux Neuralium."
+		"Explain" : "Ici, vous pouvez faire fonctionner votre ordinateur en lui faisant effectuer des énigmes mathématiques pour débloquer de nouveaux Neuralium.",
+		"Miningportalert" : "Remarque: Pour exploiter le port TCP 33888, vous devez le connecter à d’autres nœuds sur le P2P. Assurez-vous d'ouvrir votre pare-feu."
 	},
 	"neuralium": {
 		"Credit": "Crédit",
@@ -202,7 +203,7 @@
 		"ParagrahThree": "",
 		"ParagrahTwo": "En mode TESTNET, les jetons de Neuralium obtenus ne servent qu'à des fins de test et ne peuvent pas être utilisés dans le réseau de production «MainNet». Les jetons gagnés en mode TESTNET peuvent également être perdus ou réinitialisés à tout moment sans préavis.",
 		"Warning": "Le serveur et le porte-monnaie sont actuellement en mode \"TESTNET\" sur un réseau isolé..",
-		"Period": "La periode d'essai I de TESTNET durera du 3 septembre 19h (EST) au 4 septembre à 19h (EST)"
+		"Period": "La periode d'essai I de TESTNET durera du 4 septembre 19h (EST) au 5 septembre à 19h (EST)"
 	},
 	"wallet": {
 		"AccountCreation": "Création du compte",

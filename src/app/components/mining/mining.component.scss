@@ -13,6 +13,24 @@ mat-expansion-panel-header{
     flex-direction: column;
 }
 
+.top-wrapper{
+  display: flex;
+  flex-direction: column;
+}
+.side-wrapper{
+  display: flex;
+  flex-direction: row;
+}
+.half-card{
+  width: 45%;
+  padding: 3px;
+}
+
+.port-notice{
+  font-size: smaller;
+  padding-bottom: 9px;
+}
+
   .mineHeader{
     flex: 1;
     flex-grow: inherit;

@@ -174,6 +174,7 @@ getMessages(): Array<ServerMessage> {
 
   startListeningMiningEvents() {
     this.listenToMiningBountyAllocated();
+    this.listenToMiningConnectableStatusChanged();
     this.listenToMiningElected();
     this.listenToMiningEnded();
     this.listenToMiningStarted();
@@ -939,6 +940,17 @@ getMessages(): Array<ServerMessage> {
       this.logEvent(action + " - event", { 'chainType': chainType });
       this.notificationService.showSuccess("Bounty has been allocated.", "Bounty Allocated");
       this.propagateEvent(chainType, EventTypes.MiningBountyAllocated, ResponseResult.Success);
+    });
+  }
+
+  listenToMiningConnectableStatusChanged(){
+    const cnx = this.connection;
+    const action = "connectableStatusChanged";
+    this.manageOnStartAndOnCloseListening(cnx, action);
+
+    cnx.on(action, (connectable: boolean) => {
+      this.logEvent(action + " - event", { 'connectable': connectable });
+      this.propagateEvent(0, EventTypes.ConnectableStatusChanged, ResponseResult.Success, { connectable });
     });
   }
 
