@@ -1,5 +1,7 @@
 # Neuralium Desktop Wallet
 
+##### Version:  Trial run III
+
 The "pro" Neuralium crypto token desktop user interface
 
 ## Build Instructions
