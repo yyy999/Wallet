@@ -33,7 +33,7 @@ export class AccountPublicationStatusComponent implements OnInit {
   }
 
   get showAccountStatus():boolean{
-    return this.account != NO_WALLET_ACCOUNT && this.account.status != 3;
+    return this.account != NO_WALLET_ACCOUNT && this.account.Status != 3;
   }
 
   publishAccount(accountUuid:string){

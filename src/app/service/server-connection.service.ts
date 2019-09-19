@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { NotificationService } from './notification.service';
+
 import { HubConnectionBuilder, HttpTransportType, HubConnection, LogLevel } from '@aspnet/signalr';
+import { MessagePackHubProtocol} from '@aspnet/signalr-protocol-msgpack';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { LogService } from './log.service';
 import { WalletCreation } from '../model/wallet';
@@ -19,8 +21,8 @@ import { PassphrasesCall } from '../business/serverCall/passphrasesCall';
 import { remote } from 'electron';
 import * as moment from 'moment';
 
-const RETRY_DURATION = 2000;
-const MESSAGE_BUFFER_SIZE = 500;
+const RETRY_DURATION = 3000;
+const MESSAGE_BUFFER_SIZE = 4096;
 
 export class ServerMessage {
 
@@ -81,6 +83,11 @@ export class ServerConnectionService {
     this.serverPort = this.configService.serverPort;
     this.serverPath = this.configService.serverPath;   
 
+    this.beginConnection();
+  }
+
+  private beginConnection(){
+    
     this.tryConnectToServer().then(() => {
       this.notifyServerConnectionStatusIfNeeded(true);
       this.startListeningWalletCreationEvents()
@@ -136,6 +143,7 @@ getMessages(): Array<ServerMessage> {
     this.listenToKeyGenerationEnded();
     this.listenToAccountCreationError();
     this.listenToKeyGenerationMessage();
+    this.listenToKeyGenerationPercentageUpdate();
     this.listenToKeyGenerationStarted();
   }
 
@@ -373,7 +381,7 @@ getMessages(): Array<ServerMessage> {
   listenToServerShutdownStarted() {
     const cnx = this.connection;
     const action = "ShutdownStarted";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, () => {
       this.logEvent(action + " - event", null);
@@ -384,7 +392,7 @@ getMessages(): Array<ServerMessage> {
   listenToServerShutdownCompleted() {
     const cnx = this.connection;
     const action = "ShutdownCompleted";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, () => {
       this.logEvent(action + " - event", null);
@@ -395,7 +403,7 @@ getMessages(): Array<ServerMessage> {
   listenToRequestCopyWallet() {
     const cnx = this.connection;
     const action = "requestCopyWallet";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (chainType: number, message: string) => {
       this.logEvent(action + " - event", { 'chainType': chainType, 'message': message });
@@ -406,7 +414,7 @@ getMessages(): Array<ServerMessage> {
   listenToMiningStatusChanged() {
     const cnx = this.connection;
     const action = "miningStatusChanged";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (chainType: number, isMining: boolean) => {
       this.logEvent(action + " - event", { 'chainType': chainType, 'isMining': isMining });
@@ -417,7 +425,7 @@ getMessages(): Array<ServerMessage> {
   listenToReturnClientLongRunningEvent() {
     const cnx = this.connection;
     const action = "returnClientLongRunningEvent";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on("returnClientLongRunningEvent", (correlationId: number, result: number, message: string) => {
       this.logEvent("returnClientLongRunningEvent - event", { 'correlationId': correlationId, 'result': result, 'message': message });
@@ -433,7 +441,7 @@ getMessages(): Array<ServerMessage> {
   listenToLongRunningStatusUpdate() {
     const cnx = this.connection;
     const action = "longRunningStatusUpdate";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on("longRunningStatusUpdate", (correlationId: number, eventId: number, eventType: number, message: any) => {
       var eventName = EventTypes[eventId];
@@ -448,7 +456,7 @@ getMessages(): Array<ServerMessage> {
   listenToAccountTotalUpdated() {
     const cnx = this.connection;
     const action = "accountTotalUpdated";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (correlationId: number, accountId: string, total: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'accountId': accountId, 'total': total });
@@ -459,7 +467,7 @@ getMessages(): Array<ServerMessage> {
   listenToPeerTotalUpdated() {
     const cnx = this.connection;
     const action = "peerTotalUpdated";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (count: number) => {
       this.logEvent(action + " - event", { 'count': count });
@@ -470,7 +478,7 @@ getMessages(): Array<ServerMessage> {
   listenToEnterWalletPassphrase() {
     const cnx = this.connection;
     const action = "enterWalletPassphrase";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (correlationId: number, chainType: number, keyCorrelationCode: number, attempt: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'chainType': chainType, 'keyCorrelationCode': keyCorrelationCode, 'attempt': attempt });
@@ -482,7 +490,7 @@ getMessages(): Array<ServerMessage> {
   listenToEnterKeyPassphrase() {
     const cnx = this.connection;
     const action = "enterKeysPassphrase";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (correlationId: number, chainType: number, keyCorrelationCode: number, accountID: string, keyname: string, attempt: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'chainType': chainType, 'keyCorrelationCode': keyCorrelationCode, 'accountID': accountID, 'keyname': keyname, 'attempt': attempt });
@@ -498,7 +506,7 @@ getMessages(): Array<ServerMessage> {
   listenToWalletCreationStarted() {
     const cnx = this.connection;
     const action = "walletCreationStarted";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (correlationId: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId });
@@ -509,7 +517,7 @@ getMessages(): Array<ServerMessage> {
   listenToWalletCreationEnded() {
     const cnx = this.connection;
     const action = "walletCreationEnded";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (correlationId: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId });
@@ -521,7 +529,7 @@ getMessages(): Array<ServerMessage> {
   listenToWalletCreationMessage() {
     const cnx = this.connection;
     const action = "aalletCreationMessage";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (correlationId: number, message: string) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'message': message });
@@ -532,7 +540,7 @@ getMessages(): Array<ServerMessage> {
   listenToWalletCreationStep() {
     const cnx = this.connection;
     const action = "aalletCreationStep";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (correlationId: number, stepName: string, stepIndex: number, stepTotal: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'stepName': stepName, 'stepIndex': stepIndex, 'stepTotal': stepTotal });
@@ -543,7 +551,7 @@ getMessages(): Array<ServerMessage> {
   listenToWalletCreationError() {
     const cnx = this.connection;
     const action = "aalletCreationError";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (correlationId: number, error: string) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'error': error });
@@ -556,7 +564,7 @@ getMessages(): Array<ServerMessage> {
   listenToAccountCreationStarted() {
     const cnx = this.connection;
     const action = "accountCreationStarted";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (correlationId: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId });
@@ -567,7 +575,7 @@ getMessages(): Array<ServerMessage> {
   listenToAccountCreationEnded() {
     const cnx = this.connection;
     const action = "accountCreationEnded";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (correlationId: number, accountUuid: string) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'accountUuid': accountUuid });
@@ -578,8 +586,7 @@ getMessages(): Array<ServerMessage> {
   listenToAccountCreationMessage() {
     const cnx = this.connection;
     const action = "accountCreationMessage";
-    this.manageOnStartAndOnCloseListening(cnx, action);
-
+    
     cnx.on(action, (correlationId: number, message: string) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'message': message });
       this.propagateEvent(correlationId, EventTypes.AccountCreationMessage, ResponseResult.Success, message);
@@ -589,7 +596,7 @@ getMessages(): Array<ServerMessage> {
   listenToAccountCreationStep() {
     const cnx = this.connection;
     const action = "accountCreationStep";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (correlationId: number, stepName: string, stepIndex: number, stepTotal: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'stepName': stepName, 'stepIndex': stepIndex, 'stepTotal': stepTotal });
@@ -600,7 +607,7 @@ getMessages(): Array<ServerMessage> {
   listenToAccountCreationError() {
     const cnx = this.connection;
     const action = "accountCreationError";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (correlationId: number, error: string) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'error': error });
@@ -613,7 +620,7 @@ getMessages(): Array<ServerMessage> {
   listenToKeyGenerationStarted() {
     const cnx = this.connection;
     const action = "keyGenerationStarted";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (correlationId: number, keyName: string, keyIndex : number, totalKeys: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'keyName': keyName, 'keyIndex' : keyIndex, 'totalKeys': totalKeys });
@@ -624,7 +631,7 @@ getMessages(): Array<ServerMessage> {
   listenToKeyGenerationEnded() {
     const cnx = this.connection;
     const action = "keyGenerationEnded";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (correlationId: number, keyName: string, keyIndex : number, totalKeys: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'keyName': keyName, 'keyIndex' : keyIndex, 'totalKeys': totalKeys });
@@ -635,7 +642,7 @@ getMessages(): Array<ServerMessage> {
   listenToKeyGenerationMessage() {
     const cnx = this.connection;
     const action = "keyGenerationMessage";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (correlationId: number, keyName: string, message: string) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'keyName': keyName, 'message': message });
@@ -643,10 +650,22 @@ getMessages(): Array<ServerMessage> {
     });
   }
 
+  listenToKeyGenerationPercentageUpdate() {
+    const cnx = this.connection;
+    const action = "keyGenerationPercentageUpdate";
+    
+
+    cnx.on(action, (correlationId: number, keyName: string, percentage: number) => {
+      this.logEvent(action + " - event", { 'correlationId': correlationId, 'keyName': keyName, 'percentage': percentage });
+      this.propagateEvent(correlationId, EventTypes.KeyGenerationPercentageUpdate, ResponseResult.Success, { 'keyName': keyName, 'percentage': percentage });
+    });
+  }
+  
+
   listenToKeyGenerationError() {
     const cnx = this.connection;
     const action = "KeyGenerationError";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (correlationId: number, keyName: string, error: string) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'keyName': keyName, 'error': error });
@@ -659,7 +678,7 @@ getMessages(): Array<ServerMessage> {
   listenToAccountPublicationStarted() {
     const cnx = this.connection;
     const action = "accountPublicationStarted";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (correlationId: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId });
@@ -670,7 +689,7 @@ getMessages(): Array<ServerMessage> {
   listenToAccountPublicationEnded() {
     const cnx = this.connection;
     const action = "accountPublicationEnded";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (correlationId: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId });
@@ -681,7 +700,7 @@ getMessages(): Array<ServerMessage> {
   listenToAccountPublicationMessage() {
     const cnx = this.connection;
     const action = "accountPublicationMessage";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (correlationId: number, message: string) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'message': message });
@@ -692,7 +711,7 @@ getMessages(): Array<ServerMessage> {
   listenToAccountPublicationStep() {
     const cnx = this.connection;
     const action = "accountPublicationStep";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (correlationId: number, stepName: string, stepIndex: number, stepTotal: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'stepName': stepName, 'stepIndex': stepIndex, 'stepTotal': stepTotal });
@@ -703,7 +722,7 @@ getMessages(): Array<ServerMessage> {
   listenToAccountPublicationPOWNonceIteration() {
     const cnx = this.connection;
     const action = "accountPublicationPOWNonceIteration";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (correlationId: number, nonce: number, difficulty: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'nonce': nonce, 'difficulty': difficulty });
@@ -714,7 +733,7 @@ getMessages(): Array<ServerMessage> {
   listenToAccountPublicationPOWNonceFound() {
     const cnx = this.connection;
     const action = "accountPublicationPOWNonceFound";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (correlationId: number, nonce: number, difficulty: number, solutions: Array<number>) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'nonce': nonce, 'difficulty': difficulty, 'solutions': solutions });
@@ -725,7 +744,7 @@ getMessages(): Array<ServerMessage> {
   listenToAccountPublicationError() {
     const cnx = this.connection;
     const action = "accountPublicationError";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (correlationId: number, error: string) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'error': error });
@@ -738,7 +757,7 @@ getMessages(): Array<ServerMessage> {
   listenToWalletSyncStarted() {
     const cnx = this.connection;
     const action = "walletSyncStarted";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (chainType: number) => {
       this.logEvent(action + " - event", { 'chainType': chainType });
@@ -749,7 +768,7 @@ getMessages(): Array<ServerMessage> {
   listenToWalletSyncEnded() {
     const cnx = this.connection;
     const action = "walletSyncEnded";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (chainType: number) => {
       this.logEvent(action + " - event", { 'chainType': chainType });
@@ -760,7 +779,7 @@ getMessages(): Array<ServerMessage> {
   listenToWalletSyncUpdate() {
     const cnx = this.connection;
     const action = "WalletSyncUpdate";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (chainType: number, currentBlockId: number, blockHeight: number, percentage: number) => {
       this.logEvent(action + " - event", { 'chainType': chainType, 'currentBlockId': currentBlockId, 'blockHeight': blockHeight, 'percentage': percentage });
@@ -771,7 +790,7 @@ getMessages(): Array<ServerMessage> {
   listenToWalletSyncError() {
     const cnx = this.connection;
     const action = "walletSyncError";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (correlationId: number, error: string) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'error': error });
@@ -784,7 +803,7 @@ getMessages(): Array<ServerMessage> {
   listenToBlockchainSyncStarted() {
     const cnx = this.connection;
     const action = "blockchainSyncStarted";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (chainType: number) => {
       this.logEvent(action + " - event", { 'chainType': chainType });
@@ -795,7 +814,7 @@ getMessages(): Array<ServerMessage> {
   listenToBlockchainSyncEnded() {
     const cnx = this.connection;
     const action = "blockchainSyncEnded";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (chainType: number) => {
       this.logEvent(action + " - event", { 'chainType': chainType });
@@ -806,7 +825,7 @@ getMessages(): Array<ServerMessage> {
   listenToBlockchainSyncUpdate() {
     const cnx = this.connection;
     const action = "blockchainSyncUpdate";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (chainType: number, currentBlockId: number, publicBlockHeight: number, percentage: number, estimatedTimeRemaining: string) => {
       this.logEvent(action + " - event", { 'chainType': chainType, 'currentBlockId': currentBlockId, 'publicBlockHeight': publicBlockHeight, 'percentage': percentage, 'estimatedTimeRemaining': estimatedTimeRemaining });
@@ -817,7 +836,7 @@ getMessages(): Array<ServerMessage> {
   listenToBlockchainSyncError() {
     const cnx = this.connection;
     const action = "blockchainSyncError";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (correlationId: number, error: string) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'error': error });
@@ -830,7 +849,7 @@ getMessages(): Array<ServerMessage> {
   listenToTransactionSent() {
     const cnx = this.connection;
     const action = "transactionSent";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (transactionId: number, transaction: any) => {
       this.logEvent(action + " - event", { 'transactionId': transactionId, 'transaction': transaction });
@@ -841,7 +860,7 @@ getMessages(): Array<ServerMessage> {
   listenToTransactionConfirmed() {
     const cnx = this.connection;
     const action = "transactionConfirmed";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (transactionId: number, transaction: any) => {
       this.logEvent(action + " - event", { 'transactionId': transactionId, 'transaction': transaction });
@@ -852,7 +871,7 @@ getMessages(): Array<ServerMessage> {
   listenToTransactionReceived() {
     const cnx = this.connection;
     const action = "transactionReceived";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (transactionId: number, transaction: any) => {
       this.logEvent(action + " - event", { 'transactionId': transactionId, 'transaction': transaction });
@@ -863,7 +882,7 @@ getMessages(): Array<ServerMessage> {
   listenToTransactionMessage() {
     const cnx = this.connection;
     const action = "transactionMessage";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (transactionId: number, message: string) => {
       this.logEvent(action + " - event", { 'transactionId': transactionId, 'message': message });
@@ -874,7 +893,7 @@ getMessages(): Array<ServerMessage> {
   listenToTransactionRefused() {
     const cnx = this.connection;
     const action = "transactionRefused";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (transactionId: number, message: string) => {
       this.logEvent(action + " - event", { 'transactionId': transactionId, 'message': message });
@@ -885,7 +904,7 @@ getMessages(): Array<ServerMessage> {
   listenToTransactionError() {
     const cnx = this.connection;
     const action = "transactionError";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (transactionId: number, errorCodes: Array<number>) => {
       this.logEvent(action + " - event", { 'transactionId': transactionId, 'message': errorCodes });
@@ -898,7 +917,7 @@ getMessages(): Array<ServerMessage> {
   listenToMiningStarted() {
     const cnx = this.connection;
     const action = "miningStarted";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (chainType: number) => {
       this.logEvent(action + " - event", { 'chainType': chainType });
@@ -910,7 +929,7 @@ getMessages(): Array<ServerMessage> {
   listenToMiningEnded() {
     const cnx = this.connection;
     const action = "miningEnded";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (chainType: number) => {
       this.logEvent(action + " - event", { 'chainType': chainType });
@@ -922,7 +941,7 @@ getMessages(): Array<ServerMessage> {
   listenToMiningElected() {
     const cnx = this.connection;
     const action = "miningElected";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (chainType: number) => {
       this.logEvent(action + " - event", { 'chainType': chainType });
@@ -934,7 +953,7 @@ getMessages(): Array<ServerMessage> {
   listenToMiningBountyAllocated() {
     const cnx = this.connection;
     const action = "miningBountyAllocated";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (chainType: number) => {
       this.logEvent(action + " - event", { 'chainType': chainType });
@@ -946,7 +965,7 @@ getMessages(): Array<ServerMessage> {
   listenToMiningConnectableStatusChanged(){
     const cnx = this.connection;
     const action = "connectableStatusChanged";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (connectable: boolean) => {
       this.logEvent(action + " - event", { 'connectable': connectable });
@@ -959,7 +978,7 @@ getMessages(): Array<ServerMessage> {
   listenToBlockInserted() {
     const cnx = this.connection;
     const action = "blockInserted";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (chainType: number, blockId: number, timestamp: Date, hash: string, publicBlockId: number, lifespan: number) => {
       this.logEvent(action + " - event", { chainType, blockId, publicBlockId, timestamp, hash, lifespan });
@@ -975,7 +994,7 @@ getMessages(): Array<ServerMessage> {
   listenToMessage() {
     const cnx = this.connection;
     const action = "message";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (message: string, timestamp: Date, level:string, properties:Array<Object>) => {
 
@@ -992,7 +1011,7 @@ getMessages(): Array<ServerMessage> {
   listenToError() {
     const cnx = this.connection;
     const action = "error";
-    this.manageOnStartAndOnCloseListening(cnx, action);
+    
 
     cnx.on(action, (correlationId: number, message: string) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'message': message });
@@ -1004,23 +1023,6 @@ getMessages(): Array<ServerMessage> {
 
   isConnectedToServer(): Observable<boolean> {
     return this.serverConnection;
-  }
-
-  tryConnectToServer(): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      setTimeout(() => {
-        this.ping()
-          .then(() => {
-            this.notifyServerConnectionStatusIfNeeded(true);
-            resolve();
-          })
-          .catch(reason => {
-            this.notifyServerConnectionStatusIfNeeded(false);
-            //this.logService.logDebug(reason, null);
-            this.tryConnectToServer().then(() => resolve());
-          })
-      }, RETRY_DURATION);
-    });
   }
 
   logEvent(message: string, data: any) {
@@ -1035,45 +1037,64 @@ getMessages(): Array<ServerMessage> {
     this.eventNotifier.next(event);
   }
 
+
+  private isConnecting:boolean = false;
+
+  tryConnectToServer(): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      setTimeout(() => {
+          if(!this.isCurrentlyConnected && !this.isConnecting){
+            this.isConnecting = true;
+            this.ping()
+              .then(() => {
+                this.notifyServerConnectionStatusIfNeeded(true);
+                resolve();
+                this.isConnecting = false;
+              })
+              .catch(reason => {
+                this.notifyServerConnectionStatusIfNeeded(false);
+                this.isConnecting = false;
+                //this.logService.logDebug(reason, null);
+                this.tryConnectToServer().then(() => resolve());
+              });
+          }
+          else{
+            this.tryConnectToServer().then(() => resolve());
+          }
+      }, RETRY_DURATION);
+
+    });
+  }
+
+  private cnx:HubConnection;
   get connection(): HubConnection {
-    this.serverPort = this.configService.serverPort;
-    var cnx = new HubConnectionBuilder()
-      .configureLogging(LogLevel.None)
-      .withUrl("http://127.0.0.1:" + this.serverPort + "/signal", {
-        skipNegotiation: true,
-        transport: HttpTransportType.WebSockets
-      })
-      .build();
-
-    cnx.serverTimeoutInMilliseconds = 60 * 60 * 1000;
-
-    return cnx;
-  }
-
-  manageOnStartAndOnCloseListening(cnx: HubConnection, action: string) {
-    try {
-      cnx.onclose(() => {
-        this.logService.logDebug(action + " Connection Closed", { cnx, action });
-        this.tryConnectToServer().then(() => {
-          setTimeout(() => { this.manageOnStartAndOnCloseListening(cnx, action) }, RETRY_DURATION);
-        });
-      });
-
-      cnx.start()
-        .then(() => {
+    if(!this.cnx){
+      this.serverPort = this.configService.serverPort;
+      this.cnx = new HubConnectionBuilder()
+        .configureLogging(LogLevel.None)
+        .withUrl("http://127.0.0.1:" + this.serverPort + "/signal", {
+          skipNegotiation: true,
+          transport: HttpTransportType.WebSockets
         })
-        .catch(reason => {
-          this.logService.logDebug(action + " start : " + reason, { cnx, action });
-          setTimeout(() => { this.manageOnStartAndOnCloseListening(cnx, action) }, RETRY_DURATION);
-        });
+        .withHubProtocol(new MessagePackHubProtocol())
+        .build();
+
+        this.cnx.serverTimeoutInMilliseconds = 3 * 60 * 1000;
+        this.cnx.keepAliveIntervalInMilliseconds = 15 * 1000;
     }
-    catch(error){
-      console.log(error);
-    }
+
+    this.cnx.onclose(() => {
+      this.logService.logDebug(" Connection Closed", {  });
+      this.notifyServerConnectionStatusIfNeeded(false);
+      this.beginConnection();
+    });
+    
+    return this.cnx;
   }
+
 
   notifyServerConnectionStatusIfNeeded(connected: boolean) {
-    if (connected != this.isCurrentlyConnected) {
+    if (connected !== this.isCurrentlyConnected) {
       this.isCurrentlyConnected = connected;
       this.serverConnection.next(connected);
     }
@@ -1098,15 +1119,14 @@ getMessages(): Array<ServerMessage> {
                 }
               })
             .catch(reason => {
-              reject("Ping error : " + reason);
-            })
-            .finally(() => {
               cnx.stop();
-            })
+              reject("Ping error : " + reason);
+            
+            });
         })
         .catch(reason => {
-          reject("Connection error : " + reason)
-        })
+          reject("Connection error : " + reason);
+        });
     });
   }
 

@@ -26,11 +26,9 @@ export class PassphrasesCall extends CommonCall {
 
     private callEnterPassphrase(action : string, correlationId: number, chainType: number, keyCorrelationCode: number, passphrase: string): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
-            const cnx = this.connection;
 
-            cnx.start().then(() => {
                 this.logEvent(action + " - call", { correlationId, chainType, keyCorrelationCode, passphrase });
-                cnx.invoke<boolean>(action, correlationId, chainType, keyCorrelationCode, passphrase)
+                this.connection.invoke<boolean>(action, correlationId, chainType, keyCorrelationCode, passphrase)
                     .then(
                         response => {
                             this.logEvent(action + " - response", response);
@@ -38,13 +36,7 @@ export class PassphrasesCall extends CommonCall {
                         })
                     .catch(reason => {
                         reject(action + " error : " + reason);
-                    })
-                    .finally(() => {
-                        cnx.stop();
-                    })
-            }).catch(reason => {
-                reject(action + " error : " + reason);
-            })
-        });
+                    });
+            });
     }
 }

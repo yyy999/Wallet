@@ -138,7 +138,9 @@
 		"Start" : "Start Mining",
 		"Stop" : "Stop Mining",
 		"Explain" : "Here you can put your computer to work by making it perform mathematical puzzles to unlock new Neuraliums.",
-		"Miningportalert" : "Note: In order to mine, your TCP port 33888 must be connectible by other nodes on the p2p; in order to mine, we must share. Please ensure you open your firewall."
+		"Miningportalert" : "Note: In order to mine, your TCP port 33888 must be connectible by other nodes on the p2p; in order to mine, we must share. Please ensure you open your firewall.",
+		"PortConnectable" : "Port 33888 is connectable.",
+		"PortNotConnectable" : "Port 33888 is not connectable."
 	},
 	"neuralium": {
 		"Credit": "Credit",
@@ -166,8 +168,8 @@
 		"PleaseInputNeuraliumAmount": "Please input correct Neuralium amount",
 		"Send": "Send",
 		"SendingSuccess": "Neuraliums sent",
-		"SendingValueConfirmation": "{{neuraliums}} neuraliums to account {{{id}}}",
-		"SendingValueConfirmationWithName": "{{neuraliums}} neuraliums to {{name}} (account {{{id}}})",
+		"SendingValueConfirmation": "{{neuraliums}} neuraliums to account {{id}}",
+		"SendingValueConfirmationWithName": "{{neuraliums}} neuraliums to {{name}} (account {{id}})",
 		"Title": "Send",
 		"WrongFees": "Tip value is not valid"
 	},
@@ -204,7 +206,7 @@
 		"ParagrahThree": "",
 		"ParagrahTwo": "In TESTNET mode, any neuralium tokens gained are for testing purposes only and may not be used in the production 'MainNet' network. Tokens gained in TESTNET mode may also be lost or reset at any time without prior notice.",
 		"Warning": "The node and the wallet are currently in TestNet Mode on a separate network.",
-		"Period": "TESTNET Trial run II will last from September 6th 19:00 (EST) to September 7th 19:00 (EST)"
+		"Period": "TESTNET Trial run III will last from September 19th 19:00 (EST) to September 20th 19:00 (EST)"
 	},
 	"wallet": {
 		"AccountCreation": "Account creation",
@@ -215,7 +217,8 @@
 		"CreateWallet": "Create a wallet",
 		"EncryptKeys": "encrypt keys",
 		"EncryptWallet": "encrypt wallet",
-		"KeyCreation": "Key generation",
+		"KeyCreation": "Generating keyset",
+		"KeyCreationProgress": "Key generation progress",
 		"LoadingWallet": "Loading Wallet",
 		"OnePassphraseForEachKey": "one password for each key",
 		"PassphraseForEncryptionOfAllKeys": "a password for encryption of all keys",

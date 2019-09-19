@@ -79,8 +79,8 @@ export class WalletService {
   }
 
   setCurrentAccount(account: WalletAccount) {
-    this.serverConnectionService.callSetActiveAccount(this.currentBlockchainId, account.accountUuid).then(()=>{
-      this.serverConnectionService.callQueryWalletAccountDetails(this.currentBlockchainId, account.accountUuid).then(activeAccount =>{
+    this.serverConnectionService.callSetActiveAccount(this.currentBlockchainId, account.AccountUuid).then(()=>{
+      this.serverConnectionService.callQueryWalletAccountDetails(this.currentBlockchainId, account.AccountUuid).then(activeAccount =>{
         this.currentAccount.next(activeAccount);
       })
     })
@@ -120,8 +120,8 @@ export class WalletService {
         wallet.accounts = accounts;
         if (wallet.accounts != void (0) && wallet.accounts.length > 0) {
           wallet.accounts.forEach(account => {
-            if(account.isActive){
-              this.serverConnectionService.callQueryWalletAccountDetails(this.currentBlockchainId, account.accountUuid).then(activeAccount =>{
+            if(account.IsActive){
+              this.serverConnectionService.callQueryWalletAccountDetails(this.currentBlockchainId, account.AccountUuid).then(activeAccount =>{
                 this.currentAccount.next(activeAccount);
               })
             }

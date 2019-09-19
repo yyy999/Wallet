@@ -223,18 +223,23 @@
        
         <span class="row" *ngIf="isWalletCreationRunning">
           <mat-progress-bar mode="determinate" [value]="walletCreationStep"></mat-progress-bar>
-          <mat-label><small>{{ 'wallet.WalletCreation' | translate }}... {{walletCreationStep | number:'2.2'}} %</small>
+          <mat-label><small>{{ 'wallet.WalletCreation' | translate }}... {{walletCreationStep | number:'1.0'}} %</small>
           </mat-label>
         </span>
         <span class="row" *ngIf="isAccountCreationRunning">
           <mat-progress-bar mode="determinate" [value]="accountCreationStep"></mat-progress-bar>
-          <mat-label><small>{{ 'wallet.AccountCreation' | translate }}... {{accountCreationStep | number:'2.2'}}
+          <mat-label><small>{{ 'wallet.AccountCreation' | translate }}... {{accountCreationStep | number:'1.0'}}
               %</small>
           </mat-label>
         </span>
         <span class="row" *ngIf="isKeyCreationRunning">
           <mat-progress-bar mode="determinate" [value]="keyCreationStep"></mat-progress-bar>
-          <mat-label><small>{{ 'wallet.KeyCreation' | translate }}... {{keyCreationStep | number:'2.2'}} % ({{keyName}})</small>
+          <mat-label><small>{{ 'wallet.KeyCreation' | translate }}... {{keyIndex+1}} / {{totalKeys}}</small>
+          </mat-label>
+        </span>
+        <span class="row" *ngIf="isKeyCreationRunning">
+          <mat-progress-bar mode="determinate" [value]="percentage"></mat-progress-bar>
+          <mat-label><small>{{keyName}}&nbsp;{{ 'wallet.KeyCreationProgress' | translate }}... {{percentage | number:'1.0'}} %</small>
           </mat-label>
         </span>
       </mat-card>

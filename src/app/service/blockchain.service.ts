@@ -94,14 +94,14 @@ export class BlockchainService implements OnInit {
       this.serverConnectionService.callQuerySupportedChains()
         .then(blockchains => {
           blockchains.forEach(blockchain => {
-            if (blockchain["enabled"]) {
-              if (blockchain["id"] == NEURALIUM_BLOCKCHAIN.id) {
+            if (blockchain["Enabled"]) {
+              if (blockchain["Id"] == NEURALIUM_BLOCKCHAIN.id) {
                 this.blockchains.push(NEURALIUM_BLOCKCHAIN);
               }
-              else if (blockchain["id"] == SECURITY_BLOCKCHAIN.id) {
+              else if (blockchain["Id"] == SECURITY_BLOCKCHAIN.id) {
                 this.blockchains.push(SECURITY_BLOCKCHAIN);
               }
-              else if (blockchain["id"] == CONTRACT_BLOCKCHAIN.id) {
+              else if (blockchain["Id"] == CONTRACT_BLOCKCHAIN.id) {
                 this.blockchains.push(CONTRACT_BLOCKCHAIN);
               }
             }

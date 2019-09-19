@@ -138,7 +138,9 @@
 		"Start" : "Empezar a minar",
 		"Stop" : "parar de minar",
 		"Explain" : "Here you can put your computer to work by making it perform mathematical puzzles to unlock new Neuraliums.",
-		"Miningportalert" : "Nota: Para extraer, su puerto TCP 33888 debe ser conectable por otros nodos en el p2p. Asegúrese de abrir su firewall."
+		"Miningportalert" : "Nota: Para extraer, su puerto TCP 33888 debe ser conectable por otros nodos en el p2p. Asegúrese de abrir su firewall.",
+		"PortConnectable" : "El puerto 33888 es conectable.",
+		"PortNotConnectable" : "El puerto 33888 no es conectable"
 	},
 	"neuralium": {
 		"Credit": "Crédito",
@@ -166,8 +168,8 @@
 		"PleaseInputNeuraliumAmount": "Ingrese la cantidad correcta de Neuraliums",
 		"Send": "Enviar",
 		"SendingSuccess": "Neuraliums enviados",
-		"SendingValueConfirmation": "{{neuraliums}} neuraliums a la cuenta {{{id}}}",
-		"SendingValueConfirmationWithName": "{{neuraliums}} neuraliums a {{name}} (cuenta {{{id}}})",
+		"SendingValueConfirmation": "{{neuraliums}} neuraliums a la cuenta {{id}}",
+		"SendingValueConfirmationWithName": "{{neuraliums}} neuraliums a {{name}} (cuenta {{id}})",
 		"Title": "Enviar",
 		"WrongFees": "El valor de tip no es válido"
 	},
@@ -203,7 +205,7 @@
 		"ParagrahThree": "",
 		"ParagrahTwo": "En el modo TESTNET, todos los neuraliums obtenidos sólo tienen fines de prueba y no se pueden utilizar en la red de producción 'MainNet'. Los neuraliums obtenidos en el modo TESTNET también pueden perderse o restablecerse en cualquier momento sin previo aviso.",
 		"Warning": "El nodo y la cartera se encuentran actualmente en modo de prueba TestNet en una red separada.",
-		"Period": "TESTNET Trial run I durará del 4 de septiembre a las 19:00 (EST) al 5 de septiembre a las 19:00 (EST)"
+		"Period": "TESTNET Trial run III durará del 19 de septiembre a las 19:00 (EST) al 20 de septiembre a las 19:00 (EST)"
 	},
 	"wallet": {
 		"AccountCreation": "Creación de cuenta",
@@ -215,6 +217,7 @@
 		"EncryptKeys": "encriptar claves",
 		"EncryptWallet": "encriptar cartera",
 		"KeyCreation": "Generación de Claves",
+		"KeyCreationProgress": ": Progreso de la generación de la llave",
 		"LoadingWallet": "Cargando Cartera",
 		"OnePassphraseForEachKey": "una contraseña para cada clave",
 		"PassphraseForEncryptionOfAllKeys": "una contraseña para el encriptamiento de todas las claves",

@@ -20,24 +20,22 @@ export class BlockchainCall extends CommonCall {
 
     callQueryBlockChainInfo(chainType: number) {
         return new Promise<BlockchainInfo>((resolve, reject) => {
-          const cnx = this.connection;
-    
-          cnx.start().then(() => {
+
             this.logEvent("QueryBlockChainInfo - call", { chainType });
-            cnx.invoke<BlockchainInfo>("QueryBlockChainInfo", chainType)
+            this.connection.invoke<BlockchainInfo>("QueryBlockChainInfo", chainType)
               .then(
                 account => {
                   this.logEvent("QueryBlockChainInfo - response", account);
-                  var blockId: number = account["blockId"];
-                  var blockHash: string = account["blockHash"];
-                  var publicBlockId: number = <WalletAccountStatus>account["publicBlockId"];
-                  var blockTimestamp = new Date(account["blockTimestamp"]);
-                  var blockLifespan: number = account["blockLifespan"];
-                  var digestId: number = account["digestId"];
-                  var digestHash: string = account["digestHash"];
-                  var digestBlockId: number = account["digestBlockId"];
-                  var digestTimestamp: Date = new Date(account["digestTimestamp"]);
-                  var publicDigestId: number = account["publicDigestId"];
+                  var blockId: number = account["BlockId"];
+                  var blockHash: string = account["BlockHash"];
+                  var publicBlockId: number = <WalletAccountStatus>account["PublicBlockId"];
+                  var blockTimestamp = new Date(account["BlockTimestamp"]);
+                  var blockLifespan: number = account["BlockLifespan"];
+                  var digestId: number = account["DigestId"];
+                  var digestHash: string = account["DigestHash"];
+                  var digestBlockId: number = account["DigestBlockId"];
+                  var digestTimestamp: Date = new Date(account["DigestTimestamp"]);
+                  var publicDigestId: number = account["PublicDigestId"];
     
                   var blockInfo = BlockInfo.create(blockId, blockTimestamp, blockHash, publicBlockId, blockLifespan);
                   var digestInfo = DigestInfo.create(digestId, digestBlockId, digestTimestamp, digestHash, publicDigestId);
@@ -47,23 +45,15 @@ export class BlockchainCall extends CommonCall {
                 })
               .catch(reason => {
                 reject("QueryBlockChainInfo error : " + reason);
-              })
-              .finally(() => {
-                cnx.stop();
-              })
-          }).catch(reason => {
-            reject("Connection error : " + reason);
-          })
+              });
         });
       }
 
       callQuerySupportedChains() {
         return new Promise<Array<object>>((resolve, reject) => {
-          const cnx = this.connection;
-    
-          cnx.start().then(() => {
+
             this.logEvent("querySupportedChains - call", null);
-            cnx.invoke<Array<object>>("querySupportedChains")
+            this.connection.invoke<Array<object>>("QuerySupportedChains")
               .then(
                 response => {
                   this.logEvent("querySupportedChains - response", response);
@@ -71,23 +61,15 @@ export class BlockchainCall extends CommonCall {
                 })
               .catch(reason => {
                 reject("QuerySupportedChains error : " + reason);
-              })
-              .finally(() => {
-                cnx.stop();
-              })
-          }).catch(reason => {
-            reject("Connection error : " + reason);
-          })
-        });
+              });
+          });
       }
 
       callQueryChainStatus(chainType: number) {
         return new Promise<object>((resolve, reject) => {
-          const cnx = this.connection;
-    
-          cnx.start().then(() => {
+
             this.logEvent("queryChainStatus - call", { 'chainType': chainType });
-            cnx.invoke<object>("queryChainStatus", chainType)
+            this.connection.invoke<object>("QueryChainStatus", chainType)
               .then(
                 response => {
                   this.logEvent("queryChainStatus - response", response);
@@ -95,23 +77,15 @@ export class BlockchainCall extends CommonCall {
                 })
               .catch(reason => {
                 reject("QueryChainStatus error : " + reason);
-              })
-              .finally(() => {
-                cnx.stop();
-              })
-          }).catch(reason => {
-            reject("Connection error : " + reason);
-          })
-        });
+              });
+          });
       }
 
       callQueryBlockchainSynced(chainType: number) {
         return new Promise<boolean>((resolve, reject) => {
-          const cnx = this.connection;
-    
-          cnx.start().then(() => {
+
             this.logEvent("QueryBlockchainSynced - call", { 'chainType': chainType });
-            cnx.invoke<boolean>("QueryBlockchainSynced", chainType)
+            this.connection.invoke<boolean>("QueryBlockchainSynced", chainType)
               .then(
                 response => {
                   this.logEvent("QueryBlockchainSynced - response", response);
@@ -119,23 +93,15 @@ export class BlockchainCall extends CommonCall {
                 })
               .catch(reason => {
                 reject("QueryBlockchainSynced error : " + reason);
-              })
-              .finally(() => {
-                cnx.stop();
-              })
-          }).catch(reason => {
-            reject("Connection error : " + reason);
-          })
-        });
+              });
+          });
       }
 
       callQueryBlockHeight(chainType: number) {
         return new Promise<number>((resolve, reject) => {
-          const cnx = this.connection;
-    
-          cnx.start().then(() => {
+
             this.logEvent("queryBlockHeight - call", { 'chainType': chainType });
-            cnx.invoke<number>("queryBlockHeight", chainType)
+            this.connection.invoke<number>("QueryBlockHeight", chainType)
               .then(
                 response => {
                   this.logEvent("queryBlockHeight - response", response);
@@ -143,23 +109,14 @@ export class BlockchainCall extends CommonCall {
                 })
               .catch(reason => {
                 reject("QueryBlockHeight error : " + reason);
-              })
-              .finally(() => {
-                cnx.stop();
-              })
-          }).catch(reason => {
-            reject("Connection error : " + reason);
-          })
-        });
+              });
+          });
       }
 
       callIsBlockchainSynced(chainType: number) {
         return new Promise<boolean>((resolve, reject) => {
-          const cnx = this.connection;
-    
-          cnx.start().then(() => {
             this.logEvent("isBlockchainSynced - call", { 'chainType': chainType });
-            cnx.invoke<boolean>("IsBlockchainSynced", chainType)
+            this.connection.invoke<boolean>("IsBlockchainSynced", chainType)
               .then(
                 response => {
                   this.logEvent("isBlockchainSynced - response", response);
@@ -167,13 +124,7 @@ export class BlockchainCall extends CommonCall {
                 })
               .catch(reason => {
                 reject("isBlockchainSynced error : " + reason);
-              })
-              .finally(() => {
-                cnx.stop();
-              })
-          }).catch(reason => {
-            reject("Connection error : " + reason);
-          })
-        });
+              });
+          });
       }
 }

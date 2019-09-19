@@ -1,14 +1,14 @@
 export class WalletAccount {
-    accountUuid: string;
-    accountId: string;
-    status: WalletAccountStatus;
-    declarationBlockId: number;
-    accountType: WalletAccountType;
-    friendlyName: string;
-    isEncrypted: boolean;
-    isActive: boolean;
-    accountHash : string;
-    trustLevel : number;
+    AccountUuid: string;
+    AccountId: string;
+    Status: WalletAccountStatus;
+    DeclarationBlockId: number;
+    AccountType: WalletAccountType;
+    FriendlyName: string;
+    IsEncrypted: boolean;
+    IsActive: boolean;
+    AccountHash : string;
+    TrustLevel : number;
 
     static createNew(
         accountUuid: string,
@@ -22,16 +22,16 @@ export class WalletAccount {
         accountHash:string = "",
         trustLevel:number = 0) {
         var newAccount = new WalletAccount();
-        newAccount.accountUuid = accountUuid;
-        newAccount.accountId = accountId;
-        newAccount.status = status;
-        newAccount.declarationBlockId = declarationBlockId;
-        newAccount.accountType = accountType;
-        newAccount.friendlyName = friendlyName;
-        newAccount.isEncrypted = isEncrypted;
-        newAccount.isActive = isActive;
-        newAccount.accountHash = accountHash;
-        newAccount.trustLevel = trustLevel;
+        newAccount.AccountUuid = accountUuid;
+        newAccount.AccountId = accountId;
+        newAccount.Status = status;
+        newAccount.DeclarationBlockId = declarationBlockId;
+        newAccount.AccountType = accountType;
+        newAccount.FriendlyName = friendlyName;
+        newAccount.IsEncrypted = isEncrypted;
+        newAccount.IsActive = isActive;
+        newAccount.AccountHash = accountHash;
+        newAccount.TrustLevel = trustLevel;
         return newAccount;
     }
 }
@@ -53,14 +53,14 @@ export class XmssWalletKey inherits WalletKey{
 */
 
 export const NO_WALLET_ACCOUNT = <WalletAccount>{
-    accountUuid: "",
-    accountId: "",
-    status: 1,
-    declarationBlockId: 0,
-    accountType: 1,
-    friendlyName: "",
-    isEncrypted: false,
-    isActive: false
+    AccountUuid: "",
+    AccountId: "",
+    Status: 1,
+    DeclarationBlockId: 0,
+    AccountType: 1,
+    FriendlyName: "",
+    IsEncrypted: false,
+    IsActive: false
 }
 
 export enum WalletAccountStatus {

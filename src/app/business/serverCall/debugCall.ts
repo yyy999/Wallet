@@ -18,11 +18,9 @@ export class DebugCall extends CommonCall {
 
     callRefillNeuraliums(accountUuid: string): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
-          const cnx = this.connection;
-    
-          cnx.start().then(() => {
+
             this.logEvent("RefillNeuraliums - call", { 'accountUuid': accountUuid });
-            cnx.invoke<boolean>("refillNeuraliums", accountUuid)
+            this.connection.invoke<boolean>("RefillNeuraliums", accountUuid)
               .then(
                 response => {
                   this.logEvent("RefillNeuraliums - response", response);
@@ -30,13 +28,7 @@ export class DebugCall extends CommonCall {
                 })
               .catch(reason => {
                 reject("RefillNeuraliums error : " + reason);
-              })
-              .finally(() => {
-                cnx.stop();
-              })
-          }).catch(reason => {
-            reject("Connection error : " + reason);
-          })
-        });
+              });
+          });
       }
 }

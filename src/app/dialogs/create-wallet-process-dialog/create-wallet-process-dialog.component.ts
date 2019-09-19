@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { NotificationService } from '../..//service/notification.service';
 import { SyncStatusService } from '../..//service/sync-status.service';
 import { BlockchainService } from '../..//service/blockchain.service';
@@ -40,6 +40,9 @@ export class CreateWalletProcessDialogComponent implements OnInit {
   isKeyCreationRunning: boolean;
   passPhrasesConfirm = [];
   keyName: string = '';
+  percentage:number = 0;
+  keyIndex:number = 0;
+  totalKeys: number = 0;
 
   get passWordInputType(): string {
     if (this.showPasswords) {
@@ -57,7 +60,8 @@ export class CreateWalletProcessDialogComponent implements OnInit {
     private blockchainService: BlockchainService,
     private notificationService: NotificationService,
     private syncStatusService: SyncStatusService,
-    public dialogRef: MatDialogRef<CreateWalletProcessDialogComponent>
+    public dialogRef: MatDialogRef<CreateWalletProcessDialogComponent>,
+    private changeDetector: ChangeDetectorRef
   ) { }
 
   ngOnInit() {
@@ -151,11 +155,14 @@ export class CreateWalletProcessDialogComponent implements OnInit {
         case EventTypes.KeyGenerationStarted:
           this.isKeyCreationRunning = true;
 
-          let keyIndex:number =  event.message['keyIndex'];
-          let totalKeys:number =  event.message['totalKeys'];
+          this.percentage = 0;
 
-          this.keyCreationStep = 25*(keyIndex-1);
+          this.keyIndex =  (event.message['keyIndex']) - 1;
+          this.totalKeys =  event.message['totalKeys'];
+
           this.keyName = event.message['keyName'];
+
+          this.updateKeyGeneratePercentage();
           break;
         case EventTypes.KeyGenerationEnded:
             let keyIndex2:number =  event.message['keyIndex'];
@@ -164,15 +171,27 @@ export class CreateWalletProcessDialogComponent implements OnInit {
             if(keyIndex2 === totalKeys2){
               this.isKeyCreationRunning = false;
               this.keyCreationStep = 100;
+              this.percentage = 100;
               this.keyName = '';
             }
           break;
-        default:
+        case EventTypes.KeyGenerationPercentageUpdate:
+      
+              this.percentage = event.message['percentage'];
+
+              this.updateKeyGeneratePercentage();
           break;
+        default:
+          return;
       }
     })
   }
 
+  private updateKeyGeneratePercentage(){
+    let keyPart = 100 / (this.totalKeys-1); // -1 because the last key is so fast to generate, we exclude it from the %
+    let baseline:number = keyPart*(this.keyIndex);
+    this.keyCreationStep = baseline + ((keyPart * this.percentage) / (100));
+  }
   
 
   get isWalletValid() {

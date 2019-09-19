@@ -43,7 +43,7 @@ export class NeuraliumsComponent implements OnInit {
           this.blockchainService.selectedBlockchain.subscribe(blockchain => {
             if (blockchain == NEURALIUM_BLOCKCHAIN && blockchain.menuConfig.showSend) {
               this.walletService.getCurrentAccount().subscribe(account => {
-                if (account != void (0) && account != NO_WALLET_ACCOUNT && account.isActive && account.status == WalletAccountStatus.Published) { // && account.status == WalletAccountStatus.Published
+                if (account != void (0) && account != NO_WALLET_ACCOUNT && account.IsActive && account.Status == WalletAccountStatus.Published) { // && account.Status == WalletAccountStatus.Published
                   this.initialise(account);
                 }
                 else {

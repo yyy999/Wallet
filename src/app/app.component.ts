@@ -64,7 +64,7 @@ export class AppComponent {
   ngOnInit() {
     this.electronService.ipcRenderer.on("quit",(event) =>{
       this.serverConnectionService.canManuallyStopServer.subscribe(canStop =>{
-        if(canStop){
+        if(true){
           this.serverConnectionService.callServerShutdown().finally(()=>{
             event.sender.send("ok-quit");
           });

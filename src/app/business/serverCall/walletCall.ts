@@ -20,11 +20,9 @@ export class WalletCall extends CommonCall {
 
     callCreateNewWallet(chainType: number, wallet: WalletCreation): Promise<number> {
         return new Promise<number>((resolve, reject) => {
-          const cnx = this.connection;
-    
-          cnx.start().then(() => {
+
             this.logEvent("callCreateNewWallet - call", { 'chainType': chainType, 'wallet': wallet });
-            cnx.invoke<number>("createNewWallet", chainType, wallet.friendlyName, wallet.encryptWallet, wallet.encryptKey, wallet.encryptKeysIndividualy, wallet.passPhrasesAsDictionary, wallet.publishAccount)
+            this.connection.invoke<number>("CreateNewWallet", chainType, wallet.friendlyName, wallet.encryptWallet, wallet.encryptKey, wallet.encryptKeysIndividualy, wallet.passPhrasesAsDictionary, wallet.publishAccount)
               .then(
                 response => {
                   this.logEvent("callCreateNewWallet - response", response);
@@ -32,23 +30,15 @@ export class WalletCall extends CommonCall {
                 })
               .catch(reason => {
                 reject("CreateNewWallet error : " + reason);
-              })
-              .finally(() => {
-                cnx.stop();
-              })
-          }).catch(reason => {
-            reject("Connection error : " + reason);
-          })
-        });
+              });
+          });
       }
 
       callSetWalletPassphrase(correlationId: number, password: string) {
         return new Promise<number>((resolve, reject) => {
-          const cnx = this.connection;
-    
-          cnx.start().then(() => {
+
             this.logEvent("setWalletPassphrase - call", { 'correlationId': correlationId, 'password': password });
-            cnx.invoke<number>("setWalletPassphrase", correlationId, password)
+            this.connection.invoke<number>("SetWalletPassphrase", correlationId, password)
               .then(
                 response => {
                   this.logEvent("setWalletPassphrase - response", response);
@@ -56,23 +46,15 @@ export class WalletCall extends CommonCall {
                 })
               .catch(reason => {
                 reject("SetWalletPassphrase error : " + reason);
-              })
-              .finally(() => {
-                cnx.stop();
-              })
-          }).catch(reason => {
-            reject("Connection error : " + reason);
-          })
-        });
+              });
+          });
       }
 
       callSetKeysPassphrase(correlationId: number, password: string) {
         return new Promise<number>((resolve, reject) => {
-          const cnx = this.connection;
-    
-          cnx.start().then(() => {
+
             this.logEvent("setKeysPassphrase - call", { 'correlationId': correlationId, 'password': password });
-            cnx.invoke<number>("setKeysPassphrase", correlationId, password)
+            this.connection.invoke<number>("SetKeysPassphrase", correlationId, password)
               .then(
                 response => {
                   this.logEvent("setKeysPassphrase - response", response);
@@ -80,33 +62,25 @@ export class WalletCall extends CommonCall {
                 })
               .catch(reason => {
                 reject("SetKeysPassphrase error : " + reason);
-              })
-              .finally(() => {
-                cnx.stop();
-              })
-          }).catch(reason => {
-            reject("Connection error : " + reason);
-          })
-        });
+              });
+          });
       }
 
       callQueryWalletAccounts(chainType: number) {
         return new Promise<Array<WalletAccount>>((resolve, reject) => {
-          const cnx = this.connection;
-    
-          cnx.start().then(() => {
+ 
             this.logEvent("queryWalletAccounts - call", { 'chainType': chainType });
-            cnx.invoke<Array<WalletAccount>>("queryWalletAccounts", chainType)
+            this.connection.invoke<Array<WalletAccount>>("queryWalletAccounts", chainType)
               .then(
                 response => {
                   this.logEvent("queryWalletAccounts - response", response);
                   var walletAccounts = new Array<WalletAccount>();
                   response.forEach(account => {
-                    var accountUuid: string = account.accountUuid;
-                    var accountId: string = <string>account.accountId;
-                    var status: number = <WalletAccountStatus>account.status;
-                    var friendlyName: string = account.friendlyName;
-                    var isActive: boolean = <boolean>account.isActive;
+                    var accountUuid: string = account.AccountUuid;
+                    var accountId: string = <string>account.AccountId;
+                    var status: number = <WalletAccountStatus>account.Status;
+                    var friendlyName: string = account.FriendlyName;
+                    var isActive: boolean = <boolean>account.IsActive;
                     var walletAccount = WalletAccount.createNew(accountUuid, accountId, status, 0, 1, friendlyName, false, isActive);
                     walletAccounts.push(walletAccount);
                   })
@@ -114,58 +88,42 @@ export class WalletCall extends CommonCall {
                 })
               .catch(reason => {
                 reject("QueryWalletAccounts error : " + reason);
-              })
-              .finally(() => {
-                cnx.stop();
-              })
-          }).catch(reason => {
-            reject("Connection error : " + reason);
-          })
-        });
+              });
+          });
       }
 
       callQueryWalletAccountDetails(chainType: number, accountUuid: string) {
         return new Promise<WalletAccount>((resolve, reject) => {
-          const cnx = this.connection;
-    
-          cnx.start().then(() => {
+
             this.logEvent("QueryWalletAccountDetails - call", { chainType, accountUuid });
-            cnx.invoke<Array<WalletAccount>>("QueryWalletAccountDetails", chainType, accountUuid)
+            this.connection.invoke<Array<WalletAccount>>("QueryWalletAccountDetails", chainType, accountUuid)
               .then(
                 account => {
                   this.logEvent("QueryWalletAccountDetails - response", account);
-                  var accountUuid: string = account["accountUuid"];
-                  var accountId: string = account["accountId"];
-                  var status: number = <WalletAccountStatus>account["status"];
-                  var declarationBlockId = <number>account["declarationBlockid"];
-                  var accountType = <WalletAccountType>account["accountType"];
-                  var friendlyName: string = account["friendlyName"];
-                  var isEncrypted: boolean = <boolean>account["keysEncrypted"];
-                  var isActive: boolean = <boolean>account["isActive"];
-                  var accountHash = account["accountHash"];
-                  var trustLevel = account["trustLevel"];
+                  var accountUuid: string = account["AccountUuid"];
+                  var accountId: string = account["AccountId"];
+                  var status: number = <WalletAccountStatus>account["Status"];
+                  var declarationBlockId = <number>account["DeclarationBlockid"];
+                  var accountType = <WalletAccountType>account["AccountType"];
+                  var friendlyName: string = account["FriendlyName"];
+                  var isEncrypted: boolean = <boolean>account["KeysEncrypted"];
+                  var isActive: boolean = <boolean>account["IsActive"];
+                  var accountHash = account["AccountHash"];
+                  var trustLevel = account["TrustLevel"];
                   var walletAccount = WalletAccount.createNew(accountUuid, accountId, status, declarationBlockId, accountType, friendlyName, isEncrypted, isActive, accountHash, trustLevel);
                   resolve(walletAccount);
                 })
               .catch(reason => {
                 reject("QueryWalletAccountDetails error : " + reason);
-              })
-              .finally(() => {
-                cnx.stop();
-              })
-          }).catch(reason => {
-            reject("Connection error : " + reason);
+              });
           })
-        });
       }
 
       callQueryWalletSynced(chainType: number) {
         return new Promise<boolean>((resolve, reject) => {
-          const cnx = this.connection;
-    
-          cnx.start().then(() => {
+
             this.logEvent("QueryWalletSynced - call", { 'chainType': chainType });
-            cnx.invoke<boolean>("QueryWalletSynced", chainType)
+            this.connection.invoke<boolean>("QueryWalletSynced", chainType)
               .then(
                 response => {
                   this.logEvent("QueryWalletSynced - response", response);
@@ -173,23 +131,15 @@ export class WalletCall extends CommonCall {
                 })
               .catch(reason => {
                 reject("QueryWalletSynced error : " + reason);
-              })
-              .finally(() => {
-                cnx.stop();
-              })
-          }).catch(reason => {
-            reject("Connection error : " + reason);
-          })
-        });
+              });
+          });
       }
 
       callIsWalletLoaded(chainType: number) {
         return new Promise<boolean>((resolve, reject) => {
-          const cnx = this.connection;
-    
-          cnx.start().then(() => {
+
             this.logEvent("isWalletLoaded - call", { 'chainType': chainType });
-            cnx.invoke<boolean>("isWalletLoaded", chainType)
+            this.connection.invoke<boolean>("IsWalletLoaded", chainType)
               .then(
                 response => {
                   this.logEvent("isWalletLoaded - response", response);
@@ -197,23 +147,15 @@ export class WalletCall extends CommonCall {
                 })
               .catch(reason => {
                 reject("IsWalletLoaded error : " + reason);
-              })
-              .finally(() => {
-                cnx.stop();
-              })
-          }).catch(reason => {
-            reject("Connection error : " + reason);
-          })
-        });
+              });
+          });
       }
 
       callWalletExists(chainType: number) {
         return new Promise<boolean>((resolve, reject) => {
-          const cnx = this.connection;
-    
-          cnx.start().then(() => {
+
             this.logEvent("walletExists - call", { 'chainType': chainType });
-            cnx.invoke<boolean>("walletExists", chainType)
+            this.connection.invoke<boolean>("WalletExists", chainType)
               .then(
                 response => {
                   this.logEvent("walletExists - response", response);
@@ -221,23 +163,15 @@ export class WalletCall extends CommonCall {
                 })
               .catch(reason => {
                 reject("WalletExists error : " + reason);
-              })
-              .finally(() => {
-                cnx.stop();
-              })
-          }).catch(reason => {
-            reject("Connection error : " + reason);
-          })
-        });
+              });
+          });
       }
 
       callLoadWallet(chainType: number) {
         return new Promise<number>((resolve, reject) => {
-          const cnx = this.connection;
-    
-          cnx.start().then(() => {
+
             this.logEvent("loadWallet - call", { 'chainType': chainType });
-            cnx.invoke<number>("loadWallet", chainType)
+            this.connection.invoke<number>("LoadWallet", chainType)
               .then(
                 response => {
                   this.logEvent("loadWallet - response", response);
@@ -245,23 +179,15 @@ export class WalletCall extends CommonCall {
                 })
               .catch(reason => {
                 reject("LoadWallet error : " + reason);
-              })
-              .finally(() => {
-                cnx.stop();
-              })
-          }).catch(reason => {
-            reject("Connection error : " + reason);
-          })
-        });
+              });
+          });
       }
 
       callIsWalletSynced(chainType: number) {
         return new Promise<boolean>((resolve, reject) => {
-          const cnx = this.connection;
-    
-          cnx.start().then(() => {
+
             this.logEvent("isWalletSynced - call", { 'chainType': chainType });
-            cnx.invoke<boolean>("IsWalletSynced", chainType)
+            this.connection.invoke<boolean>("IsWalletSynced", chainType)
               .then(
                 response => {
                   this.logEvent("isWalletSynced - response", response);
@@ -269,13 +195,7 @@ export class WalletCall extends CommonCall {
                 })
               .catch(reason => {
                 reject("isWalletSynced error : " + reason);
-              })
-              .finally(() => {
-                cnx.stop();
-              })
-          }).catch(reason => {
-            reject("Connection error : " + reason);
-          })
-        });
+              });
+          });
       }
 }

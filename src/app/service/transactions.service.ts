@@ -30,7 +30,7 @@ export class TransactionsService {
       this.blockchainId = blockchain.id;
       this.serverConnectionService.callQueryChainStatus(blockchain.id).then(chainStatus => {
         if (chainStatus != void (0)) {
-          this.minRequiredPeerCount = chainStatus["minRequiredPeerCount"];
+          this.minRequiredPeerCount = chainStatus["MinRequiredPeerCount"];
           this.updateCanSendTransaction();
         }
       })
@@ -39,7 +39,7 @@ export class TransactionsService {
     this.walletService.getWallet().subscribe(wallet => {
       this.walletId = wallet.id;
       if (wallet.accounts != void (0) && wallet.accounts.length > 0) {
-        this.accountId = wallet.accounts.filter(account => account.isActive)[0].accountUuid;
+        this.accountId = wallet.accounts.filter(account => account.IsActive)[0].AccountUuid;
       }
       else {
         this.accountId = undefined;

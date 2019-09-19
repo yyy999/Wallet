@@ -19,11 +19,9 @@ export class ServerCall extends CommonCall {
 
     callServerShutdown(): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
-          const cnx = this.connection;
-    
-          cnx.start().then(() => {
+
             this.logEvent("shutdown - call", null);
-            cnx.invoke<boolean>("shutdown")
+            this.connection.invoke<boolean>("Shutdown")
               .then(
                 response => {
                   this.logEvent("shutdown - response", response);
@@ -31,23 +29,15 @@ export class ServerCall extends CommonCall {
                 })
               .catch(reason => {
                 reject("shutdown error : " + reason);
-              })
-              .finally(() => {
-                cnx.stop();
-              })
-          }).catch(reason => {
-            reject("Connection error : " + reason);
-          })
-        })
+              });
+          });
       }
 
       callQuerySystemVersion() {
         return new Promise<SystemInfo>((resolve, reject) => {
-          const cnx = this.connection;
-    
-          cnx.start().then(() => {
+
             this.logEvent("QuerySystemInfo - call", null);
-            cnx.invoke<SystemInfo>("QuerySystemInfo")
+            this.connection.invoke<SystemInfo>("QuerySystemInfo")
               .then(
                 response => {
                   this.logEvent("QuerySystemInfo - response", response);
@@ -55,23 +45,15 @@ export class ServerCall extends CommonCall {
                 })
               .catch(reason => {
                 reject("QuerySystemInfo error : " + reason);
-              })
-              .finally(() => {
-                cnx.stop();
-              })
-          }).catch(reason => {
-            reject("Connection error : " + reason);
-          })
-        });
+              });
+          });
       }
 
       callQueryTotalConnectedPeersCount() {
         return new Promise<number>((resolve, reject) => {
-          const cnx = this.connection;
-    
-          cnx.start().then(() => {
+
             this.logEvent("QueryTotalConnectedPeersCount - call", null);
-            cnx.invoke<number>("QueryTotalConnectedPeersCount")
+            this.connection.invoke<number>("QueryTotalConnectedPeersCount")
               .then(
                 response => {
                   this.logEvent("QueryTotalConnectedPeersCount - response", response);
@@ -79,23 +61,15 @@ export class ServerCall extends CommonCall {
                 })
               .catch(reason => {
                 reject("QueryTotalConnectedPeersCount error : " + reason);
-              })
-              .finally(() => {
-                cnx.stop();
-              })
-          }).catch(reason => {
-            reject("Connection error : " + reason);
-          })
-        });
+              });
+          });
       }
 
       callCompleteLongRunningEvent(correlationId: number) {
         return new Promise<boolean>((resolve, reject) => {
-          const cnx = this.connection;
-    
-          cnx.start().then(() => {
+
             this.logEvent("completeLongRunningEvent - call", { 'correlationId': correlationId });
-            cnx.invoke<boolean>("completeLongRunningEvent", correlationId)
+            this.connection.invoke<boolean>("CompleteLongRunningEvent", correlationId)
               .then(
                 response => {
                   this.logEvent("completeLongRunningEvent - response", response);
@@ -103,23 +77,15 @@ export class ServerCall extends CommonCall {
                 })
               .catch(reason => {
                 reject("CompleteLongRunningEvent error : " + reason);
-              })
-              .finally(() => {
-                cnx.stop();
-              })
-          }).catch(reason => {
-            reject("Connection error : " + reason);
-          })
-        });
+              });
+          });
       }
 
       callRenewLongRunningEvent(correlationId: number) {
         return new Promise<boolean>((resolve, reject) => {
-          const cnx = this.connection;
-    
-          cnx.start().then(() => {
+
             this.logEvent("renewLongRunningEvent - call", { 'correlationId': correlationId });
-            cnx.invoke<boolean>("renewLongRunningEvent", correlationId)
+            this.connection.invoke<boolean>("RenewLongRunningEvent", correlationId)
               .then(
                 response => {
                   this.logEvent("renewLongRunningEvent - response", response);
@@ -127,13 +93,7 @@ export class ServerCall extends CommonCall {
                 })
               .catch(reason => {
                 reject("RenewLongRunningEvent error : " + reason);
-              })
-              .finally(() => {
-                cnx.stop();
-              })
-          }).catch(reason => {
-            reject("Connection error : " + reason);
-          })
-        });
+              });
+          });
       }
 }

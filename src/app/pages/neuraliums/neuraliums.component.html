@@ -1,7 +1,7 @@
 <app-page-title [title]="title" [icon]="icon" showNeuraliumsTotal="true" helpMessage="neuralium.Explain"></app-page-title>
 <mat-tab-group>
-    <mat-tab *ngIf="hasCurrentAccount && currentAccount.isActive ">
-        <!-- && currentAccount.status == 3 -->
+    <mat-tab *ngIf="hasCurrentAccount && currentAccount.IsActive ">
+        <!-- && currentAccount.Status == 3 -->
         <ng-template mat-tab-label>
             <img src="./assets/img/mine_icon_s.png" class="img-fluid" />&nbsp; {{ 'mining.Mining' | translate }}
         </ng-template>
@@ -9,7 +9,7 @@
         <div class="row item">
           <div class="item" style="width: 40%">
             <mat-card *ngIf="currentAccount" style="margin-bottom:1em;">
-              {{ 'account.CurrentAccount' | translate }} : <span class="textHighlight">{{currentAccount.accountId}}</span>
+              {{ 'account.CurrentAccount' | translate }} : <span class="textHighlight">{{currentAccount.AccountId}}</span>
             </mat-card>
             <mat-card style="flex-grow:1;">
               <mat-card-title>{{ 'mining.Mining' | translate }}&nbsp;<app-help-icon [message]="'mining.Explain'"></app-help-icon></mat-card-title>
@@ -36,7 +36,7 @@
         <img src="./assets/img/debit_icon.png" class="img-fluid" />&nbsp; {{ 'send.Title' | translate }}
     </ng-template>
     <div class="container-centered">
-      <app-send-neuraliums [neuraliumTotal]="neuraliumTotal" [currentAccountUuId]="currentAccount.accountUuId"
+      <app-send-neuraliums [neuraliumTotal]="neuraliumTotal" [currentAccountUuId]="currentAccount.AccountUuId"
         (neuraliumsSent)="neuraliumsSent($event)"></app-send-neuraliums>
 
     </div>

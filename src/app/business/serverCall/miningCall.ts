@@ -19,11 +19,9 @@ export class MiningCall extends CommonCall {
 
   callStartMining(chainType: number, delegateAccountId: string) {
     return new Promise<boolean>((resolve, reject) => {
-      const cnx = this.connection;
 
-      cnx.start().then(() => {
         this.logEvent("StartMining - call", { 'chainType': chainType, 'delegateAccountId': delegateAccountId });
-        cnx.invoke<boolean>("startMining", chainType, delegateAccountId)
+        this.connection.invoke<boolean>("StartMining", chainType, delegateAccountId)
           .then(
             response => {
               this.logEvent("StartMining - response", response);
@@ -31,23 +29,15 @@ export class MiningCall extends CommonCall {
             })
           .catch(reason => {
             reject("StartMining error : " + reason);
-          })
-          .finally(() => {
-            cnx.stop();
-          })
-      }).catch(reason => {
-        reject("Connection error : " + reason);
-      })
-    });
+          });
+      });
   }
 
   callStopMining(chainType: number) {
     return new Promise<boolean>((resolve, reject) => {
-      const cnx = this.connection;
-
-      cnx.start().then(() => {
+  
         this.logEvent("StopMining - call", { 'chainType': chainType });
-        cnx.invoke<boolean>("stopMining", chainType)
+        this.connection.invoke<boolean>("StopMining", chainType)
           .then(
             response => {
               this.logEvent("StopMining - response", response);
@@ -55,23 +45,15 @@ export class MiningCall extends CommonCall {
             })
           .catch(reason => {
             reject("StopMining error : " + reason);
-          })
-          .finally(() => {
-            cnx.stop();
-          })
-      }).catch(reason => {
-        reject("Connection error : " + reason);
-      })
-    });
+          });
+      });
   }
 
   callIsMiningEnabled(chainType: number) {
     return new Promise<boolean>((resolve, reject) => {
-      const cnx = this.connection;
 
-      cnx.start().then(() => {
         this.logEvent("IsMiningEnabled - call", { 'chainType': chainType });
-        cnx.invoke<boolean>("IsMiningEnabled", chainType)
+        this.connection.invoke<boolean>("IsMiningEnabled", chainType)
           .then(
             response => {
               this.logEvent("IsMiningEnabled - response", response);
@@ -79,33 +61,25 @@ export class MiningCall extends CommonCall {
             })
           .catch(reason => {
             reject("IsMiningEnabled error : " + reason);
-          })
-          .finally(() => {
-            cnx.stop();
-          })
-      }).catch(reason => {
-        reject("Connection error : " + reason);
-      })
-    });
+          });
+      });
   }
 
   callQueryMiningHistory(chainType: number) {
     return new Promise<Array<MiningHistory>>((resolve, reject) => {
-      const cnx = this.connection;
 
-      cnx.start().then(() => {
         this.logEvent("QueryMiningHistory - call", { 'chainType': chainType });
-        cnx.invoke<Array<object>>("QueryMiningHistory", chainType)
+        this.connection.invoke<Array<object>>("QueryMiningHistory", chainType)
           .then(
             response => {
               this.logEvent("QueryMiningHistory - response", response);
               var miningHistoryList = new Array<MiningHistory>();
               response.forEach(miningHistory => {
                 try {
-                  var blockId = <number>miningHistory["blockId"];
-                  var transactionIds = <Array<string>>miningHistory["transactionIds"];
-                  var bountyShare = <number>miningHistory["bountyShare"];
-                  var transactionTips = <number>miningHistory["transactionTips"];
+                  var blockId = <number>miningHistory["BlockId"];
+                  var transactionIds = <Array<string>>miningHistory["TransactionIds"];
+                  var bountyShare = <number>miningHistory["BountyShare"];
+                  var transactionTips = <number>miningHistory["TransactionTips"];
                   miningHistoryList.push(MiningHistory.create(blockId, transactionIds, bountyShare, transactionTips));
                 } catch (error) {
                   this.logEvent("Cannot use mining hitory data.", miningHistory);
@@ -115,14 +89,8 @@ export class MiningCall extends CommonCall {
             })
           .catch(reason => {
             reject("QueryMiningHistory error : " + reason);
-          })
-          .finally(() => {
-            cnx.stop();
-          })
-      }).catch(reason => {
-        reject("Connection error : " + reason);
-      })
-    });
+          });
+      });
   }
 
   

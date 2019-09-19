@@ -8,6 +8,8 @@ import { TotalNeuralium } from '../..//model/total-neuralium';
 import { MatDialog } from '@angular/material';
 import { TransactionsService } from '../..//service/transactions.service';
 import { NotificationService } from '../..//service/notification.service';
+import { AccountsService } from '../..//service/accounts.service';
+
 
 @Component({
   selector: 'app-send-neuraliums',
@@ -35,6 +37,7 @@ export class SendNeuraliumsComponent implements OnInit {
     private contactsService: ContactsService,
     private transactionService: TransactionsService,
     private notificationService: NotificationService,
+    private accountService: AccountsService,
     public dialog: MatDialog) { }
 
   ngOnInit() {
@@ -64,23 +67,24 @@ export class SendNeuraliumsComponent implements OnInit {
   }
 
   get contactSelected() {
-    return this.selectedContact != void (0) && this.selectedContact.id !== "" && this.selectedContact.id !== null;
+    return this.selectedContact && this.selectedContact.id !== "" && this.selectedContact.id !== null;
   }
 
   sendTransaction() {
-    var destId: string = null;
+    var accountId: string = null;
     this.sendDisabled = true;
 
-    if (this.selectedContact != void (0)) {
-      destId = this.selectedContact.id;
+    if (this.selectedContact) {
+      accountId = this.selectedContact.id;
     }
-    else if (this.selectedContactManual != void (0)) {
-      destId = this.selectedContactManual;
+  
+    if (!accountId && this.selectedContactManual) {
+      accountId = this.selectedContactManual;
     }
 
     var isValid: boolean = true;
 
-    if (destId == null) {
+    if (!accountId) {
       isValid = false;
       var message = this.translateService.instant('send.PleaseChooseContactInTheListOrInputContactId');
       this.notificationService.showError(message);
@@ -95,7 +99,7 @@ export class SendNeuraliumsComponent implements OnInit {
     
 
     var finalFees: number = 0;
-    if (this.fees == void (0)) {
+    if (!this.fees) {
       finalFees = 0;
     }
     else {
@@ -118,17 +122,22 @@ export class SendNeuraliumsComponent implements OnInit {
 
     if (isValid) {
       var message = this.translateService.instant("send.PleaseConfirmSending");
-      if (this.selectedContact != void (0)) {
+
+      
+      accountId = this.accountService.FormatAccountId(accountId);
+
+
+      if (this.selectedContact && this.selectedContact.id) {
         var name = this.selectedContact.friendlyName;
-        this.translateService.get("send.SendingValueConfirmationWithName", { neuraliums : this.neuraliums,name:name, id: destId }).subscribe(messagePart =>{
+        this.translateService.get("send.SendingValueConfirmationWithName", { neuraliums : this.neuraliums,name:name, id: accountId }).subscribe(messagePart =>{
           message += " " + messagePart;
-          this.send(destId,this.neuraliums, finalFees,message);
+          this.send(accountId,this.neuraliums, finalFees,message);
         })
       }
       else{
-        this.translateService.get("send.SendingValueConfirmation", { neuraliums : this.neuraliums, id: destId }).subscribe(messagePart =>{
+        this.translateService.get("send.SendingValueConfirmation", { neuraliums : this.neuraliums, id: accountId }).subscribe(messagePart =>{
           message += " " + messagePart;
-          this.send(destId,this.neuraliums, finalFees,message);
+          this.send(accountId,this.neuraliums, finalFees,message);
         })
       }
     }

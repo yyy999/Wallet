@@ -18,11 +18,9 @@ export class AccountCall extends CommonCall {
 
     callSetActiveAccount(chainType: number, accountUuid: string): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
-          const cnx = this.connection;
-    
-          cnx.start().then(() => {
+
             this.logEvent("SetActiveAccount - call", { chainType, accountUuid });
-            cnx.invoke<boolean>("setActiveAccount", chainType, accountUuid)
+            this.connection.invoke<boolean>("SetActiveAccount", chainType, accountUuid)
               .then(
                 response => {
                   this.logEvent("setActiveAccount - response", response);
@@ -30,23 +28,16 @@ export class AccountCall extends CommonCall {
                 })
               .catch(reason => {
                 reject("setActiveAccount error : " + reason);
-              })
-              .finally(() => {
-                cnx.stop();
-              })
-          }).catch(reason => {
-            reject("Connection error : " + reason);
-          })
-        })
+              });
+          });
+
       }
 
       callPublishAccount(chainType: number, accountUuId: string) {
         return new Promise<number>((resolve, reject) => {
-          const cnx = this.connection;
-    
-          cnx.start().then(() => {
+
             this.logEvent("publishAccount - call", { 'chainType': chainType, 'accountUuId': accountUuId });
-            cnx.invoke<number>("PublishAccount", chainType, accountUuId)
+            this.connection.invoke<number>("PublishAccount", chainType, accountUuId)
               .then(
                 response => {
                   this.logEvent("publishAccount - response", response);
@@ -54,13 +45,7 @@ export class AccountCall extends CommonCall {
                 })
               .catch(reason => {
                 reject("publishAccount error : " + reason);
-              })
-              .finally(() => {
-                cnx.stop();
-              })
-          }).catch(reason => {
-            reject("Connection error : " + reason);
-          })
-        });
+              });
+          });
       }
 }

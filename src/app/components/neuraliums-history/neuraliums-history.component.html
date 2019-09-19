@@ -10,7 +10,7 @@
             <tr>
                 <td colspan="3" style="padding-bottom:1em;">
                     <div class="center-content black-line">
-                        <span class="period-day">{{period.day | formatTimelineDate}}</span>
+                        <span class="period-day">{{period.Day | formatTimelineDate}}</span>
                     </div>
                 </td>
             </tr>
@@ -19,12 +19,12 @@
                     <div class="center-content">
                         <span class="period-total vertical-align">
                             <img src="./assets/img/neuralium_icon.png"
-                                class="img-fluid" />{{period.endingTotal | formatNeuralium}}
+                                class="img-fluid" />{{period.EndingTotal | formatNeuralium}}
                         </span>
                     </div>
                 </td>
             </tr>
-            <tr *ngFor="let item of period.entries"
+            <tr *ngFor="let item of period.Entries"
                 [ngClass]="{ 'debit': isDebit(item), 'credit': isCredit(item), 'mining': isMining(item)}">
 
                 <td *ngIf="isMining(item) || isCredit(item)" style="width:45%;"></td>
@@ -34,7 +34,7 @@
                 </td>
 
                 <td style="width:45%;margin-bottom:5px;" >
-                    <div [@sizeChange]="item.lightState" class="content-light vertical-align" (click)="showTransaction(item)">
+                    <div [@sizeChange]="item.LightState" class="content-light vertical-align" (click)="showTransaction(item)">
                         <div class="icon">
             
                                 <img *ngIf="isDebit(item)" src="./assets/img/debit_icon_c.png" class="img-fluid" />
@@ -42,24 +42,24 @@
                                 <img *ngIf="isMining(item)" src="./assets/img/mine_icon_s.png" class="img-fluid" />
                        
                         </div>
-                        <div class="time">{{item.timestamp | formatTimelineTime}}</div>
+                        <div class="time">{{item.Timestamp | formatTimelineTime}}</div>
                         <div class="account" *ngIf="isDebit(item) || isCredit(item)">
-                            <span *ngIf="isDebit(item)">{{item.recipientAccountId | formatAccountNumber}}
-                                {{getAccountName(item.recipientAccountId)}}</span>
-                            <span *ngIf="isCredit(item)">{{item.senderAccountId | formatAccountNumber}}
-                                {{getAccountName(item.senderAccountId)}}</span>
+                            <span *ngIf="isDebit(item)">{{item.RecipientAccountId | formatAccountNumber}}
+                                {{getAccountName(item.RecipientAccountId)}}</span>
+                            <span *ngIf="isCredit(item)">{{item.SenderAccountId | formatAccountNumber}}
+                                {{getAccountName(item.SenderAccountId)}}</span>
                         </div>
                         <div class="neuraliums vertical-align"><img src="./assets/img/neuralium_icon.png"
-                                class="img-fluid" />{{item.amount | formatNeuralium}}</div>
+                                class="img-fluid" />{{item.Amount | formatNeuralium}}</div>
                         <div class="tip vertical-align"><img src="./assets/img/tips_icon.png"
-                                class="img-fluid" />{{item.tips | formatNeuralium}}</div>
+                                class="img-fluid" />{{item.Tips | formatNeuralium}}</div>
                     </div>
 
-                    <div [@sizeChange]="item.detailsState" class="content-full" (click)="hideTransaction(item)">
-                        <table *ngIf="item.showTransaction">
+                    <div [@sizeChange]="item.DetailsState" class="content-full" (click)="hideTransaction(item)">
+                        <table *ngIf="item.ShowTransaction">
                             <tr>
                                 <td><strong>Transaction ID :</strong></td>
-                                <td colspan="4">{{item.transaction.id}}</td>
+                                <td colspan="4">{{item.Transaction.id}}</td>
                                 <td style="width: 30px;" rowspan="6">
                                     <div class="icon">
                                             <img *ngIf="isDebit(item)" src="./assets/img/debit_icon_c.png"
@@ -71,23 +71,23 @@
                             </tr>
                             <tr>
                                 <td><strong>Sent To :</strong></td>
-                                <td>{{item.transaction.recipient | formatAccountNumber}}</td>
+                                <td>{{item.Transaction.recipient | formatAccountNumber}}</td>
                                 <td><strong>Amount :</strong></td>
-                                <td>{{item.transaction.amount | formatNeuralium}}</td>
+                                <td>{{item.Transaction.Amount | formatNeuralium}}</td>
                             </tr>
                             <tr>
                                 <td><strong>Datetime :</strong></td>
-                                <td>{{item.transaction.date | formatDateWithTime}}</td>
+                                <td>{{item.Transaction.date | formatDateWithTime}}</td>
                                 <td><strong>Tips :</strong></td>
-                                <td>{{item.transaction.tip | formatNeuralium}}</td>
+                                <td>{{item.Transaction.Tip | formatNeuralium}}</td>
                             </tr>
                             <tr>
                                 <td><strong>Total :</strong></td>
-                                <td colspan="4">{{item.transaction.total | formatNeuralium}}</td>
+                                <td colspan="4">{{item.Transaction.total | formatNeuralium}}</td>
                             </tr>
                             <tr>
                                 <td><strong>Note :</strong></td>
-                                <td colspan="4">{{item.transaction.note }}</td>
+                                <td colspan="4">{{item.Transaction.note }}</td>
                             </tr>
                         </table>
                     </div>

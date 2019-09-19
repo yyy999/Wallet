@@ -12,7 +12,7 @@
         </div>
       </mat-card>
       <mat-card class="half-card" style="margin: 10px;height: 205px;padding:10px;">
-        <span style="display: block;">Port 33888 connectable: {{isConnectable}}</span>
+        <span style="display: block;">{{isConnectable ? ('mining.PortConnectable' | translate) : ('mining.PortNotConnectable' | translate)}}</span>
         <div *ngIf="isConnectable !== true"> <span class="port-notice">{{ 'mining.Miningportalert' | translate }}</span></div>
        
       </mat-card>

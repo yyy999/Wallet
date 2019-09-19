@@ -40,7 +40,7 @@
 
     <mat-card *ngIf="hasCurrentAccount" class="item">
       <mat-card-title>{{ 'account.CurrentAccount' | translate }} <span
-          class="textHighlight">{{currentAccount.accountId}}</span></mat-card-title>
+          class="textHighlight">{{currentAccount.AccountId}}</span></mat-card-title>
       <mat-card-content>
         <mat-divider></mat-divider>
         <app-account-details class="item" [account]="currentAccount" [isCurrent]="true"></app-account-details>
