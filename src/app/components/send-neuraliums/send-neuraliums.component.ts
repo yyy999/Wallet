@@ -27,7 +27,7 @@ export class SendNeuraliumsComponent implements OnInit {
   selectedContact: Contact;
   selectedContactManual: string;
   neuraliums: number = 0;
-  fees: number = 0;
+  tip: number = 0;
   note:string;
 
   canSendTransaction:boolean = false;
@@ -61,7 +61,7 @@ export class SendNeuraliumsComponent implements OnInit {
     this.selectedContact = null;
     this.selectedContactManual = null;
     this.neuraliums = 0;
-    this.fees = 0;
+    this.tip = 0;
     this.note = null;
     this.sendDisabled = false;
   }
@@ -99,11 +99,11 @@ export class SendNeuraliumsComponent implements OnInit {
     
 
     var finalFees: number = 0;
-    if (!this.fees) {
+    if (!this.tip) {
       finalFees = 0;
     }
     else {
-      finalFees = this.fees;
+      finalFees = this.tip;
     }
 
     if (finalFees < 0) {
@@ -146,8 +146,8 @@ export class SendNeuraliumsComponent implements OnInit {
     }
   }
 
-  private send(targetAccountId: string, neuraliums: number, fees: number, confirmMessage: string) {
-    var total = neuraliums + fees;
+  private send(targetAccountId: string, neuraliums: number, tip: number, confirmMessage: string) {
+    var total = neuraliums + tip;
     setTimeout(() => {
       let dialogRef = this.dialog.open(ConfirmDialogComponent, {
         width: '650px',
@@ -156,7 +156,7 @@ export class SendNeuraliumsComponent implements OnInit {
 
       dialogRef.afterClosed().subscribe(dialogResult => {
         if (dialogResult == DialogResult.Yes) {
-          this.transactionService.saveTransaction(targetAccountId, neuraliums, fees, this.note)
+          this.transactionService.saveTransaction(targetAccountId, neuraliums, tip, this.note)
             .then(() => {
               this.neuraliumsSent.emit(total);
               setTimeout(() => {

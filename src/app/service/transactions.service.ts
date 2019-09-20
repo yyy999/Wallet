@@ -89,13 +89,17 @@ export class TransactionsService {
     return this.serverConnectionService.callQueryTransationHistoryDetails(this.blockchainId, this.accountId, transactionId);
   }
 
-  saveTransaction(targetAccountId: string, amount: number, fees: number, note: string): Promise<boolean> {
+  saveTransaction(targetAccountId: string, amount: number, tip: number, note: string): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       if (!this.canSendTransaction) {
         reject("Can't send transaction. Not enough peer. Need at least " + this.minRequiredPeerCount + " peer.");
       }
       else {
-        this.serverConnectionService.callSendNeuraliums(targetAccountId, amount, fees, note).then(() => {
+
+        if(!note){
+          note = "";
+        }
+        this.serverConnectionService.callSendNeuraliums(targetAccountId, amount, tip, note).then(() => {
           this.refrechTransactions();
           resolve(true);
         }).catch(reason => {

@@ -345,9 +345,9 @@ getMessages(): Array<ServerMessage> {
     return service.callPublishAccount(chainType, accountUuId);
   }
 
-  callSendNeuraliums(targetAccountId: string, amount: number, fees: number, note: string) {
+  callSendNeuraliums(targetAccountId: string, amount: number, tip: number, note: string) {
     var service = NeuraliumCall.create(this.connection, this.logService);
-    return service.callSendNeuraliums(targetAccountId, amount, fees, note);
+    return service.callSendNeuraliums(targetAccountId, amount, tip, note);
   }
 
   callQueryAccountTotalNeuraliums(accountUuid: string) {
@@ -1079,13 +1079,14 @@ getMessages(): Array<ServerMessage> {
         .withHubProtocol(new MessagePackHubProtocol())
         .build();
 
-        this.cnx.serverTimeoutInMilliseconds = 3 * 60 * 1000;
-        this.cnx.keepAliveIntervalInMilliseconds = 15 * 1000;
+        this.cnx.serverTimeoutInMilliseconds = 60 * 1000;
+        this.cnx.keepAliveIntervalInMilliseconds = 30 * 1000;
     }
 
     this.cnx.onclose(() => {
       this.logService.logDebug(" Connection Closed", {  });
       this.notifyServerConnectionStatusIfNeeded(false);
+      this.isConnecting = false;
       this.beginConnection();
     });
     

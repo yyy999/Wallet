@@ -29,6 +29,9 @@ export class DashboardComponent implements OnInit {
   walletAccounts: Array<WalletAccount> = [];
   currentAccount: WalletAccount;
 
+  private walletDialogOpen: boolean = false;
+  private createLoadDialogOpen: boolean = false;
+
   constructor(
     private translateService: TranslateService,
     private walletService: WalletService,
@@ -106,21 +109,52 @@ export class DashboardComponent implements OnInit {
 
 
   askCreateOrCopyWallet() {
-    setTimeout(() => {
-      let dialogRef = this.dialog.open(AskOrCreateWalletDialogComponent, {
-        width: '450px'
+    if (!this.walletDialogOpen && !this.createLoadDialogOpen) {
+      this.createLoadDialogOpen = true;
+      setTimeout(() => {
+        const dialogRef = this.dialog.open(AskOrCreateWalletDialogComponent, {
+          width: '450px'
+        });
+        dialogRef.afterClosed().subscribe(dialogResult => {
+          this.createLoadDialogOpen = false;
+          if (dialogResult == DialogResult.CreateWallet) {
+            setTimeout(() => {
+              this.showCreateWalletDialog();
+            }, 1000);
+          }
+          else {
+            this.initialise();
+          }
+        })
       });
-      dialogRef.afterClosed().subscribe(dialogResult => {
-        if (dialogResult == DialogResult.CreateWallet) {
-          setTimeout(() => {
-            this.showCreateWalletDialog();
-          }, 1000);
-        }
-        else {
-          this.initialise();
-        }
-      })
-    });
+    }
+  }
+
+
+  showCreateWalletDialog() {
+
+    if (!this.walletDialogOpen) {
+      this.walletDialogOpen = true;
+      setTimeout(() => {
+        const dialogRef = this.dialog.open(CreateWalletProcessDialogComponent, {
+          width: '750px'
+        });
+        dialogRef.afterClosed().subscribe(dialogResult => {
+          this.walletDialogOpen = false;
+          if (dialogResult == DialogResult.Cancel) {
+            this.initialise();
+          }
+          else if (dialogResult == DialogResult.WalletCreated) {
+            setTimeout(() => {
+              this.walletService.refreshWallet(this.blockchainService.getCurrentBlockchain().id);
+            }, 100);
+          }
+          else if (dialogResult != "") {
+            this.publishAccount(dialogResult);
+          }
+        });
+      });
+    }
   }
 
   tryLoadWalletFromServer(blockchainId: number): Promise<boolean> {
@@ -161,30 +195,5 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  private walletDialogOpen:boolean = false;
-  showCreateWalletDialog() {
 
-    if(!this.walletDialogOpen){
-      this.walletDialogOpen = true;
-      setTimeout(() => {
-        const dialogRef = this.dialog.open(CreateWalletProcessDialogComponent, {
-          width: '750px'
-        });
-        dialogRef.afterClosed().subscribe(dialogResult => {
-          this.walletDialogOpen = false;
-          if (dialogResult == DialogResult.Cancel) {
-            this.initialise();
-          }
-          else if (dialogResult == DialogResult.WalletCreated) {
-            setTimeout(() => {
-              this.walletService.refreshWallet(this.blockchainService.getCurrentBlockchain().id);
-            }, 100);
-          }
-          else if (dialogResult != "") {
-            this.publishAccount(dialogResult);
-          }
-        });
-      });
-  }
-  }
 }

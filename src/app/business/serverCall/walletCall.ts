@@ -22,7 +22,7 @@ export class WalletCall extends CommonCall {
         return new Promise<number>((resolve, reject) => {
 
             this.logEvent("callCreateNewWallet - call", { 'chainType': chainType, 'wallet': wallet });
-            this.connection.invoke<number>("CreateNewWallet", chainType, wallet.friendlyName, wallet.encryptWallet, wallet.encryptKey, wallet.encryptKeysIndividualy, wallet.passPhrasesAsDictionary, wallet.publishAccount)
+            this.connection.invoke<number>("CreateNewWallet", chainType, wallet.friendlyName, wallet.encryptWallet, wallet.encryptKey, wallet.encryptKeysIndividualy, wallet.passPhrases, wallet.publishAccount)
               .then(
                 response => {
                   this.logEvent("callCreateNewWallet - response", response);
@@ -70,7 +70,7 @@ export class WalletCall extends CommonCall {
         return new Promise<Array<WalletAccount>>((resolve, reject) => {
  
             this.logEvent("queryWalletAccounts - call", { 'chainType': chainType });
-            this.connection.invoke<Array<WalletAccount>>("queryWalletAccounts", chainType)
+            this.connection.invoke<Array<WalletAccount>>("QueryWalletAccounts", chainType)
               .then(
                 response => {
                   this.logEvent("queryWalletAccounts - response", response);

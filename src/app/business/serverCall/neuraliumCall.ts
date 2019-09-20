@@ -39,11 +39,11 @@ export class NeuraliumCall extends CommonCall {
             });
     }
 
-    callSendNeuraliums(targetAccountId: string, amount: number, fees: number, note: string = ""): Promise<number> {
+    callSendNeuraliums(targetAccountId: string, amount: number, tip: number, note: string = ""): Promise<number> {
         return new Promise<number>((resolve, reject) => {
 
-                this.logEvent("sendNeuraliums - call", { 'targetAccountId': targetAccountId, 'amount': amount, 'fees': fees });
-                this.connection.invoke<number>("SendNeuraliums", targetAccountId, amount, fees, note)
+                this.logEvent("sendNeuraliums - call", { 'targetAccountId': targetAccountId, 'amount': amount, 'tip': tip });
+                this.connection.invoke<number>("SendNeuraliums", targetAccountId, amount.toString(), tip.toString(), note)
                     .then(
                         response => {
                             this.logEvent("sendNeuraliums - response", response);

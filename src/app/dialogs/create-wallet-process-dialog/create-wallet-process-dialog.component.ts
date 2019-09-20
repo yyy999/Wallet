@@ -11,12 +11,12 @@ import { DialogResult } from '../..//config/dialog-result';
 import { TranslateService } from '@ngx-translate/core';
 import { EventTypes } from '../..//model/serverConnectionEvent';
 
-const WALLET_KEY = 0;
-const ALL_KEYS = 1;
-const TRANSACTION_KEY = 1;
-const MESSAGE_KEY = 2;
-const CHANGE_KEY = 3;
-const SUPER_KEY = 4;
+const WALLET_KEY:string = '0';
+const ALL_KEYS:string = '1';
+const TRANSACTION_KEY:string = '1';
+const MESSAGE_KEY:string = '2';
+const CHANGE_KEY:string = '3';
+const SUPER_KEY:string = '4';
 
 @Component({
   selector: 'app-create-wallet-process-dialog',
@@ -219,13 +219,13 @@ export class CreateWalletProcessDialogComponent implements OnInit {
     return isValid;;
   }
 
-  passPhraseValid(index: number) {
+  passPhraseValid(index: string) {
     if (this.walletToCreate != void (0)) {
       return !this.isNullOrEmpty(this.walletToCreate.passPhrases[index]) && this.passPhraseConfirmed(index);
     }
   }
 
-  passPhraseConfirmed(index: number) {
+  passPhraseConfirmed(index: string) {
     if (this.walletToCreate != void (0)) {
       return this.walletToCreate.passPhrases[index] == this.passPhrasesConfirm[index];
     }

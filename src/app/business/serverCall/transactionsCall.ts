@@ -34,8 +34,8 @@ export class TransactionsCall extends CommonCall {
                       var date = new Date(transaction["Timestamp"]);
                       var status = <TransactionStatuses>transaction["Status"];
                       var version = <TransactionVersion>transaction["Version"];
-                      var amount = <number>transaction["Amount"];
-                      var tip = <number>transaction["Tip"];
+                      var amount = <number>Number(transaction["Amount"]);
+                      var tip = <number>Number(transaction["Tip"]);
                       var local = <boolean>transaction["Local"];
                       var note = transaction["Note"];
                       var recipient = transaction["Recipient"];
@@ -70,8 +70,8 @@ export class TransactionsCall extends CommonCall {
                       var details = JSON.parse(response["Contents"]);//{details:"détails to show"};
                       var status = <TransactionStatuses>response["Status"];
                       var version = <TransactionVersion>response["Version"];
-                      var amount = <number>response["Amount"];
-                      var tip = <number>response["Tip"];
+                      var amount = <number>Number(response["Amount"]);
+                      var tip = <number>Number(response["Tip"]);
                       var local = <boolean>response["Local"];
                       var note = response["Note"];
                       var recipient = response["Recipient"];

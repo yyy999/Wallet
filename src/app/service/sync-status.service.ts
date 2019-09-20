@@ -88,10 +88,10 @@ export class SyncStatusService {
           this.currentWalletSyncStatus.next(SyncStatus.Synced);
           break;
         case EventTypes.WalletSyncUpdate:
-          var chainType: number = event.message["ChainType"];
-          var currentBlockId: number = event.message["CurrentBlockId"];
-          var blockHeight: number = event.message["BlockHeight"];
-          var percentage: number = event.message["Percentage"];
+          var chainType: number = event.message["chainType"];
+          var currentBlockId: number = event.message["currentBlockId"];
+          var blockHeight: number = event.message["blockHeight"];
+          var percentage: number = event.message["percentage"];
 
           this.currentWalletSyncUpdate.next(SyncUpdate.create(chainType, currentBlockId, blockHeight, percentage, ''));
           this.currentWalletSyncStatus.next(SyncStatus.NotSynced);
@@ -107,7 +107,7 @@ export class SyncStatusService {
           this.initialiseBlockchainSyncStatus(this.blockchainId);
           break;
         case EventTypes.BlockchainSyncUpdate:
-          var chainType: number = event.message["CchainType"];
+          var chainType: number = event.message["chainType"];
           var currentBlockId: number = event.message["currentBlockId"];
           var blockHeight: number = event.message["publicBlockHeight"];
           var percentage: number = event.message["percentage"];

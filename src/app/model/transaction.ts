@@ -15,7 +15,7 @@ export class Transaction {
         this.source = source;
         this.date = date;
         this.version = version;
-        this.object =  TransactionType[version.transactionType.value];
+        this.object =  TransactionType[version.TransactionType];
         this.details = details;
         this.status = status;
         this.local = local;
@@ -45,14 +45,14 @@ export class NeuraliumTransaction extends Transaction{
 }
 
 export class TransactionVersion {
-    transactionType: any;
-    major: number;
-    minor: number;
+    TransactionType: number;
+    Major: number;
+    Minor: number;
 
-    constructor(type:any, major:number, minor:number){
-        this.major = major;
-        this.minor = minor;
-        this.transactionType = type;
+    constructor(type:number, major:number, minor:number){
+        this.Major = major;
+        this.Minor = minor;
+        this.TransactionType = type;
     }
 }
 

@@ -2,10 +2,10 @@ import { WalletAccount } from "./walletAccount";
 
 export enum EncryptionKey{
     Wallet = 0,
-    ChangeKey = 3,
-    TransactionKey = 1,
-    MessageKey = 2,
-    SuperKey = 4
+    TransactionKey = '1',
+    MessageKey = '2',
+    ChangeKey = '3',
+    SuperKey = '4'
 }
 
 export class WalletCreation {
@@ -13,7 +13,7 @@ export class WalletCreation {
     encryptWallet: boolean;
     encryptKey: boolean;
     encryptKeysIndividualy:boolean;
-    passPhrases:Array<string>;
+    passPhrases:Map<string, string>;
     publishAccount:boolean;
 
     private constructor(){
@@ -21,25 +21,8 @@ export class WalletCreation {
         this.encryptWallet = false;
         this.encryptKey = false;
         this.encryptKeysIndividualy = false;
-        this.passPhrases = [];
+        this.passPhrases = new Map<string, string>();
         this.publishAccount = false;
-    }
-
-    get passPhrasesAsDictionary():Object{
-        var dictionary = new Object();
-        for (let index = 0; index < 4; index++) {
-            dictionary = this.convertToDictionaryItemAndPush(dictionary,index,this.passPhrases);
-        }
-        return dictionary;
-    }
-
-    private convertToDictionaryItemAndPush(dictionary:Object, key:number, array:Array<string>):Object{
-        if(array[key] != void(0)){
-            for(let i =0; i < array.length; i++){
-                dictionary[key] = array[key];
-            }
-        };
-        return dictionary;
     }
 
     static createNew(): WalletCreation {
