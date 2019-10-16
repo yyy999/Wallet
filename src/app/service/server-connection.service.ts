@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { NotificationService } from './notification.service';
 
-import { HubConnectionBuilder, HttpTransportType, HubConnection, LogLevel } from '@aspnet/signalr';
-import { MessagePackHubProtocol} from '@aspnet/signalr-protocol-msgpack';
+import { HubConnectionBuilder, HttpTransportType, HubConnection, LogLevel, HubConnectionState } from '@microsoft/signalr';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { LogService } from './log.service';
 import { WalletCreation } from '../model/wallet';
@@ -47,32 +46,14 @@ public properties:Array<Object>;
   providedIn: 'root'
 })
 export class ServerConnectionService {
-  private showServerNotConnectedObs: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(true);
-  private canManuallyStopServerObs: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
   get showServerNotConnected(): Observable<boolean> {
     return this.showServerNotConnectedObs;
   }
 
-  setShowServerNotConnected(value: boolean) {
-    this.showServerNotConnectedObs.next(value);
-  }
-
   get canManuallyStopServer(): Observable<boolean> {
     return this.canManuallyStopServerObs;
   }
-
-  setCanManuallyStopServer(value: boolean) {
-    this.canManuallyStopServerObs.next(value);
-  }
-
-  serverPort: number;
-  serverPath: string;
-  eventNotifier: BehaviorSubject<ServerConnectionEvent> = new BehaviorSubject<ServerConnectionEvent>(ServerConnectionEvent.NO_EVENT);
-  serverConnection: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  private isCurrentlyConnected: boolean = false;
-
-  public messages:Array<ServerMessage> = new Array<ServerMessage>();
 
 
   constructor(
@@ -84,6 +65,56 @@ export class ServerConnectionService {
     this.serverPath = this.configService.serverPath;   
 
     this.beginConnection();
+  }
+
+  get connection(): HubConnection {
+    if(!this.cnx){
+
+      this.serverPort = this.configService.serverPort;
+      this.cnx = new HubConnectionBuilder()
+        .configureLogging(LogLevel.None)
+        .withUrl("http://127.0.0.1:" + this.serverPort + "/signal", {
+          skipNegotiation: true,
+          transport: HttpTransportType.WebSockets
+        })
+        .withAutomaticReconnect()
+        .build();
+
+        this.cnx.serverTimeoutInMilliseconds = 60 * 1000;
+        this.cnx.keepAliveIntervalInMilliseconds = 30 * 1000;
+    }
+
+    this.cnx.onclose(() => {
+      this.logService.logDebug(" Connection Closed", {  });
+      this.notifyServerConnectionStatusIfNeeded(false);
+      this.isConnecting = false;
+      this.beginConnection();
+    });
+    
+    return this.cnx;
+  }
+  private showServerNotConnectedObs: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(true);
+  private canManuallyStopServerObs: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+
+  serverPort: number;
+  serverPath: string;
+  eventNotifier: BehaviorSubject<ServerConnectionEvent> = new BehaviorSubject<ServerConnectionEvent>(ServerConnectionEvent.NO_EVENT);
+  serverConnection: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+  private isCurrentlyConnected: boolean = false;
+
+  public messages:Array<ServerMessage> = new Array<ServerMessage>();
+
+
+  private isConnecting:boolean = false;
+
+  private cnx:HubConnection;
+
+  setShowServerNotConnected(value: boolean) {
+    this.showServerNotConnectedObs.next(value);
+  }
+
+  setCanManuallyStopServer(value: boolean) {
+    this.canManuallyStopServerObs.next(value);
   }
 
   private beginConnection(){
@@ -193,7 +224,7 @@ getMessages(): Array<ServerMessage> {
   // DEBUG
 
   callRefillNeuraliums(accountUuid: string): Promise<boolean> {
-    var service = DebugCall.create(this.connection, this.logService);
+    var service = DebugCall.create(this, this.logService);
     return service.callRefillNeuraliums(accountUuid);
   }
 
@@ -201,179 +232,184 @@ getMessages(): Array<ServerMessage> {
 
   //server call methods
   callSetActiveAccount(chainType: number, accountUuid: string): Promise<boolean> {
-    var service = AccountCall.create(this.connection, this.logService);
+    var service = AccountCall.create(this, this.logService);
     return service.callSetActiveAccount(chainType, accountUuid);
   }
 
   callServerShutdown(): Promise<boolean> {
-    var service = ServerCall.create(this.connection, this.logService);
+    var service = ServerCall.create(this, this.logService);
     return service.callServerShutdown();
   }
 
   callCreateNewWallet(chainType: number, wallet: WalletCreation): Promise<number> {
-    var service = WalletCall.create(this.connection, this.logService);
+    var service = WalletCall.create(this, this.logService);
     return service.callCreateNewWallet(chainType, wallet);
   }
 
   callSetWalletPassphrase(correlationId: number, password: string) {
-    var service = WalletCall.create(this.connection, this.logService);
+    var service = WalletCall.create(this, this.logService);
     return service.callSetWalletPassphrase(correlationId, password);
   }
 
   callSetKeysPassphrase(correlationId: number, password: string) {
-    var service = WalletCall.create(this.connection, this.logService);
+    var service = WalletCall.create(this, this.logService);
     return service.callSetKeysPassphrase(correlationId, password);
   }
 
   callQuerySystemVersion() {
-    var service = ServerCall.create(this.connection, this.logService);
+    var service = ServerCall.create(this, this.logService);
     return service.callQuerySystemVersion();
   }
 
   callQueryWalletTransactionHistory(chainType: number, accountUuid: string) {
-    var service = TransactionsCall.create(this.connection, this.logService);
+    var service = TransactionsCall.create(this, this.logService);
     return service.callQueryWalletTransactionHistory(chainType, accountUuid);
   }
 
   callQueryTransationHistoryDetails(chainType: number, accountUuid: string, transactionId: string) {
-    var service = TransactionsCall.create(this.connection, this.logService);
+    var service = TransactionsCall.create(this, this.logService);
     return service.callQueryTransationHistoryDetails(chainType, accountUuid, transactionId);
   }
 
   callQueryWalletAccounts(chainType: number) {
-    var service = WalletCall.create(this.connection, this.logService);
+    var service = WalletCall.create(this, this.logService);
     return service.callQueryWalletAccounts(chainType);
   }
 
   callQueryWalletAccountDetails(chainType: number, accountUuid: string) {
-    var service = WalletCall.create(this.connection, this.logService);
+    var service = WalletCall.create(this, this.logService);
     return service.callQueryWalletAccountDetails(chainType, accountUuid);
   }
 
   callQueryBlockChainInfo(chainType: number) {
-    var service = BlockchainCall.create(this.connection, this.logService);
+    var service = BlockchainCall.create(this, this.logService);
     return service.callQueryBlockChainInfo(chainType);
   }
 
   callQuerySupportedChains() {
-    var service = BlockchainCall.create(this.connection, this.logService);
+    var service = BlockchainCall.create(this, this.logService);
     return service.callQuerySupportedChains();
   }
 
   callCompleteLongRunningEvent(correlationId: number) {
-    var service = ServerCall.create(this.connection, this.logService);
+    var service = ServerCall.create(this, this.logService);
     return service.callCompleteLongRunningEvent(correlationId);
   }
 
   callRenewLongRunningEvent(correlationId: number) {
-    var service = ServerCall.create(this.connection, this.logService);
+    var service = ServerCall.create(this, this.logService);
     return service.callRenewLongRunningEvent(correlationId);
   }
 
   callQueryChainStatus(chainType: number) {
-    var service = BlockchainCall.create(this.connection, this.logService);
+    var service = BlockchainCall.create(this, this.logService);
     return service.callQueryChainStatus(chainType);
   }
 
   callStartMining(chainType: number, delegateAccountId: string) {
-    var service = MiningCall.create(this.connection, this.logService);
+    var service = MiningCall.create(this, this.logService);
     return service.callStartMining(chainType, delegateAccountId);
   }
 
   callStopMining(chainType: number) {
-    var service = MiningCall.create(this.connection, this.logService);
+    var service = MiningCall.create(this, this.logService);
     return service.callStopMining(chainType);
   }
 
   callIsMiningEnabled(chainType: number) {
-    var service = MiningCall.create(this.connection, this.logService);
+    var service = MiningCall.create(this, this.logService);
     return service.callIsMiningEnabled(chainType);
   }
 
   callQueryMiningHistory(chainType: number) {
-    var service = MiningCall.create(this.connection, this.logService);
+    var service = MiningCall.create(this, this.logService);
     return service.callQueryMiningHistory(chainType);
   }
 
   callQueryTotalConnectedPeersCount() {
-    var service = ServerCall.create(this.connection, this.logService);
+    var service = ServerCall.create(this, this.logService);
     return service.callQueryTotalConnectedPeersCount();
   }
 
+  callQueryMiningPortConnectable(){
+    var service = ServerCall.create(this, this.logService);
+    return service.callQueryMiningPortConnectable();
+  }
+
   callQueryBlockchainSynced(chainType: number) {
-    var service = BlockchainCall.create(this.connection, this.logService);
+    var service = BlockchainCall.create(this, this.logService);
     return service.callQueryBlockchainSynced(chainType);
   }
 
   callIsBlockchainSynced(chainType: number): Promise<boolean> {
-    var service = BlockchainCall.create(this.connection, this.logService);
+    var service = BlockchainCall.create(this, this.logService);
     return service.callIsBlockchainSynced(chainType);
   }
 
   callQueryWalletSynced(chainType: number) {
-    var service = WalletCall.create(this.connection, this.logService);
+    var service = WalletCall.create(this, this.logService);
     return service.callQueryWalletSynced(chainType);
   }
 
   callIsWalletLoaded(chainType: number) {
-    var service = WalletCall.create(this.connection, this.logService);
+    var service = WalletCall.create(this, this.logService);
     return service.callIsWalletLoaded(chainType);
   }
 
   callWalletExists(chainType: number) {
-    var service = WalletCall.create(this.connection, this.logService);
+    var service = WalletCall.create(this, this.logService);
     return service.callWalletExists(chainType);
   }
 
   callLoadWallet(chainType: number) {
-    var service = WalletCall.create(this.connection, this.logService);
+    var service = WalletCall.create(this, this.logService);
     return service.callLoadWallet(chainType);
   }
 
   callIsWalletSynced(chainType: number): Promise<boolean> {
-    var service = WalletCall.create(this.connection, this.logService);
+    var service = WalletCall.create(this, this.logService);
     return service.callIsWalletSynced(chainType);
   }
 
   callQueryBlockHeight(chainType: number) {
-    var service = BlockchainCall.create(this.connection, this.logService);
+    var service = BlockchainCall.create(this, this.logService);
     return service.callQueryBlockHeight(chainType);
   }
 
   callPublishAccount(chainType: number, accountUuId: string) {
-    var service = AccountCall.create(this.connection, this.logService);
+    var service = AccountCall.create(this, this.logService);
     return service.callPublishAccount(chainType, accountUuId);
   }
 
   callSendNeuraliums(targetAccountId: string, amount: number, tip: number, note: string) {
-    var service = NeuraliumCall.create(this.connection, this.logService);
+    var service = NeuraliumCall.create(this, this.logService);
     return service.callSendNeuraliums(targetAccountId, amount, tip, note);
   }
 
   callQueryAccountTotalNeuraliums(accountUuid: string) {
-    var service = NeuraliumCall.create(this.connection, this.logService);
+    var service = NeuraliumCall.create(this, this.logService);
     return service.callQueryAccountTotalNeuraliums(accountUuid);
   }
 
   callQueryNeuraliumTimelineHeader(accountUuid: string) {
-    var service = NeuraliumCall.create(this.connection, this.logService);
+    var service = NeuraliumCall.create(this, this.logService);
     return service.callQueryNeuraliumTimelineHeader(accountUuid);
   }
 
   callQueryNeuraliumTimelineSection(accountUuid: string, firstday: Date, skip: number, take: number) {
-    var service = NeuraliumCall.create(this.connection, this.logService);
+    var service = NeuraliumCall.create(this, this.logService);
     return service.callQueryNeuraliumTimelineSection(accountUuid, firstday, skip, take);
   }
 
   // PASSPHRASES CALL
 
   callEnterWalletPassphrase(correlationId: number, chainType: number, keyCorrelationCode: number, passphrase: string): Promise<boolean> {
-    var service = PassphrasesCall.create(this.connection, this.logService);
+    var service = PassphrasesCall.create(this, this.logService);
     return service.callEnterWalletPassphrase(correlationId, chainType, keyCorrelationCode, passphrase);
   }
 
   callEnterKeyPassphrase(correlationId: number, chainType: number, keyCorrelationCode: number, passphrase: string): Promise<boolean> {
-    var service = PassphrasesCall.create(this.connection, this.logService);
+    var service = PassphrasesCall.create(this, this.logService);
     return service.callEnterKeyPassphrase(correlationId, chainType, keyCorrelationCode, passphrase);
   }
 
@@ -871,14 +907,13 @@ getMessages(): Array<ServerMessage> {
   listenToTransactionReceived() {
     const cnx = this.connection;
     const action = "transactionReceived";
-    
 
-    cnx.on(action, (transactionId: number, transaction: any) => {
-      this.logEvent(action + " - event", { 'transactionId': transactionId, 'transaction': transaction });
-      this.propagateEvent(transactionId, EventTypes.TransactionReceived, ResponseResult.Success, transaction);
+    cnx.on(action, (transactionId: string) => {
+      this.logEvent(action + " - event", { 'transactionId': transactionId });
+      this.propagateEvent(1, EventTypes.TransactionReceived, ResponseResult.Success, transactionId);
     });
   }
-
+  
   listenToTransactionMessage() {
     const cnx = this.connection;
     const action = "transactionMessage";
@@ -1037,11 +1072,20 @@ getMessages(): Array<ServerMessage> {
     this.eventNotifier.next(event);
   }
 
+  public tryConnectToServer(): Promise<void> {
+    return this.tryConnectToServerTyped<void>();
+  }
+  
+  public tryConnectToServerTyped<T = any>(): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
 
-  private isConnecting:boolean = false;
-
-  tryConnectToServer(): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
+      if(this.connection.state === HubConnectionState.Connected){
+        this.isCurrentlyConnected = true;
+        this.isConnecting = false;
+        resolve();
+        return;
+      }
+      this.isCurrentlyConnected = false;
       setTimeout(() => {
           if(!this.isCurrentlyConnected && !this.isConnecting){
             this.isConnecting = true;
@@ -1059,38 +1103,34 @@ getMessages(): Array<ServerMessage> {
               });
           }
           else{
-            this.tryConnectToServer().then(() => resolve());
+            if(!this.isConnecting){
+              this.tryConnectToServer().then(() => resolve());
+            }
           }
       }, RETRY_DURATION);
-
     });
   }
 
-  private cnx:HubConnection;
-  get connection(): HubConnection {
-    if(!this.cnx){
-      this.serverPort = this.configService.serverPort;
-      this.cnx = new HubConnectionBuilder()
-        .configureLogging(LogLevel.None)
-        .withUrl("http://127.0.0.1:" + this.serverPort + "/signal", {
-          skipNegotiation: true,
-          transport: HttpTransportType.WebSockets
-        })
-        .withHubProtocol(new MessagePackHubProtocol())
-        .build();
 
-        this.cnx.serverTimeoutInMilliseconds = 60 * 1000;
-        this.cnx.keepAliveIntervalInMilliseconds = 30 * 1000;
+  public invoke<T = any>(methodName: string, ...args: any[]): Promise<T>{
+
+    // if we are connected, then go right to the request.
+    if(this.connection.state === HubConnectionState.Connected){
+      return this.connection.invoke<T>(methodName, ...args);
     }
+    else{
 
-    this.cnx.onclose(() => {
-      this.logService.logDebug(" Connection Closed", {  });
-      this.notifyServerConnectionStatusIfNeeded(false);
-      this.isConnecting = false;
-      this.beginConnection();
-    });
-    
-    return this.cnx;
+      // now we need to conenct before we fulfill the request.
+      return new Promise<T>((resolve, reject) => {
+        this.tryConnectToServerTyped<T>().then(() => {
+          this.connection.invoke<T>(methodName, ...args).then(() => resolve()).catch(() => reject());
+        })
+        .catch(reason => {
+          console.log('Connection not connected, failed to reconnect.');
+          reject();
+        });
+      });
+    }
   }
 
 

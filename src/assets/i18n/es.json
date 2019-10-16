@@ -7,11 +7,11 @@
 		"AccountName": "Nombre de la Cuenta",
 		"AccountNumber": "ID de cuenta",
 		"AccountStatus": "Estado de Cuenta",
-		"CurrentAccount": "Cuenta activa",
-		"DeclarationBlockId": "Id de Bloque de Declaración",
+		"CurrentAccount": "Cuenta de minería activa",
+		"declarationBlockId": "Id de Bloque de Declaración",
 		"Dispatched": "Enviado",
 		"WalletEncryption" : "Cifrado",
-		"FriendlyNameForYourAccount": "Nombre de la cuenta",
+		"friendlyNameForYourAccount": "Nombre de la cuenta",
 		"Hash": "Hash",
 		"Joint": "Conjunto",
 		"Locked": "Bloqueado",
@@ -140,7 +140,21 @@
 		"Explain" : "Here you can put your computer to work by making it perform mathematical puzzles to unlock new Neuraliums.",
 		"Miningportalert" : "Nota: Para extraer, su puerto TCP 33888 debe ser conectable por otros nodos en el p2p. Asegúrese de abrir su firewall.",
 		"PortConnectable" : "El puerto 33888 es conectable.",
-		"PortNotConnectable" : "El puerto 33888 no es conectable"
+		"PortNotConnectable" : "El puerto 33888 no es conectable",
+		"Options" : "Options",
+		"OptionTrxSelectionStrategy" : "Estrategia de selección de transacciones",
+		"HighestTipStrategy" : "Propinas más altas",
+		"CreationTimeStrategy" : "Tiempo de creación",
+		"TransactionTypeStrategy" : "Tipo de transacción",
+		"TransactionSizeStrategy" : "Tamaño de transacción",
+		"RandomStrategy" : "Aleatorio",
+		"OlderToNewer" : "Más viejo a más nuevo",
+		"NewerToOlder" : "Más nuevo a más viejo",
+		"Random" : "Aleatorio",
+		"MostToLess" : "Más a menos",
+		"LessToMost" : "Menos a la mayoría",
+		"LargerToSmaller" : "De mayor a menor",
+		"SmallerToLarger" : "Más pequeño a más grande"
 	},
 	"neuralium": {
 		"Credit": "Crédito",
@@ -205,7 +219,7 @@
 		"ParagrahThree": "",
 		"ParagrahTwo": "En el modo TESTNET, todos los neuraliums obtenidos sólo tienen fines de prueba y no se pueden utilizar en la red de producción 'MainNet'. Los neuraliums obtenidos en el modo TESTNET también pueden perderse o restablecerse en cualquier momento sin previo aviso.",
 		"Warning": "El nodo y la cartera se encuentran actualmente en modo de prueba TestNet en una red separada.",
-		"Period": "TESTNET Trial run III durará del 19 de septiembre a las 19:00 (EST) al 20 de septiembre a las 19:00 (EST)"
+		"Period": "TESTNET Trial run IV durará del 15 de Octubre a las 19:00 (EST) al 20 de Octubre a las 19:00 (EST)"
 	},
 	"wallet": {
 		"AccountCreation": "Creación de cuenta",

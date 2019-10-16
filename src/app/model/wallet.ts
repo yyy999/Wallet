@@ -44,11 +44,21 @@ export class Wallet {
         newWallet.id = id;
         return newWallet;
     }
+
+    get isLoaded(): boolean {
+        return  this.id !== 0;
+    }
+
 }
 
 export const NO_WALLET = <Wallet>{
     id: 0
 }
 
+export enum WalletLoadStatus {
+    NotLoaded = 0,
+    Loading = 1,
+    Loaded = 2
+}
+
 export const WALLET_LOADED = true;
-export const WALLET_EXISTS = true;

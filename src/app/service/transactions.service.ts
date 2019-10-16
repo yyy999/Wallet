@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Transaction, NO_TRANSACTION } from '../model/transaction';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { ServerConnectionService } from './server-connection.service';
+import { CONNECTED } from '../model/serverConnectionEvent';
 import { WalletService } from './wallet.service';
 import { BlockchainService } from './blockchain.service';
 import { EventTypes } from '../model/serverConnectionEvent';
@@ -26,20 +27,24 @@ export class TransactionsService {
     private walletService: WalletService,
     private blockchainService: BlockchainService,
     private notificationService: NotificationService) {
+
+      this.serverConnectionService.isConnectedToServer().subscribe(connected => {
+        if (connected === CONNECTED) {
+          
+          this.updateChainStatus();
+        }
+      });
+
     this.blockchainService.getSelectedBlockchain().subscribe(blockchain => {
       this.blockchainId = blockchain.id;
-      this.serverConnectionService.callQueryChainStatus(blockchain.id).then(chainStatus => {
-        if (chainStatus != void (0)) {
-          this.minRequiredPeerCount = chainStatus["MinRequiredPeerCount"];
-          this.updateCanSendTransaction();
-        }
-      })
+      this.updateChainStatus();
     });
 
+   
     this.walletService.getWallet().subscribe(wallet => {
       this.walletId = wallet.id;
       if (wallet.accounts != void (0) && wallet.accounts.length > 0) {
-        this.accountId = wallet.accounts.filter(account => account.IsActive)[0].AccountUuid;
+        this.accountId = wallet.accounts.filter(account => account.isActive)[0].accountUuid;
       }
       else {
         this.accountId = undefined;
@@ -68,6 +73,17 @@ export class TransactionsService {
         this.updateCanSendTransaction();
       }
     })
+  }
+
+  updateChainStatus(){
+    if(this.blockchainId !== 0){
+      this.serverConnectionService.callQueryChainStatus(this.blockchainId).then(chainStatus => {
+        if (chainStatus !== void (0)) {
+          this.minRequiredPeerCount = chainStatus["minRequiredPeerCount"];
+          this.updateCanSendTransaction();
+        }
+      });
+  }
   }
 
   updateCanSendTransaction() {

@@ -58,15 +58,15 @@ export class NeuraliumsHistoryComponent implements OnInit {
   }
 
   isDebit(entry: TimelineEntry): boolean {
-    return entry.Type == EntryType.debit;
+    return entry.type == EntryType.debit;
   }
 
   isCredit(entry: TimelineEntry): boolean {
-    return entry.Type == EntryType.credit;
+    return entry.type == EntryType.credit;
   }
 
   isMining(entry: TimelineEntry): boolean {
-    return entry.Type == EntryType.mining;
+    return entry.type == EntryType.mining;
   }
 
   nextPeriod() {
@@ -93,14 +93,14 @@ export class NeuraliumsHistoryComponent implements OnInit {
       return;
     }
 
-    if (entry.Transaction == void(0) || entry.Transaction == NO_NEURALIUM_TRANSACTION) {
-      this.transactionService.getTransactionDetails(entry.TransactionId)
+    if (entry.transaction == void(0) || entry.transaction == NO_NEURALIUM_TRANSACTION) {
+      this.transactionService.getTransactionDetails(entry.transactionId)
         .then(transaction => {
           if (transaction != void (0)) {
-            entry.Transaction = <NeuraliumTransaction>transaction;
-            entry.ShowDetails = true;
-            entry.LightState = 'close';
-            entry.DetailsState = 'open';
+            entry.transaction = <NeuraliumTransaction>transaction;
+            entry.showDetails = true;
+            entry.lightState = 'close';
+            entry.detailsState = 'open';
           }
           else {
             this.translateService.get("neuralium.NoTransaction").subscribe(message =>{
@@ -110,9 +110,9 @@ export class NeuraliumsHistoryComponent implements OnInit {
         })
     }
     else {
-      entry.ShowDetails = true;
-      entry.LightState = 'close';
-      entry.DetailsState = 'open';
+      entry.showDetails = true;
+      entry.lightState = 'close';
+      entry.detailsState = 'open';
     }
   }
 
@@ -123,9 +123,9 @@ export class NeuraliumsHistoryComponent implements OnInit {
       return;
     }
 
-    entry.ShowDetails = false;
-    entry.LightState = 'open';
-      entry.DetailsState = 'close';
+    entry.showDetails = false;
+    entry.lightState = 'open';
+      entry.detailsState = 'close';
   }
 
 }

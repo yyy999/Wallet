@@ -45,7 +45,7 @@ export class SendComponent implements OnInit {
           this.blockchainService.selectedBlockchain.subscribe(blockchain => {
             if (blockchain == NEURALIUM_BLOCKCHAIN && blockchain.menuConfig.showSend) {
               this.walletService.getCurrentAccount().subscribe(account => {
-                if (account != void (0) && account != NO_WALLET_ACCOUNT && account.IsActive && account.Status == WalletAccountStatus.Published) { //
+                if (account != void (0) && account != NO_WALLET_ACCOUNT && account.isActive && account.status == WalletAccountStatus.Published) { //
                   this.initialise(account);
                 }
                 else {
@@ -71,7 +71,7 @@ export class SendComponent implements OnInit {
   initialise(account: WalletAccount) {
     this.neuraliumService.getNeuraliumTotal().subscribe(total => this.neuraliumTotal = total);
 
-    this.currentAccountUuId = account.AccountUuid;
+    this.currentAccountUuId = account.accountUuid;
     
   }
 

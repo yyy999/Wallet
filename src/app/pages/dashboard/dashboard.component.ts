@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { WalletService } from '../../service/wallet.service';
 import { WalletAccount, NO_WALLET_ACCOUNT } from '../../model/walletAccount';
-import { NO_WALLET, WALLET_LOADED, WALLET_EXISTS } from '../../model/wallet';
+import {  WalletLoadStatus } from '../../model/wallet';
 import { ServerConnectionService } from '../../service/server-connection.service';
 import { BlockchainService } from '../../service/blockchain.service';
 import { NO_BLOCKCHAIN } from '../../model/blockchain';
@@ -13,7 +13,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { PublishAccountDialogComponent } from '../../dialogs/publish-account-dialog/publish-account-dialog.component';
 import { CONNECTED } from '../..//model/serverConnectionEvent';
 import { SyncStatusService } from '../..//service/sync-status.service';
-
+import { EventTypes } from '../../model/serverConnectionEvent';
 
 
 @Component({
@@ -29,6 +29,7 @@ export class DashboardComponent implements OnInit {
   walletAccounts: Array<WalletAccount> = [];
   currentAccount: WalletAccount;
 
+  private walletLoadingHelper : WalletLoadingHelper;
   private walletDialogOpen: boolean = false;
   private createLoadDialogOpen: boolean = false;
 
@@ -42,7 +43,7 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit() {
     this.serverConnectionService.isConnectedToServer().subscribe(connected => {
-      if (connected == CONNECTED) {
+      if (connected === CONNECTED) {
         this.initialise();
       }
     })
@@ -50,7 +51,7 @@ export class DashboardComponent implements OnInit {
 
   initialise() {
     this.blockchainService.getSelectedBlockchain().subscribe(blockchain => {
-      if (blockchain != NO_BLOCKCHAIN) {
+      if (blockchain !== NO_BLOCKCHAIN) {
         let currentBlockchainId = this.blockchainService.getCurrentBlockchain().id;
         this.tryInitialiseWallet(currentBlockchainId).then(() => {
           this.syncStatusService.initialiseStatus(blockchain.id);
@@ -63,11 +64,13 @@ export class DashboardComponent implements OnInit {
     return new Promise<boolean>((resolve, reject) => {
       this.walletService.getWallet().subscribe(wallet => {
 
-        if (blockchainId != 0) {
-          if (wallet == NO_WALLET) {
+        if (blockchainId !== 0) {
+          if (!wallet.isLoaded) {
 
-            this.tryLoadWalletFromServer(blockchainId).then(isLoaded => {
-              if (isLoaded != WALLET_LOADED) {
+            this.walletLoadingHelper = new WalletLoadingHelper(this.serverConnectionService, blockchainId);
+
+            this.walletLoadingHelper.loadWallet().then(isLoaded => {
+              if (isLoaded === false) {
                 this.askCreateOrCopyWallet();
               }
               else {
@@ -89,19 +92,19 @@ export class DashboardComponent implements OnInit {
   }
 
   isCurrentAccount(walletAccount: WalletAccount) {
-    return this.currentAccount != NO_WALLET_ACCOUNT && this.currentAccount.AccountId == walletAccount.AccountId;
+    return this.currentAccount !== NO_WALLET_ACCOUNT && this.currentAccount.accountId === walletAccount.accountId;
   }
 
   get hasAccount(): boolean {
-    return this.walletAccounts != void (0) && this.walletAccounts.length > 0;
+    return this.walletAccounts !== void (0) && this.walletAccounts.length > 0;
   }
 
   get hasCurrentAccount(): boolean {
-    return this.walletAccounts != void (0) && this.walletAccounts.length > 0 && this.currentAccount != NO_WALLET_ACCOUNT;
+    return this.walletAccounts !== void (0) && this.walletAccounts.length > 0 && this.currentAccount !== NO_WALLET_ACCOUNT;
   }
 
   get hasMoreThanOneAccount(): boolean {
-    return this.walletAccounts != void (0) && this.walletAccounts.length > 1;
+    return this.walletAccounts !== void (0) && this.walletAccounts.length > 1;
   }
 
 
@@ -117,7 +120,7 @@ export class DashboardComponent implements OnInit {
         });
         dialogRef.afterClosed().subscribe(dialogResult => {
           this.createLoadDialogOpen = false;
-          if (dialogResult == DialogResult.CreateWallet) {
+          if (dialogResult === DialogResult.CreateWallet) {
             setTimeout(() => {
               this.showCreateWalletDialog();
             }, 1000);
@@ -141,15 +144,15 @@ export class DashboardComponent implements OnInit {
         });
         dialogRef.afterClosed().subscribe(dialogResult => {
           this.walletDialogOpen = false;
-          if (dialogResult == DialogResult.Cancel) {
+          if (dialogResult === DialogResult.Cancel) {
             this.initialise();
           }
-          else if (dialogResult == DialogResult.WalletCreated) {
+          else if (dialogResult === DialogResult.WalletCreated) {
             setTimeout(() => {
               this.walletService.refreshWallet(this.blockchainService.getCurrentBlockchain().id);
             }, 100);
           }
-          else if (dialogResult != "") {
+          else if (dialogResult !== "") {
             this.publishAccount(dialogResult);
           }
         });
@@ -157,30 +160,6 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  tryLoadWalletFromServer(blockchainId: number): Promise<boolean> {
-    return new Promise<boolean>((resolve, reject) => {
-      this.serverConnectionService.callWalletExists(blockchainId)
-        .then(callWalletExistsResponse => {
-          if (callWalletExistsResponse == WALLET_EXISTS) {
-            this.serverConnectionService.callIsWalletLoaded(blockchainId)
-              .then(callIsWalletLoadedResponse => {
-                if (callIsWalletLoadedResponse != WALLET_LOADED) {
-                  this.serverConnectionService.callLoadWallet(blockchainId)
-                    .then(callLoadWalletResponse => {
-                      resolve(WALLET_LOADED);
-                    })
-                }
-                else {
-                  resolve(WALLET_LOADED);
-                }
-              })
-          }
-          else {
-            resolve(!WALLET_EXISTS);
-          }
-        });
-    });
-  }
 
   publishAccount(accountUuid: string) {
     setTimeout(() => {
@@ -194,6 +173,54 @@ export class DashboardComponent implements OnInit {
       })
     });
   }
+}
+
+class WalletLoadingHelper{
+
+  private longRunningContextId:number;
+  constructor(private serverConnectionService: ServerConnectionService, private blockchainID:number){
+
+  }
 
 
+  loadWallet(): Promise<boolean>{
+    return new Promise<boolean>((resolve, reject) => {
+      this.serverConnectionService.callWalletExists(this.blockchainID).then(callWalletExistsResponse => {
+        if (callWalletExistsResponse === true) {
+
+          this.serverConnectionService.callIsWalletLoaded(this.blockchainID).then(callIsWalletLoadedResponse => {
+            if (callIsWalletLoadedResponse === false) {
+              
+              this.serverConnectionService.callLoadWallet(this.blockchainID)
+                .then(longRunningContextId => {
+
+                  this.longRunningContextId = longRunningContextId;
+                  
+                  this.serverConnectionService.eventNotifier.subscribe((event) => {
+                    if(event.correlationId === this.longRunningContextId){
+                      switch (event.eventType) {
+                        case EventTypes.WalletLoadingEnded:
+                          resolve(true);
+                          break;
+                        case EventTypes.WalletLoadingError:
+                            resolve(false);
+                            break;
+                        default:
+                          return;
+                      }
+                    }
+                  });
+                });
+            }
+            else {
+              resolve(true);
+            }
+          });
+        }else {
+          resolve(false);
+        }
+      });
+    });
+
+  }
 }

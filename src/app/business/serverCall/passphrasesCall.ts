@@ -1,34 +1,34 @@
 import { CommonCall } from "./commonCall";
 import { LogService } from "../../service/log.service";
-import { HubConnection } from "@aspnet/signalr";
+import { ServerConnectionService } from '../..//service/server-connection.service';
 
 export class PassphrasesCall extends CommonCall {
 
     private constructor(
-        connection: HubConnection,
+        serviceConnectionService : ServerConnectionService,
         logService: LogService) {
-        super(connection, logService)
+        super(serviceConnectionService, logService)
     }
 
     static create(
-        connection: HubConnection,
+        serviceConnectionService : ServerConnectionService,
         logService: LogService) {
-        return new PassphrasesCall(connection, logService)
+        return new PassphrasesCall(serviceConnectionService, logService)
     }
 
     callEnterWalletPassphrase(correlationId: number, chainType: number, keyCorrelationCode: number, passphrase: string): Promise<boolean> {
-        return this.callEnterPassphrase("enterWalletPassphrase", correlationId, chainType, keyCorrelationCode, passphrase);
+        return this.callEnterPassphrase("EnterWalletPassphrase", correlationId, chainType, keyCorrelationCode, passphrase);
     }
 
     callEnterKeyPassphrase(correlationId: number, chainType: number, keyCorrelationCode: number, passphrase: string): Promise<boolean> {
-        return this.callEnterPassphrase("enterKeyPassphrase", correlationId, chainType, keyCorrelationCode, passphrase);
+        return this.callEnterPassphrase("EnterKeyPassphrase", correlationId, chainType, keyCorrelationCode, passphrase);
     }
 
     private callEnterPassphrase(action : string, correlationId: number, chainType: number, keyCorrelationCode: number, passphrase: string): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
 
                 this.logEvent(action + " - call", { correlationId, chainType, keyCorrelationCode, passphrase });
-                this.connection.invoke<boolean>(action, correlationId, chainType, keyCorrelationCode, passphrase)
+                this.serviceConnectionService.invoke<boolean>(action, correlationId, chainType, keyCorrelationCode, passphrase)
                     .then(
                         response => {
                             this.logEvent(action + " - response", response);

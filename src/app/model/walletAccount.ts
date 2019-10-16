@@ -1,37 +1,37 @@
 export class WalletAccount {
-    AccountUuid: string;
-    AccountId: string;
-    Status: WalletAccountStatus;
-    DeclarationBlockId: number;
-    AccountType: WalletAccountType;
-    FriendlyName: string;
-    IsEncrypted: boolean;
-    IsActive: boolean;
-    AccountHash : string;
-    TrustLevel : number;
+    accountUuid: string;
+    accountId: string;
+    status: WalletAccountStatus;
+    declarationBlockId: number;
+    accountType: WalletaccountType;
+    friendlyName: string;
+    isEncrypted: boolean;
+    isActive: boolean;
+    accountHash : string;
+    trustLevel : number;
 
     static createNew(
         accountUuid: string,
         accountId: string,
         status: WalletAccountStatus,
         declarationBlockId: number,
-        accountType: WalletAccountType,
+        accountType: WalletaccountType,
         friendlyName: string,
         isEncrypted: boolean,
         isActive: boolean,
         accountHash:string = "",
         trustLevel:number = 0) {
         var newAccount = new WalletAccount();
-        newAccount.AccountUuid = accountUuid;
-        newAccount.AccountId = accountId;
-        newAccount.Status = status;
-        newAccount.DeclarationBlockId = declarationBlockId;
-        newAccount.AccountType = accountType;
-        newAccount.FriendlyName = friendlyName;
-        newAccount.IsEncrypted = isEncrypted;
-        newAccount.IsActive = isActive;
-        newAccount.AccountHash = accountHash;
-        newAccount.TrustLevel = trustLevel;
+        newAccount.accountUuid = accountUuid;
+        newAccount.accountId = accountId;
+        newAccount.status = status;
+        newAccount.declarationBlockId = declarationBlockId;
+        newAccount.accountType = accountType;
+        newAccount.friendlyName = friendlyName;
+        newAccount.isEncrypted = isEncrypted;
+        newAccount.isActive = isActive;
+        newAccount.accountHash = accountHash;
+        newAccount.trustLevel = trustLevel;
         return newAccount;
     }
 }
@@ -43,7 +43,7 @@ export class WalletKey {
     status: string;
 }
 
-export class XmssWalletKey inherits WalletKey{
+export class XmssWalletKey inheritaccountUuids WalletKey{
     keyUseIndex: number;
     warningIndex: number;
     maximumUseIndex: number;
@@ -53,14 +53,14 @@ export class XmssWalletKey inherits WalletKey{
 */
 
 export const NO_WALLET_ACCOUNT = <WalletAccount>{
-    AccountUuid: "",
-    AccountId: "",
-    Status: 1,
-    DeclarationBlockId: 0,
-    AccountType: 1,
-    FriendlyName: "",
-    IsEncrypted: false,
-    IsActive: false
+    accountUuid: "",
+    accountId: "",
+    status: 1,
+    declarationBlockId: 0,
+    accountType: 1,
+    friendlyName: "",
+    isEncrypted: false,
+    isActive: false
 }
 
 export enum WalletAccountStatus {
@@ -69,7 +69,7 @@ export enum WalletAccountStatus {
     Published = 3
 }
 
-export enum WalletAccountType {
+export enum WalletaccountType {
     Standard = 1,
     Joint = 2
 }

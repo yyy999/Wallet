@@ -1,27 +1,27 @@
 import { CommonCall } from "./commonCall";
 import { LogService } from "../..//service/log.service";
-import { HubConnection } from "@aspnet/signalr";
+import { ServerConnectionService } from '../..//service/server-connection.service';
 import { TransactionStatuses, TransactionVersion, Transaction, NeuraliumTransaction, NO_TRANSACTION } from "../..//model/transaction";
 
 export class TransactionsCall extends CommonCall {
 
     private constructor(
-        connection: HubConnection,
+      protected serviceConnectionService : ServerConnectionService,
         logService: LogService) {
-        super(connection, logService)
+        super(serviceConnectionService, logService)
     }
 
     static create(
-        connection: HubConnection,
+      serviceConnectionService : ServerConnectionService,
         logService: LogService) {
-        return new TransactionsCall(connection, logService)
+        return new TransactionsCall(serviceConnectionService, logService)
     }
 
     callQueryWalletTransactionHistory(chainType: number, accountUuid: string):Promise<Array<Transaction>> {
         return new Promise<Array<Transaction>>((resolve, reject) => {
 
             this.logEvent("queryWalletTransactionHistory - call", { 'chainType': chainType, 'accountUuid': accountUuid });
-            this.connection.invoke<Array<object>>("QueryWalletTransactionHistory", chainType, accountUuid)
+            this.serviceConnectionService.invoke<Array<object>>("QueryWalletTransactionHistory", chainType, accountUuid)
               .then(
                 response => {
     
@@ -29,16 +29,16 @@ export class TransactionsCall extends CommonCall {
                   response.forEach(transaction => {
                     this.logEvent("queryWalletTransactionHistory - transaction", transaction);
                     try {
-                      var id = transaction["TransactionId"];
-                      var source = transaction["Sender"];
-                      var date = new Date(transaction["Timestamp"]);
-                      var status = <TransactionStatuses>transaction["Status"];
-                      var version = <TransactionVersion>transaction["Version"];
-                      var amount = <number>Number(transaction["Amount"]);
-                      var tip = <number>Number(transaction["Tip"]);
-                      var local = <boolean>transaction["Local"];
-                      var note = transaction["Note"];
-                      var recipient = transaction["Recipient"];
+                      var id = transaction["transactionId"];
+                      var source = transaction["sender"];
+                      var date = new Date(transaction["timestamp"]);
+                      var status = <TransactionStatuses>transaction["status"];
+                      var version = <TransactionVersion>transaction["version"];
+                      var amount = <number>Number(transaction["amount"]);
+                      var tip = <number>Number(transaction["tip"]);
+                      var local = <boolean>transaction["local"];
+                      var note = transaction["note"];
+                      var recipient = transaction["recipient"];
                       var newTransaction = new NeuraliumTransaction(id, source, date, version, null, status, local, note, recipient, amount,tip);
                       transactions.push(newTransaction);
                     }
@@ -58,23 +58,23 @@ export class TransactionsCall extends CommonCall {
         return new Promise<Transaction>((resolve, reject) => {
 
             this.logEvent("QueryTransationHistoryDetails - call", { 'chainType': chainType, 'accountUuid': accountUuid, 'transactionId' : transactionId });
-            this.connection.invoke<object>("QueryWalletTransationHistoryDetails", chainType, accountUuid, transactionId)
+            this.serviceConnectionService.invoke<object>("QueryWalletTransationHistoryDetails", chainType, accountUuid, transactionId)
               .then(
                 response => {
                   this.logEvent("queryWalletTransationHistoryDetails - transaction", response);
                   var transaction : Transaction;// <Transaction>response;
                     try {
-                      var id = response["TransactionId"];
-                      var source = response["Sender"];
-                      var date = new Date(response["Timestamp"]);
-                      var details = JSON.parse(response["Contents"]);//{details:"détails to show"};
-                      var status = <TransactionStatuses>response["Status"];
-                      var version = <TransactionVersion>response["Version"];
-                      var amount = <number>Number(response["Amount"]);
-                      var tip = <number>Number(response["Tip"]);
-                      var local = <boolean>response["Local"];
-                      var note = response["Note"];
-                      var recipient = response["Recipient"];
+                      var id = response["transactionId"];
+                      var source = response["sender"];
+                      var date = new Date(response["timestamp"]);
+                      var details = JSON.parse(response["contents"]);//{details:"détails to show"};
+                      var status = <TransactionStatuses>response["status"];
+                      var version = <TransactionVersion>response["version"];
+                      var amount = <number>Number(response["amount"]);
+                      var tip = <number>Number(response["tip"]);
+                      var local = <boolean>response["local"];
+                      var note = response["note"];
+                      var recipient = response["recipient"];
                       transaction = new NeuraliumTransaction(id, source, date, version, details, status, local, note, recipient, amount,tip);
                     }
                     catch (error) {

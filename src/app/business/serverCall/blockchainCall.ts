@@ -1,41 +1,41 @@
 import { CommonCall } from "./commonCall";
 import { LogService } from "../..//service/log.service";
-import { HubConnection } from "@aspnet/signalr";
+import { ServerConnectionService } from '../..//service/server-connection.service';
 import { BlockchainInfo, BlockInfo, DigestInfo } from "../..//model/blockchain-info";
 import { WalletAccountStatus } from "../..//model/walletAccount";
 
 export class BlockchainCall extends CommonCall {
 
     private constructor(
-        connection: HubConnection,
+      protected serviceConnectionService : ServerConnectionService,
         logService: LogService) {
-        super(connection, logService)
+        super(serviceConnectionService, logService)
     }
 
     static create(
-        connection: HubConnection,
+      serviceConnectionService : ServerConnectionService,
         logService: LogService) {
-        return new BlockchainCall(connection, logService)
+        return new BlockchainCall(serviceConnectionService, logService)
     }
 
     callQueryBlockChainInfo(chainType: number) {
         return new Promise<BlockchainInfo>((resolve, reject) => {
 
             this.logEvent("QueryBlockChainInfo - call", { chainType });
-            this.connection.invoke<BlockchainInfo>("QueryBlockChainInfo", chainType)
+            this.serviceConnectionService.invoke<BlockchainInfo>("QueryBlockChainInfo", chainType)
               .then(
                 account => {
                   this.logEvent("QueryBlockChainInfo - response", account);
-                  var blockId: number = account["BlockId"];
-                  var blockHash: string = account["BlockHash"];
-                  var publicBlockId: number = <WalletAccountStatus>account["PublicBlockId"];
-                  var blockTimestamp = new Date(account["BlockTimestamp"]);
-                  var blockLifespan: number = account["BlockLifespan"];
-                  var digestId: number = account["DigestId"];
-                  var digestHash: string = account["DigestHash"];
-                  var digestBlockId: number = account["DigestBlockId"];
-                  var digestTimestamp: Date = new Date(account["DigestTimestamp"]);
-                  var publicDigestId: number = account["PublicDigestId"];
+                  var blockId: number = account["blockId"];
+                  var blockHash: string = account["blockHash"];
+                  var publicBlockId: number = <WalletAccountStatus>account["publicBlockId"];
+                  var blockTimestamp = new Date(account["blockTimestamp"]);
+                  var blockLifespan: number = account["blockLifespan"];
+                  var digestId: number = account["digestId"];
+                  var digestHash: string = account["digestHash"];
+                  var digestBlockId: number = account["digestBlockId"];
+                  var digestTimestamp: Date = new Date(account["digestTimestamp"]);
+                  var publicDigestId: number = account["publicDigestId"];
     
                   var blockInfo = BlockInfo.create(blockId, blockTimestamp, blockHash, publicBlockId, blockLifespan);
                   var digestInfo = DigestInfo.create(digestId, digestBlockId, digestTimestamp, digestHash, publicDigestId);
@@ -53,7 +53,7 @@ export class BlockchainCall extends CommonCall {
         return new Promise<Array<object>>((resolve, reject) => {
 
             this.logEvent("querySupportedChains - call", null);
-            this.connection.invoke<Array<object>>("QuerySupportedChains")
+            this.serviceConnectionService.invoke<Array<object>>("QuerySupportedChains")
               .then(
                 response => {
                   this.logEvent("querySupportedChains - response", response);
@@ -69,7 +69,7 @@ export class BlockchainCall extends CommonCall {
         return new Promise<object>((resolve, reject) => {
 
             this.logEvent("queryChainStatus - call", { 'chainType': chainType });
-            this.connection.invoke<object>("QueryChainStatus", chainType)
+            this.serviceConnectionService.invoke<object>("QueryChainStatus", chainType)
               .then(
                 response => {
                   this.logEvent("queryChainStatus - response", response);
@@ -85,7 +85,7 @@ export class BlockchainCall extends CommonCall {
         return new Promise<boolean>((resolve, reject) => {
 
             this.logEvent("QueryBlockchainSynced - call", { 'chainType': chainType });
-            this.connection.invoke<boolean>("QueryBlockchainSynced", chainType)
+            this.serviceConnectionService.invoke<boolean>("QueryBlockchainSynced", chainType)
               .then(
                 response => {
                   this.logEvent("QueryBlockchainSynced - response", response);
@@ -101,7 +101,7 @@ export class BlockchainCall extends CommonCall {
         return new Promise<number>((resolve, reject) => {
 
             this.logEvent("queryBlockHeight - call", { 'chainType': chainType });
-            this.connection.invoke<number>("QueryBlockHeight", chainType)
+            this.serviceConnectionService.invoke<number>("QueryBlockHeight", chainType)
               .then(
                 response => {
                   this.logEvent("queryBlockHeight - response", response);
@@ -116,7 +116,7 @@ export class BlockchainCall extends CommonCall {
       callIsBlockchainSynced(chainType: number) {
         return new Promise<boolean>((resolve, reject) => {
             this.logEvent("isBlockchainSynced - call", { 'chainType': chainType });
-            this.connection.invoke<boolean>("IsBlockchainSynced", chainType)
+            this.serviceConnectionService.invoke<boolean>("IsBlockchainSynced", chainType)
               .then(
                 response => {
                   this.logEvent("isBlockchainSynced - response", response);

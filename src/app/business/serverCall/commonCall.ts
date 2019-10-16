@@ -1,13 +1,11 @@
-import { HubConnection } from "@aspnet/signalr";
 import { LogService } from "../..//service/log.service";
+import { ServerConnectionService } from '../..//service/server-connection.service';
 
 export abstract class CommonCall {
-    protected connection: HubConnection
 
     constructor(
-        connection: HubConnection,
+        protected serviceConnectionService : ServerConnectionService,
         private logService: LogService) {
-        this.connection = connection;
     }
 
     logEvent(message: string, data: any) {

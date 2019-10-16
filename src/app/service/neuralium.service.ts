@@ -39,8 +39,8 @@ export class NeuraliumService {
         });
 
         this.walletService.getCurrentAccount().subscribe(account => {
-          this.accountUUid = account.AccountUuid;
-          if (account !== NO_WALLET_ACCOUNT && account.IsActive) {
+          this.accountUUid = account.accountUuid;
+          if (account !== NO_WALLET_ACCOUNT && account.isActive) {
             this.startTimeline();
           }
         });
@@ -79,13 +79,13 @@ export class NeuraliumService {
   private displayNeuraliums(blockchain: BlockChain) {
     if (blockchain === NEURALIUM_BLOCKCHAIN && blockchain.menuConfig.showDashboard) {
       this.walletService.getCurrentAccount().subscribe(account => {
-        if (account != void (0) && account != NO_WALLET_ACCOUNT && account.IsActive && account.Status == WalletAccountStatus.Published) {//&& account.IsActive && account.Status == WalletAccountStatus.Published
-          this.updateNeuraliumsTotal(account.AccountUuid);
+        if (account != void (0) && account != NO_WALLET_ACCOUNT && account.isActive && account.status == WalletAccountStatus.Published) {//&& account.isActive && account.status == WalletAccountStatus.Published
+          this.updateNeuraliumsTotal(account.accountUuid);
           this.showNeuraliumTotal.next(true);
 
           this.serverConnectionService.eventNotifier.subscribe(event => {
             if (event.eventType === EventTypes.AccountTotalUpdated) {
-              this.updateNeuraliumsTotal(account.AccountUuid);
+              this.updateNeuraliumsTotal(account.accountUuid);
             }
           })
         }
@@ -128,7 +128,7 @@ export class NeuraliumService {
   }
 
   decrementTimelineIndexAndLoad() {
-    if (this.timelineCurrentIndex < this.timelineHeader.NumberOfDays - 1) {
+    if (this.timelineCurrentIndex < this.timelineHeader.numberOfDays - 1) {
       this.timelineCurrentIndex++;
       this.getMiningTimelineSection();
     }
@@ -136,7 +136,7 @@ export class NeuraliumService {
 
 
   private getMiningTimelineSection() {
-    this.serverConnectionService.callQueryNeuraliumTimelineSection(this.accountUUid, this.timelineHeader.FirstDay, this.timelineCurrentIndex, 1).then(sections => {
+    this.serverConnectionService.callQueryNeuraliumTimelineSection(this.accountUUid, this.timelineHeader.firstDay, this.timelineCurrentIndex, 1).then(sections => {
       this.timelineDays = [];
       sections.forEach(section => {
         this.timelineDays.push(section);
@@ -147,7 +147,7 @@ export class NeuraliumService {
   }
 
   private calculateIndexMoves(){
-    this.canGoPreviousBS.next(this.timelineCurrentIndex < this.timelineHeader.NumberOfDays - 1);
+    this.canGoPreviousBS.next(this.timelineCurrentIndex < this.timelineHeader.numberOfDays - 1);
     this.canGoNextBS.next(this.timelineCurrentIndex > 0);
   }
 

@@ -3,9 +3,8 @@ import { SyncProcess, SyncStatus, ProcessType } from '../model/syncProcess';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { ServerConnectionService } from './server-connection.service';
 import { SyncUpdate, NO_SYNC_UPDATE } from '../model/sync-update';
-import { EventTypes } from '../model/serverConnectionEvent';
+import { CONNECTED, EventTypes } from '../model/serverConnectionEvent';
 import { LogService } from './log.service';
-
 
 
 @Injectable({
@@ -33,18 +32,23 @@ export class SyncStatusService {
   ) {
     this.clearSync();
 
-    this.getPeerCountFromServer();
-    this.subscribeToEvents();
+    this.serverConnectionService.isConnectedToServer().subscribe(connected => {
+      if (connected === CONNECTED) {
+          this.getPeerCountFromServer();
+          this.initialiseBlockchainSyncStatus();
+      }
+     });
+     this.subscribeToEvents();
   }
 
   initialiseStatus(blockchainId: number) {
     this.blockchainId = blockchainId;
-    this.initialiseWalletSyncStatus(blockchainId);
-    this.initialiseBlockchainSyncStatus(blockchainId);
+    this.initialiseWalletSyncStatus();
+    this.initialiseBlockchainSyncStatus();
   }
 
-  private initialiseWalletSyncStatus(blockchainId: number) {
-    this.serverConnectionService.callIsWalletSynced(blockchainId)
+  private initialiseWalletSyncStatus() {
+    this.serverConnectionService.callIsWalletSynced(this.blockchainId)
       .then(isSynced => {
         if (isSynced) {
           this.currentWalletSyncStatus.next(SyncStatus.Synced);
@@ -58,19 +62,21 @@ export class SyncStatusService {
       })
   }
 
-  private initialiseBlockchainSyncStatus(blockchainId: number) {
-    this.serverConnectionService.callQueryBlockchainSynced(blockchainId)
-      .then(isSynced => {
-        if (isSynced) {
-          this.currentBlockchainSyncStatus.next(SyncStatus.Synced);
-        }
-        else {
-          this.currentBlockchainSyncStatus.next(SyncStatus.NotSynced);
-        }
-      })
-      .catch(err => {
-        this.logService.logDebug("initialiseBlockchainSyncStatus error", err);
-      })
+  private initialiseBlockchainSyncStatus() {
+    if(this.blockchainId !== 0){
+      this.serverConnectionService.callQueryBlockchainSynced(this.blockchainId)
+        .then(isSynced => {
+          if (isSynced) {
+            this.currentBlockchainSyncStatus.next(SyncStatus.Synced);
+          }
+          else {
+            this.currentBlockchainSyncStatus.next(SyncStatus.NotSynced);
+          }
+        })
+        .catch(err => {
+          this.logService.logDebug("initialiseBlockchainSyncStatus error", err);
+        });
+    }
   }
 
   private subscribeToEvents() {
@@ -104,7 +110,7 @@ export class SyncStatusService {
         case EventTypes.BlockchainSyncEnded:
           this.endSync(this.blockchainSyncProcess);
           this.currentBlockchainSyncUpdate.next(NO_SYNC_UPDATE);
-          this.initialiseBlockchainSyncStatus(this.blockchainId);
+          this.initialiseBlockchainSyncStatus();
           break;
         case EventTypes.BlockchainSyncUpdate:
           var chainType: number = event.message["chainType"];
@@ -122,13 +128,13 @@ export class SyncStatusService {
         default:
           break;
       }
-    })
+    });
   }
 
   private getPeerCountFromServer() {
     this.serverConnectionService.callQueryTotalConnectedPeersCount().then(total => {
       this.peerCountObservable.next(total);
-    })
+    });
   }
 
   refreshPeerCount() {

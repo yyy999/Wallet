@@ -30,17 +30,17 @@ export class Transaction {
 
 export class NeuraliumTransaction extends Transaction{
 
-    Amount:number;
-    Tip:number;
+    amount:number;
+    tip:number;
 
     constructor(id: string, source: string, date: Date, version: TransactionVersion, details: object, status: TransactionStatuses, local:boolean, note:string = "", recipient:string = "", amount:number, tip:number){
         super(id,source,date,version,details,status,local,note, recipient);
-        this.Amount = amount;
-        this.Tip = tip;
+        this.amount = amount;
+        this.tip = tip;
     }
 
     get total():number{
-        return this.Amount + this.Tip;
+        return this.amount + this.tip;
     }
 }
 

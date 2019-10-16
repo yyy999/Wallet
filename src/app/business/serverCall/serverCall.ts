@@ -1,27 +1,27 @@
 import { CommonCall } from "./commonCall";
 import { LogService } from "../..//service/log.service";
-import { HubConnection } from "@aspnet/signalr";
+import { ServerConnectionService } from '../..//service/server-connection.service';
 import { SystemInfo } from "../..//model/systemInfo";
 
 export class ServerCall extends CommonCall {
 
     private constructor(
-        connection: HubConnection,
+      protected serviceConnectionService : ServerConnectionService,
         logService: LogService) {
-        super(connection, logService)
+        super(serviceConnectionService, logService)
     }
 
     static create(
-        connection: HubConnection,
+      serviceConnectionService : ServerConnectionService,
         logService: LogService) {
-        return new ServerCall(connection, logService)
+        return new ServerCall(serviceConnectionService, logService)
     }
 
     callServerShutdown(): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
 
             this.logEvent("shutdown - call", null);
-            this.connection.invoke<boolean>("Shutdown")
+            this.serviceConnectionService.invoke<boolean>("Shutdown")
               .then(
                 response => {
                   this.logEvent("shutdown - response", response);
@@ -37,7 +37,9 @@ export class ServerCall extends CommonCall {
         return new Promise<SystemInfo>((resolve, reject) => {
 
             this.logEvent("QuerySystemInfo - call", null);
-            this.connection.invoke<SystemInfo>("QuerySystemInfo")
+
+
+            this.serviceConnectionService.invoke<SystemInfo>("QuerySystemInfo")
               .then(
                 response => {
                   this.logEvent("QuerySystemInfo - response", response);
@@ -53,7 +55,7 @@ export class ServerCall extends CommonCall {
         return new Promise<number>((resolve, reject) => {
 
             this.logEvent("QueryTotalConnectedPeersCount - call", null);
-            this.connection.invoke<number>("QueryTotalConnectedPeersCount")
+            this.serviceConnectionService.invoke<number>("QueryTotalConnectedPeersCount")
               .then(
                 response => {
                   this.logEvent("QueryTotalConnectedPeersCount - response", response);
@@ -65,11 +67,27 @@ export class ServerCall extends CommonCall {
           });
       }
 
+      callQueryMiningPortConnectable(){
+        return new Promise<boolean>((resolve, reject) => {
+
+          this.logEvent("QueryMiningPortConnectable - call", null);
+          this.serviceConnectionService.invoke<boolean>("QueryMiningPortConnectable")
+            .then(
+              response => {
+                this.logEvent("QueryMiningPortConnectable - response", response);
+                resolve(response);
+              })
+            .catch(reason => {
+              reject("QueryMiningPortConnectable error : " + reason);
+            });
+        });
+      }
+
       callCompleteLongRunningEvent(correlationId: number) {
         return new Promise<boolean>((resolve, reject) => {
 
             this.logEvent("completeLongRunningEvent - call", { 'correlationId': correlationId });
-            this.connection.invoke<boolean>("CompleteLongRunningEvent", correlationId)
+            this.serviceConnectionService.invoke<boolean>("CompleteLongRunningEvent", correlationId)
               .then(
                 response => {
                   this.logEvent("completeLongRunningEvent - response", response);
@@ -85,7 +103,7 @@ export class ServerCall extends CommonCall {
         return new Promise<boolean>((resolve, reject) => {
 
             this.logEvent("renewLongRunningEvent - call", { 'correlationId': correlationId });
-            this.connection.invoke<boolean>("RenewLongRunningEvent", correlationId)
+            this.serviceConnectionService.invoke<boolean>("RenewLongRunningEvent", correlationId)
               .then(
                 response => {
                   this.logEvent("renewLongRunningEvent - response", response);

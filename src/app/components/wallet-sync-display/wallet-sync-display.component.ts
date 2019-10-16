@@ -64,7 +64,7 @@ export class WalletSyncDisplayComponent implements OnInit {
   defineCurrentSyncStatus(status: SyncStatus) {
     this.currentSyncStatusPercentage = this.defineCurrentSyncStatusPercentage(status);
     this.currentSyncStatusColor = this.defineCurrentSyncStatusColor(status);
-    this.currentSyncStatusTitle = this.defineCurrentSyncStatusTitle(status);
+    this.defineCurrentSyncStatusTitle(status);
   }
 
   defineCurrentSyncStatusColor(status: SyncStatus):string {
@@ -85,13 +85,16 @@ export class WalletSyncDisplayComponent implements OnInit {
     }
   }
 
-  defineCurrentSyncStatusTitle(status: SyncStatus):string {
-    switch (status) {
-      case SyncStatus.Synced:
-        return this.translateService.instant("sync.Synced");
-      default:
-        return this.translateService.instant("sync.NotSynced");
+  defineCurrentSyncStatusTitle(status: SyncStatus):void {
+    let key: string= 'sync.NotSynced';
+
+    if(status === SyncStatus.Synced){
+      key = 'sync.Synced';
     }
+
+    this.translateService.get(key).subscribe((res: string) => {
+        this.currentSyncStatusTitle = res;
+    });
   }
 
   defineCurrentSyncUpdateColor(percentage: number):string {

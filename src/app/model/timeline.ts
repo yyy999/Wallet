@@ -18,83 +18,83 @@ export enum EntryCreditType {
 }
 
 export class TimelineHeader {
-    NumberOfDays: number;
-    FirstDay: Date;
+    numberOfDays: number;
+    firstDay: Date;
 
     private constructor() { }
 
     static create(numberOfDays: number, firstDay: Date) {
         var header = new TimelineHeader();
-        header.NumberOfDays = numberOfDays;
-        header.FirstDay = firstDay;
+        header.numberOfDays = numberOfDays;
+        header.firstDay = firstDay;
         return header;
     }
 }
 
 export class TimelineDay {
-    Day: Date;
-    Id: number;
-    EndingTotal: number;
-    Entries: Array<TimelineEntry>;
+    day: Date;
+    id: number;
+    endingTotal: number;
+    entries: Array<TimelineEntry>;
 
     private constructor() { }
 
     static create(day: Date, id: number, endingTotal: number) {
         var timelineDay = new TimelineDay();
-        timelineDay.Day = day;
-        timelineDay.Id = id;
-        timelineDay.EndingTotal = endingTotal;
-        timelineDay.Entries = new Array<TimelineEntry>();
+        timelineDay.day = day;
+        timelineDay.id = id;
+        timelineDay.endingTotal = endingTotal;
+        timelineDay.entries = new Array<TimelineEntry>();
         return timelineDay;
     }
 }
 
 export class TimelineEntry {
-    TransactionId:string;
-    Timestamp: Date;
-    SenderAccountId: string;
-    RecipientAccountId: string;
-    Amount: number;
-    Tips: number;
-    Total: number;
-    Type: EntryType;
-    Confirmed: boolean;
-    Transaction: NeuraliumTransaction = NO_NEURALIUM_TRANSACTION;
-    ShowDetails:boolean = false;
-    LightState:string = "open";
-    DetailsState:string = "close";
+    transactionId:string;
+    timestamp: Date;
+    senderAccountId: string;
+    recipientAccountId: string;
+    amount: number;
+    tips: number;
+    total: number;
+    type: EntryType;
+    confirmed: boolean;
+    transaction: NeuraliumTransaction = NO_NEURALIUM_TRANSACTION;
+    showDetails:boolean = false;
+    lightState:string = "open";
+    detailsState:string = "close";
 
     private constructor() { }
 
     get showTransaction():boolean{
-        return this.ShowDetails && this.Transaction != null && this.Transaction != NO_NEURALIUM_TRANSACTION;
+        return this.showDetails && this.transaction != null && this.transaction != NO_NEURALIUM_TRANSACTION;
     }
 
     static create(transactionId:string, timestamp: Date, senderAccountId: string, recipientAccountId: string,
         amount: number, tips: number, total: number, direction: EntryDirection, creditType: EntryCreditType, confirmed: boolean) {
         var timelineEntry = new TimelineEntry();
-        timelineEntry.TransactionId = transactionId;
-        timelineEntry.Timestamp = timestamp;
-        timelineEntry.SenderAccountId = senderAccountId;
-        timelineEntry.RecipientAccountId = recipientAccountId;
-        timelineEntry.Amount = amount;
-        timelineEntry.Tips = tips;
-        timelineEntry.Total = total;
+        timelineEntry.transactionId = transactionId;
+        timelineEntry.timestamp = timestamp;
+        timelineEntry.senderAccountId = senderAccountId;
+        timelineEntry.recipientAccountId = recipientAccountId;
+        timelineEntry.amount = amount;
+        timelineEntry.tips = tips;
+        timelineEntry.total = total;
         if (direction == EntryDirection.debit) {
-            timelineEntry.Type = EntryType.debit;
+            timelineEntry.type = EntryType.debit;
         }
         else {
             switch (creditType) {
                 case EntryCreditType.election:
-                    timelineEntry.Type = EntryType.mining;
+                    timelineEntry.type = EntryType.mining;
                     break;
                 default:
-                    timelineEntry.Type = EntryType.credit;
+                    timelineEntry.type = EntryType.credit;
                     break;
             }
         };
-        timelineEntry.Confirmed = confirmed;
-        timelineEntry.Transaction = null;
+        timelineEntry.confirmed = confirmed;
+        timelineEntry.transaction = null;
         return timelineEntry;
     }
 }

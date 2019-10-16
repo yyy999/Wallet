@@ -7,11 +7,11 @@
 		"AccountName": "Account name",
 		"AccountNumber": "Account ID",
 		"AccountStatus": "Account status",
-		"CurrentAccount": "Active account",
-		"DeclarationBlockId": "Declaration Block Id",
+		"CurrentAccount": "Active mining account",
+		"declarationBlockId": "Declaration Block Id",
 		"Dispatched": "Dispatched",
 		"WalletEncryption" : "Encryption",
-		"FriendlyNameForYourAccount": "a friendly name for your account",
+		"friendlyNameForYourAccount": "a friendly name for your account",
 		"Hash": "Hash",
 		"Joint": "Joint",
 		"Locked": "Locked",
@@ -140,7 +140,21 @@
 		"Explain" : "Here you can put your computer to work by making it perform mathematical puzzles to unlock new Neuraliums.",
 		"Miningportalert" : "Note: In order to mine, your TCP port 33888 must be connectible by other nodes on the p2p; in order to mine, we must share. Please ensure you open your firewall.",
 		"PortConnectable" : "Port 33888 is connectable.",
-		"PortNotConnectable" : "Port 33888 is not connectable."
+		"PortNotConnectable" : "Port 33888 is not connectable.",
+		"Options" : "Options",
+		"OptionTrxSelectionStrategy" : "Transaction Selection Strategy",
+		"HighestTipStrategy" : "Highest Tip",
+		"CreationTimeStrategy" : "Creation Time",
+		"TransactionTypeStrategy" : "Transaction Type",
+		"TransactionSizeStrategy" : "Transaction Size",
+		"RandomStrategy" : "Random",
+		"OlderToNewer" : "Older to Newer",
+		"NewerToOlder" : "Newer to Older",
+		"Random" : "Random",
+		"MostToLess" : "Most to Less",
+		"LessToMost" : "Less to Most",
+		"LargerToSmaller" : "Larger to Smaller",
+		"SmallerToLarger" : "Smaller to Larger"
 	},
 	"neuralium": {
 		"Credit": "Credit",
@@ -206,7 +220,7 @@
 		"ParagrahThree": "",
 		"ParagrahTwo": "In TESTNET mode, any neuralium tokens gained are for testing purposes only and may not be used in the production 'MainNet' network. Tokens gained in TESTNET mode may also be lost or reset at any time without prior notice.",
 		"Warning": "The node and the wallet are currently in TestNet Mode on a separate network.",
-		"Period": "TESTNET Trial run III will last from September 19th 19:00 (EST) to September 20th 19:00 (EST)"
+		"Period": "TESTNET Trial run IV will last from October 15th 19:00 (EST) to October 20th 19:00 (EST)"
 	},
 	"wallet": {
 		"AccountCreation": "Account creation",

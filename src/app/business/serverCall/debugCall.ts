@@ -1,26 +1,26 @@
 import { CommonCall } from "./commonCall";
 import { LogService } from "../..//service/log.service";
-import { HubConnection } from "@aspnet/signalr";
+import { ServerConnectionService } from '../..//service/server-connection.service';
 
 export class DebugCall extends CommonCall {
 
     private constructor(
-        connection: HubConnection,
+      protected serviceConnectionService : ServerConnectionService,
         logService: LogService) {
-        super(connection, logService)
+        super(serviceConnectionService, logService)
     }
 
     static create(
-        connection: HubConnection,
+      serviceConnectionService : ServerConnectionService,
         logService: LogService) {
-        return new DebugCall(connection, logService)
+        return new DebugCall(serviceConnectionService, logService)
     }
 
     callRefillNeuraliums(accountUuid: string): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
 
             this.logEvent("RefillNeuraliums - call", { 'accountUuid': accountUuid });
-            this.connection.invoke<boolean>("RefillNeuraliums", accountUuid)
+            this.serviceConnectionService.invoke<boolean>("RefillNeuraliums", accountUuid)
               .then(
                 response => {
                   this.logEvent("RefillNeuraliums - response", response);

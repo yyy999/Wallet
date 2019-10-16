@@ -1,26 +1,26 @@
 import { CommonCall } from "./commonCall";
 import { LogService } from "../..//service/log.service";
-import { HubConnection } from "@aspnet/signalr";
+import { ServerConnectionService } from '../..//service/server-connection.service';
 
 export class AccountCall extends CommonCall {
 
     private constructor(
-        connection: HubConnection,
+      serviceConnectionService : ServerConnectionService,
         logService: LogService) {
-        super(connection, logService)
+        super(serviceConnectionService, logService)
     }
 
     static create(
-        connection: HubConnection,
+      serviceConnectionService : ServerConnectionService,
         logService: LogService) {
-        return new AccountCall(connection, logService)
+        return new AccountCall(serviceConnectionService, logService)
     }
 
     callSetActiveAccount(chainType: number, accountUuid: string): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
 
             this.logEvent("SetActiveAccount - call", { chainType, accountUuid });
-            this.connection.invoke<boolean>("SetActiveAccount", chainType, accountUuid)
+            this.serviceConnectionService.invoke<boolean>("SetActiveAccount", chainType, accountUuid)
               .then(
                 response => {
                   this.logEvent("setActiveAccount - response", response);
@@ -37,7 +37,7 @@ export class AccountCall extends CommonCall {
         return new Promise<number>((resolve, reject) => {
 
             this.logEvent("publishAccount - call", { 'chainType': chainType, 'accountUuId': accountUuId });
-            this.connection.invoke<number>("PublishAccount", chainType, accountUuId)
+            this.serviceConnectionService.invoke<number>("PublishAccount", chainType, accountUuId)
               .then(
                 response => {
                   this.logEvent("publishAccount - response", response);

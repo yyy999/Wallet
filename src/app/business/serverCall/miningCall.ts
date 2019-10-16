@@ -1,27 +1,27 @@
 import { CommonCall } from "./commonCall";
 import { LogService } from "../..//service/log.service";
-import { HubConnection } from "@aspnet/signalr";
+import { ServerConnectionService } from '../..//service/server-connection.service';
 import { MiningHistory } from "../..//model/mining-history";
 
 export class MiningCall extends CommonCall {
 
   private constructor(
-    connection: HubConnection,
+    protected serviceConnectionService : ServerConnectionService,
     logService: LogService) {
-    super(connection, logService)
+    super(serviceConnectionService, logService)
   }
 
   static create(
-    connection: HubConnection,
+    serviceConnectionService : ServerConnectionService,
     logService: LogService) {
-    return new MiningCall(connection, logService)
+    return new MiningCall(serviceConnectionService, logService)
   }
 
   callStartMining(chainType: number, delegateAccountId: string) {
     return new Promise<boolean>((resolve, reject) => {
 
         this.logEvent("StartMining - call", { 'chainType': chainType, 'delegateAccountId': delegateAccountId });
-        this.connection.invoke<boolean>("StartMining", chainType, delegateAccountId)
+        this.serviceConnectionService.invoke<boolean>("StartMining", chainType, delegateAccountId)
           .then(
             response => {
               this.logEvent("StartMining - response", response);
@@ -37,7 +37,7 @@ export class MiningCall extends CommonCall {
     return new Promise<boolean>((resolve, reject) => {
   
         this.logEvent("StopMining - call", { 'chainType': chainType });
-        this.connection.invoke<boolean>("StopMining", chainType)
+        this.serviceConnectionService.invoke<boolean>("StopMining", chainType)
           .then(
             response => {
               this.logEvent("StopMining - response", response);
@@ -53,7 +53,7 @@ export class MiningCall extends CommonCall {
     return new Promise<boolean>((resolve, reject) => {
 
         this.logEvent("IsMiningEnabled - call", { 'chainType': chainType });
-        this.connection.invoke<boolean>("IsMiningEnabled", chainType)
+        this.serviceConnectionService.invoke<boolean>("IsMiningEnabled", chainType)
           .then(
             response => {
               this.logEvent("IsMiningEnabled - response", response);
@@ -69,17 +69,17 @@ export class MiningCall extends CommonCall {
     return new Promise<Array<MiningHistory>>((resolve, reject) => {
 
         this.logEvent("QueryMiningHistory - call", { 'chainType': chainType });
-        this.connection.invoke<Array<object>>("QueryMiningHistory", chainType)
+        this.serviceConnectionService.invoke<Array<object>>("QueryMiningHistory", chainType)
           .then(
             response => {
               this.logEvent("QueryMiningHistory - response", response);
               var miningHistoryList = new Array<MiningHistory>();
               response.forEach(miningHistory => {
                 try {
-                  var blockId = <number>miningHistory["BlockId"];
-                  var transactionIds = <Array<string>>miningHistory["TransactionIds"];
-                  var bountyShare = <number>miningHistory["BountyShare"];
-                  var transactionTips = <number>miningHistory["TransactionTips"];
+                  var blockId = <number>miningHistory["blockId"];
+                  var transactionIds = <Array<string>>miningHistory["transactionIds"];
+                  var bountyShare = <number>miningHistory["bountyShare"];
+                  var transactionTips = <number>miningHistory["transactionTips"];
                   miningHistoryList.push(MiningHistory.create(blockId, transactionIds, bountyShare, transactionTips));
                 } catch (error) {
                   this.logEvent("Cannot use mining hitory data.", miningHistory);

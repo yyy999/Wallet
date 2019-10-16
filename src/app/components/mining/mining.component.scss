@@ -1,3 +1,19 @@
+.column {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.column > * {
+  padding-top: 1em;
+  flex-grow:1;
+}
+
+mat-card{
+  margin:1em;
+  width: 550px;
+}
+
 mat-expansion-panel-header{
     font-size: 15px;
     color: #673ab7;

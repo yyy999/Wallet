@@ -7,11 +7,11 @@
 		"AccountName": "Nom du compte",
 		"AccountNumber": "ID de compte",
 		"AccountStatus": "Statut du compte",
-		"CurrentAccount": "Compte actif",
-		"DeclarationBlockId": "Déclaré sur le bloc",
+		"CurrentAccount": "Compte minier actif",
+		"declarationBlockId": "Déclaré sur le bloc",
 		"Dispatched": "Diffusé",
 		"WalletEncryption" : "Cryptage",
-		"FriendlyNameForYourAccount": "un nom pour votre compte",
+		"friendlyNameForYourAccount": "un nom pour votre compte",
 		"Hash": "Hash",
 		"Joint": "Join",
 		"Locked": "Verrouillé",
@@ -140,7 +140,21 @@
 		"Explain" : "Ici, vous pouvez faire fonctionner votre ordinateur en lui faisant effectuer des énigmes mathématiques pour débloquer de nouveaux Neuralium.",
 		"Miningportalert" : "Remarque: Pour exploiter le port TCP 33888, vous devez le connecter à d’autres nœuds sur le P2P. Assurez-vous d'ouvrir votre pare-feu.",
 		"PortConnectable" : "Le port 33888 est connectable.",
-		"PortNotConnectable" : "Le port 33888 n'est pas connectable"
+		"PortNotConnectable" : "Le port 33888 n'est pas connectable",
+		"Options" : "Options",
+		"OptionTrxSelectionStrategy" : "Stratégie de sélection des transactions",
+		"HighestTipStrategy" : "Le plus haut pourboire",
+		"CreationTimeStrategy" : "Temps de creation",
+		"TransactionTypeStrategy" : "Type de transaction",
+		"TransactionSizeStrategy" : "Taille de la transaction",
+		"RandomStrategy" : "Aléatoire",
+		"OlderToNewer" : "Plus vieux au plus récent",
+		"NewerToOlder" : "De plus en plus vieux",
+		"Random" : "Aléatoire",
+		"MostToLess" : "Le plus à moins",
+		"LessToMost" : "Moins au plus",
+		"LargerToSmaller" : "Plus grand à plus petit",
+		"SmallerToLarger" : "Plus petit à plus grand"
 	},
 	"neuralium": {
 		"Credit": "Crédit",
@@ -205,7 +219,7 @@
 		"ParagrahThree": "",
 		"ParagrahTwo": "En mode TESTNET, les jetons de Neuralium obtenus ne servent qu'à des fins de test et ne peuvent pas être utilisés dans le réseau de production «MainNet». Les jetons gagnés en mode TESTNET peuvent également être perdus ou réinitialisés à tout moment sans préavis.",
 		"Warning": "Le serveur et le porte-monnaie sont actuellement en mode \"TESTNET\" sur un réseau isolé..",
-		"Period": "La periode d'essai III de TESTNET durera du 19 septembre 19h (EST) au 20 septembre à 19h (EST)"
+		"Period": "La periode d'essai IV de TESTNET durera du 15 Octobre 19h (EST) au 20 Octobre à 19h (EST)"
 	},
 	"wallet": {
 		"AccountCreation": "Création du compte",

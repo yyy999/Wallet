@@ -1,28 +1,28 @@
 import { CommonCall } from "./commonCall";
 import { LogService } from "../..//service/log.service";
-import { HubConnection } from "@aspnet/signalr";
+import { ServerConnectionService } from '../..//service/server-connection.service';
 import { WalletCreation } from "../..//model/wallet";
-import { WalletAccount, WalletAccountStatus, WalletAccountType } from "../..//model/walletAccount";
+import { WalletAccount, WalletAccountStatus, WalletaccountType } from "../..//model/walletAccount";
 
 export class WalletCall extends CommonCall {
 
     private constructor(
-        connection: HubConnection,
+      protected serviceConnectionService : ServerConnectionService,
         logService: LogService) {
-        super(connection, logService)
+        super(serviceConnectionService, logService)
     }
 
     static create(
-        connection: HubConnection,
+      serviceConnectionService : ServerConnectionService,
         logService: LogService) {
-        return new WalletCall(connection, logService)
+        return new WalletCall(serviceConnectionService, logService);
     }
 
     callCreateNewWallet(chainType: number, wallet: WalletCreation): Promise<number> {
         return new Promise<number>((resolve, reject) => {
 
             this.logEvent("callCreateNewWallet - call", { 'chainType': chainType, 'wallet': wallet });
-            this.connection.invoke<number>("CreateNewWallet", chainType, wallet.friendlyName, wallet.encryptWallet, wallet.encryptKey, wallet.encryptKeysIndividualy, wallet.passPhrases, wallet.publishAccount)
+            this.serviceConnectionService.invoke<number>("CreateNewWallet", chainType, wallet.friendlyName, wallet.encryptWallet, wallet.encryptKey, wallet.encryptKeysIndividualy, wallet.passPhrases, wallet.publishAccount)
               .then(
                 response => {
                   this.logEvent("callCreateNewWallet - response", response);
@@ -38,7 +38,7 @@ export class WalletCall extends CommonCall {
         return new Promise<number>((resolve, reject) => {
 
             this.logEvent("setWalletPassphrase - call", { 'correlationId': correlationId, 'password': password });
-            this.connection.invoke<number>("SetWalletPassphrase", correlationId, password)
+            this.serviceConnectionService.invoke<number>("SetWalletPassphrase", correlationId, password)
               .then(
                 response => {
                   this.logEvent("setWalletPassphrase - response", response);
@@ -54,7 +54,7 @@ export class WalletCall extends CommonCall {
         return new Promise<number>((resolve, reject) => {
 
             this.logEvent("setKeysPassphrase - call", { 'correlationId': correlationId, 'password': password });
-            this.connection.invoke<number>("SetKeysPassphrase", correlationId, password)
+            this.serviceConnectionService.invoke<number>("SetKeysPassphrase", correlationId, password)
               .then(
                 response => {
                   this.logEvent("setKeysPassphrase - response", response);
@@ -70,17 +70,17 @@ export class WalletCall extends CommonCall {
         return new Promise<Array<WalletAccount>>((resolve, reject) => {
  
             this.logEvent("queryWalletAccounts - call", { 'chainType': chainType });
-            this.connection.invoke<Array<WalletAccount>>("QueryWalletAccounts", chainType)
+            this.serviceConnectionService.invoke<Array<WalletAccount>>("QueryWalletAccounts", chainType)
               .then(
                 response => {
                   this.logEvent("queryWalletAccounts - response", response);
                   var walletAccounts = new Array<WalletAccount>();
                   response.forEach(account => {
-                    var accountUuid: string = account.AccountUuid;
-                    var accountId: string = <string>account.AccountId;
-                    var status: number = <WalletAccountStatus>account.Status;
-                    var friendlyName: string = account.FriendlyName;
-                    var isActive: boolean = <boolean>account.IsActive;
+                    var accountUuid: string = account.accountUuid;
+                    var accountId: string = <string>account.accountId;
+                    var status: number = <WalletAccountStatus>account.status;
+                    var friendlyName: string = account.friendlyName;
+                    var isActive: boolean = <boolean>account.isActive;
                     var walletAccount = WalletAccount.createNew(accountUuid, accountId, status, 0, 1, friendlyName, false, isActive);
                     walletAccounts.push(walletAccount);
                   })
@@ -96,20 +96,20 @@ export class WalletCall extends CommonCall {
         return new Promise<WalletAccount>((resolve, reject) => {
 
             this.logEvent("QueryWalletAccountDetails - call", { chainType, accountUuid });
-            this.connection.invoke<Array<WalletAccount>>("QueryWalletAccountDetails", chainType, accountUuid)
+            this.serviceConnectionService.invoke<Array<WalletAccount>>("QueryWalletAccountDetails", chainType, accountUuid)
               .then(
                 account => {
                   this.logEvent("QueryWalletAccountDetails - response", account);
-                  var accountUuid: string = account["AccountUuid"];
-                  var accountId: string = account["AccountId"];
-                  var status: number = <WalletAccountStatus>account["Status"];
-                  var declarationBlockId = <number>account["DeclarationBlockid"];
-                  var accountType = <WalletAccountType>account["AccountType"];
-                  var friendlyName: string = account["FriendlyName"];
-                  var isEncrypted: boolean = <boolean>account["KeysEncrypted"];
-                  var isActive: boolean = <boolean>account["IsActive"];
-                  var accountHash = account["AccountHash"];
-                  var trustLevel = account["TrustLevel"];
+                  var accountUuid: string = account["accountUuid"];
+                  var accountId: string = account["accountId"];
+                  var status: number = <WalletAccountStatus>account["status"];
+                  var declarationBlockId = <number>account["declarationBlockid"];
+                  var accountType = <WalletaccountType>account["accountType"];
+                  var friendlyName: string = account["friendlyName"];
+                  var isEncrypted: boolean = <boolean>account["keysEncrypted"];
+                  var isActive: boolean = <boolean>account["isActive"];
+                  var accountHash = account["accountHash"];
+                  var trustLevel = account["trustLevel"];
                   var walletAccount = WalletAccount.createNew(accountUuid, accountId, status, declarationBlockId, accountType, friendlyName, isEncrypted, isActive, accountHash, trustLevel);
                   resolve(walletAccount);
                 })
@@ -123,7 +123,7 @@ export class WalletCall extends CommonCall {
         return new Promise<boolean>((resolve, reject) => {
 
             this.logEvent("QueryWalletSynced - call", { 'chainType': chainType });
-            this.connection.invoke<boolean>("QueryWalletSynced", chainType)
+            this.serviceConnectionService.invoke<boolean>("QueryWalletSynced", chainType)
               .then(
                 response => {
                   this.logEvent("QueryWalletSynced - response", response);
@@ -139,7 +139,7 @@ export class WalletCall extends CommonCall {
         return new Promise<boolean>((resolve, reject) => {
 
             this.logEvent("isWalletLoaded - call", { 'chainType': chainType });
-            this.connection.invoke<boolean>("IsWalletLoaded", chainType)
+            this.serviceConnectionService.invoke<boolean>("IsWalletLoaded", chainType)
               .then(
                 response => {
                   this.logEvent("isWalletLoaded - response", response);
@@ -155,7 +155,7 @@ export class WalletCall extends CommonCall {
         return new Promise<boolean>((resolve, reject) => {
 
             this.logEvent("walletExists - call", { 'chainType': chainType });
-            this.connection.invoke<boolean>("WalletExists", chainType)
+            this.serviceConnectionService.invoke<boolean>("WalletExists", chainType)
               .then(
                 response => {
                   this.logEvent("walletExists - response", response);
@@ -171,7 +171,7 @@ export class WalletCall extends CommonCall {
         return new Promise<number>((resolve, reject) => {
 
             this.logEvent("loadWallet - call", { 'chainType': chainType });
-            this.connection.invoke<number>("LoadWallet", chainType)
+            this.serviceConnectionService.invoke<number>("LoadWallet", chainType)
               .then(
                 response => {
                   this.logEvent("loadWallet - response", response);
@@ -187,7 +187,7 @@ export class WalletCall extends CommonCall {
         return new Promise<boolean>((resolve, reject) => {
 
             this.logEvent("isWalletSynced - call", { 'chainType': chainType });
-            this.connection.invoke<boolean>("IsWalletSynced", chainType)
+            this.serviceConnectionService.invoke<boolean>("IsWalletSynced", chainType)
               .then(
                 response => {
                   this.logEvent("isWalletSynced - response", response);

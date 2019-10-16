@@ -35,7 +35,7 @@
             "scripts": [
               "node_modules/@fortawesome/fontawesome-free/js/all.js",
               "node_modules/jquery/dist/jquery.min.js",
-              "node_modules/signalr/jquery.signalR.js"
+              "node_modules/@microsoft/signalr/dist/browser/signalr.js"
             ]
           },
           "configurations": {

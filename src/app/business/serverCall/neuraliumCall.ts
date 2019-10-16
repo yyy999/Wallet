@@ -1,4 +1,4 @@
-import { HubConnection } from "@aspnet/signalr";
+import { ServerConnectionService } from '../..//service/server-connection.service';
 import { TotalNeuralium } from "../..//model/total-neuralium";
 import { CommonCall } from "./commonCall";
 import { LogService } from "../..//service/log.service";
@@ -8,29 +8,29 @@ import { NeuraliumTransaction, TransactionStatuses, TransactionVersion, Transact
 export class NeuraliumCall extends CommonCall {
 
     private constructor(
-        connection: HubConnection,
+        protected serviceConnectionService : ServerConnectionService,
         logService: LogService) {
-        super(connection, logService);
+        super(serviceConnectionService, logService);
     }
 
     static create(
-        connection: HubConnection,
+        serviceConnectionService : ServerConnectionService,
         logService: LogService) {
-        return new NeuraliumCall(connection, logService);
+        return new NeuraliumCall(serviceConnectionService, logService);
     }
 
     callQueryAccountTotalNeuraliums(accountUuid: string): Promise<TotalNeuralium> {
         return new Promise<TotalNeuralium>((resolve, reject) => {
  
                 this.logEvent("QueryAccountTotalNeuraliums - call", { 'accountUuid': accountUuid });
-                this.connection.invoke<object>("QueryAccountTotalNeuraliums", accountUuid)
+                this.serviceConnectionService.invoke<object>("QueryAccountTotalNeuraliums", accountUuid)
                     .then(
                         response => {
                             this.logEvent("QueryAccountTotalNeuraliums - response", response);
-                            var total = Number(response["Total"]);
-                            var debit = Number(response["ReservedDebit"]);
-                            var credit = Number(response["ReservedCredit"]);
-                            var frozen = Number(response["Frozen"]);
+                            var total = Number(response["total"]);
+                            var debit = Number(response["reservedDebit"]);
+                            var credit = Number(response["reservedCredit"]);
+                            var frozen = Number(response["frozen"]);
                             resolve(TotalNeuralium.create(total, credit, debit, frozen));
                         })
                     .catch(reason => {
@@ -43,7 +43,7 @@ export class NeuraliumCall extends CommonCall {
         return new Promise<number>((resolve, reject) => {
 
                 this.logEvent("sendNeuraliums - call", { 'targetAccountId': targetAccountId, 'amount': amount, 'tip': tip });
-                this.connection.invoke<number>("SendNeuraliums", targetAccountId, amount.toString(), tip.toString(), note)
+                this.serviceConnectionService.invoke<number>("SendNeuraliums", targetAccountId, amount, tip, note)
                     .then(
                         response => {
                             this.logEvent("sendNeuraliums - response", response);
@@ -64,12 +64,12 @@ export class NeuraliumCall extends CommonCall {
             }
 
                 this.logEvent("QueryNeuraliumTimelineHeader - call", { accountUuid });
-                this.connection.invoke<Array<object>>("QueryNeuraliumTimelineHeader", accountUuid)
+                this.serviceConnectionService.invoke<Array<object>>("QueryNeuraliumTimelineHeader", accountUuid)
                     .then(
                         response => {
                             this.logEvent("QueryNeuraliumTimelineHeader - response", response);
-                            var firstDay = new Date(response["FirstDay"]);
-                            var numberOfDays = <number>Number(response["NumberOfDays"]);
+                            var firstDay = new Date(response["firstDay"]);
+                            var numberOfDays = <number>Number(response["numberOfDays"]);
                             var header = TimelineHeader.create(numberOfDays, firstDay);
                             resolve(header);
                         })
@@ -83,24 +83,24 @@ export class NeuraliumCall extends CommonCall {
     createTimelineDayForTest(date: string): TimelineDay {
         var timelineDay = TimelineDay.create(new Date(Date.parse(date)), 1, 20.2365);
         var entryWithTransaction = TimelineEntry.create("1",new Date(Date.parse(date + " 17:40:00")), "SF", "SG", 10.256458, 0.000025, 0, EntryDirection.debit, EntryCreditType.none, true);
-        entryWithTransaction.Transaction = new NeuraliumTransaction("123456","456",new Date(Date.now()),new TransactionVersion(TransactionType.DEBUG,1,1),null,TransactionStatuses.Confirmed,true,"notation","789",500,5);
-        timelineDay.Entries.push(entryWithTransaction);
-        timelineDay.Entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 15:30:00")), "SF", "SG", 10.256458, 0.000025, 0, EntryDirection.credit, EntryCreditType.transaction, true));
-        timelineDay.Entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 15:45:00")),"SF", "SG", 10.256458, 0.000025, 0, EntryDirection.credit, EntryCreditType.election, true));
-        timelineDay.Entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 16:00:00")), "SF", "SG", 10.256458, 0.000025, 0, EntryDirection.debit, EntryCreditType.none, true));
-        timelineDay.Entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 16:30:00")), "SF", "SG", 0.256458, 0.000025, 0, EntryDirection.debit, EntryCreditType.none, true));
-        timelineDay.Entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 16:45:00")),"SF", "SG", 10.256458, 0.000025, 0, EntryDirection.credit, EntryCreditType.election, true));
-        timelineDay.Entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 17:00:00")), "SF", "SG", 10.256458, 0.000025, 0, EntryDirection.debit, EntryCreditType.none, true));
-        timelineDay.Entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 17:30:00")),"SF", "SG", 0.256458, 0.000025, 0, EntryDirection.credit, EntryCreditType.transaction, true));
-        timelineDay.Entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 17:45:00")),"SF", "SG", 10.256458, 0.000025, 0, EntryDirection.debit, EntryCreditType.none, true));
-        timelineDay.Entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 15:45:00")),"SF", "SG", 10.256458, 0.000025, 0, EntryDirection.credit, EntryCreditType.election, true));
-        timelineDay.Entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 16:00:00")), "SF", "SG", 10.256458, 0.000025, 0, EntryDirection.debit, EntryCreditType.none, true));
-        timelineDay.Entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 16:30:00")), "SF", "SG", 0.256458, 0.000025, 0, EntryDirection.debit, EntryCreditType.none, true));
-        timelineDay.Entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 16:45:00")),"SF", "SG", 10.256458, 0.000025, 0, EntryDirection.credit, EntryCreditType.election, true));
-        timelineDay.Entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 17:00:00")), "SF", "SG", 10.256458, 0.000025, 0, EntryDirection.debit, EntryCreditType.none, true));
-        timelineDay.Entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 17:30:00")), "SF", "SG", 0.256458, 0.000025, 0, EntryDirection.credit, EntryCreditType.transaction, true));
-        timelineDay.Entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 17:45:00")),"SF", "SG", 10.256458, 0.000025, 0, EntryDirection.debit, EntryCreditType.none, true));
-        timelineDay.Entries = timelineDay.Entries.sort((a, b) => { return b.Timestamp.getTime() - a.Timestamp.getTime() });
+        entryWithTransaction.transaction = new NeuraliumTransaction("123456","456",new Date(Date.now()),new TransactionVersion(TransactionType.DEBUG,1,1),null,TransactionStatuses.Confirmed,true,"notation","789",500,5);
+        timelineDay.entries.push(entryWithTransaction);
+        timelineDay.entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 15:30:00")), "SF", "SG", 10.256458, 0.000025, 0, EntryDirection.credit, EntryCreditType.transaction, true));
+        timelineDay.entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 15:45:00")),"SF", "SG", 10.256458, 0.000025, 0, EntryDirection.credit, EntryCreditType.election, true));
+        timelineDay.entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 16:00:00")), "SF", "SG", 10.256458, 0.000025, 0, EntryDirection.debit, EntryCreditType.none, true));
+        timelineDay.entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 16:30:00")), "SF", "SG", 0.256458, 0.000025, 0, EntryDirection.debit, EntryCreditType.none, true));
+        timelineDay.entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 16:45:00")),"SF", "SG", 10.256458, 0.000025, 0, EntryDirection.credit, EntryCreditType.election, true));
+        timelineDay.entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 17:00:00")), "SF", "SG", 10.256458, 0.000025, 0, EntryDirection.debit, EntryCreditType.none, true));
+        timelineDay.entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 17:30:00")),"SF", "SG", 0.256458, 0.000025, 0, EntryDirection.credit, EntryCreditType.transaction, true));
+        timelineDay.entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 17:45:00")),"SF", "SG", 10.256458, 0.000025, 0, EntryDirection.debit, EntryCreditType.none, true));
+        timelineDay.entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 15:45:00")),"SF", "SG", 10.256458, 0.000025, 0, EntryDirection.credit, EntryCreditType.election, true));
+        timelineDay.entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 16:00:00")), "SF", "SG", 10.256458, 0.000025, 0, EntryDirection.debit, EntryCreditType.none, true));
+        timelineDay.entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 16:30:00")), "SF", "SG", 0.256458, 0.000025, 0, EntryDirection.debit, EntryCreditType.none, true));
+        timelineDay.entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 16:45:00")),"SF", "SG", 10.256458, 0.000025, 0, EntryDirection.credit, EntryCreditType.election, true));
+        timelineDay.entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 17:00:00")), "SF", "SG", 10.256458, 0.000025, 0, EntryDirection.debit, EntryCreditType.none, true));
+        timelineDay.entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 17:30:00")), "SF", "SG", 0.256458, 0.000025, 0, EntryDirection.credit, EntryCreditType.transaction, true));
+        timelineDay.entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 17:45:00")),"SF", "SG", 10.256458, 0.000025, 0, EntryDirection.debit, EntryCreditType.none, true));
+        timelineDay.entries = timelineDay.entries.sort((a, b) => { return b.timestamp.getTime() - a.timestamp.getTime() });
         return timelineDay;
     }
 
@@ -124,34 +124,34 @@ export class NeuraliumCall extends CommonCall {
         return new Promise<Array<TimelineDay>>((resolve, reject) => {
 
                 this.logEvent("QueryNeuraliumTimelineSection - call", { accountUuid, firstday, skip, take });
-                this.connection.invoke<Array<object>>("QueryNeuraliumTimelineSection", accountUuid, firstday, skip, take)
+                this.serviceConnectionService.invoke<Array<object>>("QueryNeuraliumTimelineSection", accountUuid, firstday, skip, take)
                     .then(
                         response => {
                             this.logEvent("QueryNeuraliumTimelineSection - response", response);
                             var list = new Array<TimelineDay>();
                             response.forEach(element => {
-                                var Day = new Date(element["Day"]);
-                                var Id = <number>Number(element["Id"]);
-                                var EndingTotal = <number>Number(element["EndingTotal"]);
+                                var Day = new Date(element["day"]);
+                                var Id = <number>Number(element["id"]);
+                                var EndingTotal = <number>Number(element["endingTotal"]);
 
                                 var timelineDay = TimelineDay.create(Day, Id, EndingTotal);
-                                var Entries = <Array<any>>element["Entries"];
+                                var Entries = <Array<any>>element["entries"];
                                 Entries.forEach(item => {
-                                    var TransactionId = item["TransactionId"];
-                                    var Timestamp = new Date(item["Timestamp"]);
-                                    var SenderAccountId = item["SenderAccountId"];
-                                    var RecipientAccountId = item["RecipientAccountId"];
-                                    var Amount = <number>Number(item["Amount"]);
-                                    var Tips = <number>Number(item["Tips"]);
-                                    var Total = <number>Number(item["Total"]);
-                                    var Direction = <EntryDirection>Number(item["Direction"]);
-                                    var CreditType = <EntryCreditType>Number(item["CreditType"]);
-                                    var Confirmed = <boolean>Boolean(item["Confirmed"]);
+                                    var TransactionId = item["transactionId"];
+                                    var Timestamp = new Date(item["timestamp"]);
+                                    var SenderAccountId = item["senderAccountId"];
+                                    var RecipientAccountId = item["recipientAccountId"];
+                                    var Amount = <number>Number(item["amount"]);
+                                    var Tips = <number>Number(item["tips"]);
+                                    var Total = <number>Number(item["total"]);
+                                    var Direction = <EntryDirection>Number(item["direction"]);
+                                    var CreditType = <EntryCreditType>Number(item["creditType"]);
+                                    var Confirmed = <boolean>Boolean(item["confirmed"]);
                                     var Entry = TimelineEntry.create(TransactionId,Timestamp, SenderAccountId, RecipientAccountId, Amount, Tips, Total, Direction, CreditType, Confirmed);
-                                    timelineDay.Entries.push(Entry);
+                                    timelineDay.entries.push(Entry);
                                 });
                                 // sort from youngest to oldest
-                                timelineDay.Entries = timelineDay.Entries.sort((a, b) => { return b.Timestamp.getTime() - a.Timestamp.getTime() });
+                                timelineDay.entries = timelineDay.entries.sort((a, b) => { return b.timestamp.getTime() - a.timestamp.getTime() });
                                 list.push(timelineDay);
                             });
                             resolve(list);

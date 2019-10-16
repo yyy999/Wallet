@@ -6,7 +6,6 @@ import { WalletService } from '../..//service/wallet.service';
 import { SyncStatusService } from '../..//service/sync-status.service';
 import { ServerConnectionService } from '../..//service/server-connection.service';
 import { timer, Observable } from 'rxjs';
-import { TimeoutError } from '@aspnet/signalr';
 
 @Component({
   selector: 'app-blockchain-info',
@@ -48,21 +47,26 @@ export class BlockchainInfoComponent implements OnInit {
       this.updateRemainingTime();
     })
 
-    this.blockchainService.getBlockchainInfo().subscribe(blockchainInfo => {
-      this.blockchainInfo = blockchainInfo;
-    })
-
-    this.walletService.getCurrentAccount().subscribe(account => {
-      this.account = account;
-    })
-
-    this.syncService.getPeerCount().subscribe(count => {
-      this.peerCount = count;
-    })
-
-    this.serverConnection.callQuerySystemVersion().then(version => {
-      this.systemVersion = version.version;
-    })
+    this.serverConnection.serverConnection.subscribe((connected) => {
+      if(connected === true){
+        this.blockchainService.getBlockchainInfo().subscribe(blockchainInfo => {
+          this.blockchainInfo = blockchainInfo;
+        })
+    
+        this.walletService.getCurrentAccount().subscribe(account => {
+          this.account = account;
+        })
+    
+        this.syncService.getPeerCount().subscribe(count => {
+          this.peerCount = count;
+        })
+    
+        this.serverConnection.callQuerySystemVersion().then(version => {
+          this.systemVersion = version.version;
+        })
+      }
+    });
+    
   }
 
   updateRemainingTime() {

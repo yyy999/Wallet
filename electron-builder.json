@@ -26,7 +26,8 @@
     "artifactName": "${productName}-windows.${ext}",
     "target": [
       "zip"
-    ]
+    ],
+    "extraFiles" : [{"from": "packaging/neuralium/win32", "to" : "neuralium", "filter": ["**/*"]}]
   },
   "mac": {
     "icon": "icon.png",
@@ -42,8 +43,8 @@
     "artifactName": "${productName}-linux.${ext}",
     "category" : "Office",
     "target": [
-      "tar.gz"
-    ]
-  },
-  "afterPack": "./afterPackHook.js"
+      "dir"
+    ],
+    "extraFiles" : [{"from": "packaging/neuralium/linux", "to" : "neuralium", "filter": ["**/*"]}]
+  }
 }

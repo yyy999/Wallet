@@ -29,7 +29,7 @@ export class ServerMessagesService implements OnInit {
       switch (event.eventType) {
         case EventTypes.Message:
           if( this.callback){
-            console.log(event.message + "SdfS");
+            console.log(event.message);
            this.callback(event.message);
           }
           break;

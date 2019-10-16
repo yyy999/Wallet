@@ -41,9 +41,9 @@ export class DebugComponent implements OnInit {
 
     this.walletService.getCurrentAccount().subscribe(account => {
       if (account != NO_WALLET_ACCOUNT) {
-        this.accountUuid = account.AccountUuid;
+        this.accountUuid = account.accountUuid;
         this.showAccountCommands = true;
-        this.addNeuraliumsEnabled = account.Status == WalletAccountStatus.Published;
+        this.addNeuraliumsEnabled = account.status == WalletAccountStatus.Published;
       }
       else {
         this.showAccountCommands = false;

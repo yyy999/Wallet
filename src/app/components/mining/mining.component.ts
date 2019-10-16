@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { MiningService } from '../..//service/mining.service';
 import { ConfigService } from '../..//service/config.service';
+import { ServerConnectionService } from '../..//service/server-connection.service';
+import { CONNECTED, EventTypes } from '../..//model/serverConnectionEvent';
 
 @Component({
   selector: 'app-mining',
@@ -12,18 +14,28 @@ export class MiningComponent implements OnInit {
   delegateAccount:string;
   isMining:boolean;
   isConnectable:boolean;
-
+  disableMiningButton:boolean = false;
+  selectedStrategy:string;
+  sortingMethod:string = 'OlderToNewer';
+  tipSortingMethod:string = 'MostToLess';
+  timeSortingMethod:string = 'NewerToOlder';
+  sizeSortingMethod:string = 'LargerToSmaller';
 
   constructor(private miningService:MiningService,
-    private configService:ConfigService) { }
+    private configService:ConfigService,
+    private serverConnectionService: ServerConnectionService) { 
+
+      this.serverConnectionService.isConnectedToServer().subscribe(connected => {
+        if (connected === CONNECTED) {
+            this.getMiningPortConnectableFromServer();
+        }
+       });
+    }
 
   ngOnInit() {
     this.miningService.isMining.subscribe(mining =>{
       this.isMining = mining;
-    });
-
-    this.miningService.isMining.subscribe(mining =>{
-      this.isMining = mining;
+      this.disableMiningButton = false;
     });
 
     this.miningService.isConnectable.subscribe(connectable =>{
@@ -31,6 +43,12 @@ export class MiningComponent implements OnInit {
     });
 
     this.delegateAccount = this.configService.delegateAccount;
+  }
+
+  private getMiningPortConnectableFromServer() {
+    this.serverConnectionService.callQueryMiningPortConnectable().then(connectable => {
+      this.isConnectable = connectable;
+    });
   }
 
   toggleMining(){
@@ -43,10 +61,12 @@ export class MiningComponent implements OnInit {
   }
 
   startMining(){
+    this.disableMiningButton = true;
     this.miningService.startMining();
   }
 
   stopMining(){
+    this.disableMiningButton = false;
     this.miningService.stopMining();
   }
 
@@ -55,4 +75,27 @@ export class MiningComponent implements OnInit {
     this.configService.saveSettings();
   }
 
+  showSortingOrder():boolean{
+
+    return this.selectedStrategy === 'CreationTimeStrategy' || this.selectedStrategy === 'TransactionSizeStrategy';
+
+  }
+
+  showTimeSortingOrder():boolean{
+
+    return this.selectedStrategy === 'HighestTipStrategy';
+
+  }
+
+  showTipSortingOrder():boolean{
+
+    return this.selectedStrategy === 'HighestTipStrategy';
+
+  }
+
+  showSizeSortingOrder():boolean{
+
+    return this.selectedStrategy === 'TransactionSizeStrategy';
+
+  }
 }

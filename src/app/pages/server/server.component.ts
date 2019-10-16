@@ -1,4 +1,5 @@
 import { Component, ChangeDetectionStrategy, OnInit, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 import { ConfigService } from '../../service/config.service';
 import { NotificationService } from '../../service/notification.service';
@@ -28,7 +29,8 @@ export class ServerComponent implements OnInit {
     private translateService: TranslateService,
     private serverConnectionService: ServerConnectionService,
     private serverMessagesService: ServerMessagesService,
-    private cdr: ChangeDetectorRef) {
+    private cdr: ChangeDetectorRef,
+    private router: Router) {
 
       // should we set this?
       this.manuallyOpened = true;
@@ -67,11 +69,18 @@ export class ServerComponent implements OnInit {
   }
 
   updateMessages() {
-    setTimeout(() => {
-      this.cdr.detectChanges();
+    if(this.router.isActive){
+      setTimeout(() => {
+        try{
+          this.cdr.detectChanges();
+          this.scrollToBottom();
+        }
+        catch{
+            // do nothing
+        }
+      }, 0);
       this.scrollToBottom();
-    }, 0);
-    this.scrollToBottom();
+    }
   }
 
   scrollToBottom(): void {
