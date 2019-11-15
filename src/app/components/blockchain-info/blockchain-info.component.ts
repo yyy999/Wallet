@@ -5,7 +5,7 @@ import { WalletAccount, NO_WALLET_ACCOUNT } from '../..//model/walletAccount';
 import { WalletService } from '../..//service/wallet.service';
 import { SyncStatusService } from '../..//service/sync-status.service';
 import { ServerConnectionService } from '../..//service/server-connection.service';
-import { timer, Observable } from 'rxjs';
+import * as moment from 'moment';
 
 @Component({
   selector: 'app-blockchain-info',
@@ -18,34 +18,22 @@ export class BlockchainInfoComponent implements OnInit {
   peerCount: number = 0;
   systemVersion: string = "";
 
-  totalRemainingTime: number = 0;
-  currentRemainingTime: Date;
-  remainingTimePercent: number;
-  tempTime: number = 0;
-  timer: NodeJS.Timeout;
-
-  get showRemainingTime(): boolean {
-    return this.tempTime > 0;
-  }
-
+  
   constructor(
     private blockchainService: BlockchainService,
     private walletService: WalletService,
     private syncService: SyncStatusService,
     private serverConnection: ServerConnectionService) { }
 
+    get currentRemainingTime(): Date {
+      return this.blockchainService.currentRemainingTime;
+    }
+
+    get showRemainingTime(): boolean {
+      return this.blockchainService.showRemainingTime;
+    }
+
   ngOnInit() {
-    this.blockchainService.remainingTimeForNextBlock.subscribe(seconds => {
-      this.totalRemainingTime = seconds;
-      this.tempTime = seconds;
-      this.currentRemainingTime = new Date(0, 0, 0, 0, 0, 0);
-      this.currentRemainingTime.setSeconds(this.tempTime);
-      this.remainingTimePercent = (this.totalRemainingTime - this.tempTime) / this.totalRemainingTime * 100;
-      if (this.timer) {
-        clearTimeout(this.timer);
-      }
-      this.updateRemainingTime();
-    })
 
     this.serverConnection.serverConnection.subscribe((connected) => {
       if(connected === true){
@@ -69,19 +57,6 @@ export class BlockchainInfoComponent implements OnInit {
     
   }
 
-  updateRemainingTime() {
-    this.timer = setTimeout(() => {
-      this.tempTime--;
-      this.currentRemainingTime = new Date(0, 0, 0, 0, 0, 0);
-      this.currentRemainingTime.setSeconds(this.tempTime);
-      this.remainingTimePercent = (this.totalRemainingTime - this.tempTime) / this.totalRemainingTime * 100;
-      if (this.tempTime == 0) {
-        clearTimeout(this.timer);
-      }
-      else {
-        this.updateRemainingTime();
-      }
-    }, 1000);
-  }
+  
 
 }

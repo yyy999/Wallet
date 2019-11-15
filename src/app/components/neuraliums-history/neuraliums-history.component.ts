@@ -58,15 +58,15 @@ export class NeuraliumsHistoryComponent implements OnInit {
   }
 
   isDebit(entry: TimelineEntry): boolean {
-    return entry.type == EntryType.debit;
+    return entry.type === EntryType.debit;
   }
 
   isCredit(entry: TimelineEntry): boolean {
-    return entry.type == EntryType.credit;
+    return entry.type === EntryType.credit;
   }
 
   isMining(entry: TimelineEntry): boolean {
-    return entry.type == EntryType.mining;
+    return entry.type === EntryType.mining;
   }
 
   nextPeriod() {
@@ -79,7 +79,7 @@ export class NeuraliumsHistoryComponent implements OnInit {
 
   getAccountName(accountId: string) {
     var contact = this.contactService.getContact(accountId);
-    if (contact != undefined) {
+    if (contact !== undefined) {
       return "- " + contact.friendlyName;
     }
     else {
@@ -93,10 +93,10 @@ export class NeuraliumsHistoryComponent implements OnInit {
       return;
     }
 
-    if (entry.transaction == void(0) || entry.transaction == NO_NEURALIUM_TRANSACTION) {
+    if (!entry.transaction || entry.transaction === NO_NEURALIUM_TRANSACTION) {
       this.transactionService.getTransactionDetails(entry.transactionId)
         .then(transaction => {
-          if (transaction != void (0)) {
+          if (transaction) {
             entry.transaction = <NeuraliumTransaction>transaction;
             entry.showDetails = true;
             entry.lightState = 'close';

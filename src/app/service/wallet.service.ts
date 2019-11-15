@@ -15,7 +15,6 @@ export class WalletService {
   selectedWallet: BehaviorSubject<Wallet> = new BehaviorSubject<Wallet>(NO_WALLET);
   wallets: Object = new Object();
   currentBlockchainId: number = 0;
-  currentWalletId: number = 0;
   currentAccount: BehaviorSubject<WalletAccount> = new BehaviorSubject<WalletAccount>(NO_WALLET_ACCOUNT);
 
   constructor(private syncStatusService: SyncStatusService, private serverConnectionService: ServerConnectionService) {
@@ -24,7 +23,7 @@ export class WalletService {
     this.wallets[CONTRACT_BLOCKCHAIN.id] = NO_WALLET;
 
     this.serverConnectionService.eventNotifier.subscribe(event => {
-      if (event.eventType == EventTypes.AccountPublicationEnded) {
+      if (event.eventType === EventTypes.AccountPublicationEnded) {
         this.refreshWallet(this.currentBlockchainId);
       }
     })
@@ -67,7 +66,7 @@ export class WalletService {
   }
 
   private isNullOrEmpty(text: string) {
-    return text == void (0) || text == "";
+    return !text || text === "";
   }
 
   getWallet(): Observable<Wallet> {
@@ -86,10 +85,6 @@ export class WalletService {
     })
   }
 
-  get walletId(): number {
-    return this.currentWalletId;
-  }
-
   getWalletAccounts(): Promise<Array<WalletAccount>> {
     return new Promise<Array<WalletAccount>>((resolve, reject) => {
       this.serverConnectionService.callQueryWalletAccounts(this.currentBlockchainId)
@@ -99,16 +94,42 @@ export class WalletService {
     });
   }
 
-  getWalletFromServer(blockChainId: number): Promise<number> {
-    return new Promise<number>((resolve, reject) => {
-      this.serverConnectionService.callLoadWallet(blockChainId)
-        .then(walletId => {
-          resolve(walletId);
-        })
-        .catch(reason => {
-          reject(reason);
-        })
-    })
+  loadWallet(blockChainId: number): Promise<boolean> {
+    return new Promise<boolean>((resolve, reject) => {
+      this.serverConnectionService.callWalletExists(blockChainId).then(callWalletExistsResponse => {
+        if (callWalletExistsResponse === true) {
+
+          this.serverConnectionService.callIsWalletLoaded(blockChainId).then(callIsWalletLoadedResponse => {
+            if (callIsWalletLoadedResponse === false) {
+
+              this.serverConnectionService.callLoadWallet(blockChainId, '')
+                .then(longRunningContextId => {
+
+                  this.serverConnectionService.eventNotifier.subscribe((event) => {
+                    if(event.correlationId === longRunningContextId){
+                      switch (event.eventType) {
+                        case EventTypes.WalletLoadingEnded:
+                          resolve(true);
+                          break;
+                        case EventTypes.WalletLoadingError:
+                            resolve(false);
+                            break;
+                        default:
+                          return;
+                      }
+                    }
+                  });
+                });
+            }
+            else {
+              resolve(true);
+            }
+          });
+        }else {
+          resolve(false);
+        }
+      });
+    });
   }
 
   setWallet(blockchainId: number, wallet: Wallet) {
@@ -118,7 +139,7 @@ export class WalletService {
     this.getWalletAccounts()
       .then(accounts => {
         wallet.accounts = accounts;
-        if (wallet.accounts != void (0) && wallet.accounts.length > 0) {
+        if (wallet.accounts && wallet.accounts.length > 0) {
           wallet.accounts.forEach(account => {
             if(account.isActive){
               this.serverConnectionService.callQueryWalletAccountDetails(this.currentBlockchainId, account.accountUuid).then(activeAccount =>{
@@ -130,7 +151,6 @@ export class WalletService {
       })
       .finally(() => {
         this.wallets[blockchainId] = wallet;
-        this.currentWalletId = wallet.id;
         this.changeWallet(blockchainId);
         this.syncStatusService.endSync(syncProcess);
       })
@@ -145,10 +165,20 @@ export class WalletService {
     this.serverConnectionService.callPublishAccount(this.currentBlockchainId, accountUuid);
   }
 
-  refreshWallet(blockchainId: number) {
-    this.getWalletFromServer(blockchainId).then(walletId => {
-      var wallet = Wallet.createNew(walletId);
-      this.setWallet(blockchainId, wallet);
+  refreshWallet(blockchainId: number):Promise<Wallet> {
+
+    return new Promise<Wallet>((resolve, reject) => {
+
+      if(blockchainId && blockchainId !== 0){
+        this.serverConnectionService.callQueryWalletInfo(blockchainId).then(walletInfo => {
+          const wallet = Wallet.createNew(walletInfo);
+          this.setWallet(blockchainId, wallet);
+          resolve(wallet);
+        }).catch(error => {
+          reject(error);
+        });
+      }
+      resolve(null);
     });
   }
 }

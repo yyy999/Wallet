@@ -167,11 +167,11 @@ export class WalletCall extends CommonCall {
           });
       }
 
-      callLoadWallet(chainType: number) {
+      callLoadWallet(chainType: number, passphrase : string) {
         return new Promise<number>((resolve, reject) => {
 
             this.logEvent("loadWallet - call", { 'chainType': chainType });
-            this.serviceConnectionService.invoke<number>("LoadWallet", chainType)
+            this.serviceConnectionService.invoke<number>("LoadWallet", chainType, passphrase)
               .then(
                 response => {
                   this.logEvent("loadWallet - response", response);

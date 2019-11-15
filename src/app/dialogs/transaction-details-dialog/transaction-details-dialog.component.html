@@ -3,7 +3,7 @@
   <mat-divider></mat-divider>
   <table>
     <tr>
-      <td><strong>{{ 'history.status' | translate }}</strong></td>
+      <td style="width: 100px;"><strong>{{ 'history.Status' | translate }}</strong></td>
       <td>
         <span>
           <span *ngIf="transaction.status==0" class="text-primary">
@@ -42,11 +42,11 @@
       <td>{{transaction.date | formatDateWithTime}}</td>
     </tr>
     <tr>
-      <td><strong>{{ 'history.amount' | translate }}</strong></td>
+      <td><strong>{{ 'history.Amount' | translate }}</strong></td>
       <td>{{transaction.amount | formatNeuralium}}</td>
     </tr>
     <tr>
-      <td><strong>{{ 'history.tip' | translate }}</strong></td>
+      <td><strong>{{ 'history.Tip' | translate }}</strong></td>
       <td>{{transaction.tip | formatNeuralium}}</td>
     </tr>
     <tr>

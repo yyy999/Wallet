@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialogRef } from '@angular/material';
+import * as moment from 'moment';
 
 @Component({
   selector: 'app-about-dialog',
@@ -11,7 +12,7 @@ export class AboutDialogComponent implements OnInit {
   public Year:number;
 
   constructor(public dialogRef: MatDialogRef<AboutDialogComponent>) { 
-   this.Year = (new Date()).getFullYear();
+   this.Year = (moment().toDate()).getFullYear();
   }
 
   ngOnInit() {

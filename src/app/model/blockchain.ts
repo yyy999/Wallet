@@ -1,5 +1,18 @@
 import { MenuConfig } from "./ui-config";
 
+export class ChainStatus {
+ 
+  walletInfo : WalletInfo;
+  minRequiredPeerCount: number;
+}
+
+export class WalletInfo {
+  walletExists: boolean;
+  isWalletLoaded: boolean;
+  walletEncrypted: boolean;
+  walletPath: string;
+}
+
 export class BlockChain {
   id: number;
   label: string;
@@ -17,6 +30,7 @@ export const NO_BLOCKCHAIN = <BlockChain>{
     showSend: false,
     showReceive: false,
     showHistory: false,
+    showTools: false,
     showContacts: false,
     showSettings: false
   }
@@ -31,6 +45,7 @@ export const NEURALIUM_BLOCKCHAIN = <BlockChain>{
     showSend: true,
     showReceive: true,
     showHistory: true,
+    showTools : true,
     showContacts: true,
     showSettings: true
   }
@@ -45,6 +60,7 @@ export const CONTRACT_BLOCKCHAIN = <BlockChain>{
     showSend: false,
     showReceive: true,
     showHistory: true,
+    showTools: true,
     showContacts: true,
     showSettings: true
   }
@@ -59,6 +75,7 @@ export const SECURITY_BLOCKCHAIN = <BlockChain>{
     showSend: false,
     showReceive: false,
     showHistory: true,
+    showTools : true,
     showContacts: true,
     showSettings: true
   }

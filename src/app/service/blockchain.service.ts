@@ -1,10 +1,11 @@
 import { Injectable, OnInit } from '@angular/core';
-import { BlockChain, NO_BLOCKCHAIN, NEURALIUM_BLOCKCHAIN, CONTRACT_BLOCKCHAIN, SECURITY_BLOCKCHAIN } from '../model/blockchain';
+import { BlockChain, NO_BLOCKCHAIN, NEURALIUM_BLOCKCHAIN, CONTRACT_BLOCKCHAIN, SECURITY_BLOCKCHAIN, ChainStatus } from '../model/blockchain';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { WalletService } from './wallet.service';
 import { ServerConnectionService } from './server-connection.service';
 import { BlockchainInfo, NO_BLOCKCHAIN_INFO, BlockInfo, DigestInfo } from '../model/blockchain-info';
 import { EventTypes } from '../model/serverConnectionEvent';
+import * as moment from 'moment';
 
 @Injectable({
   providedIn: 'root'
@@ -16,14 +17,77 @@ export class BlockchainService implements OnInit {
 
   remainingTimeForNextBlock : BehaviorSubject<number> = new BehaviorSubject<number>(0);
 
+
   blockchainInfo: BehaviorSubject<BlockchainInfo> = new BehaviorSubject<BlockchainInfo>(NO_BLOCKCHAIN_INFO);
   currentBlockchainInfo: BlockchainInfo = NO_BLOCKCHAIN_INFO;
 
+  private currentRemainingTimeVal = new Date(0, 0, 0, 0, 0, 0);
+  private totalRemainingTime: number = 0;
+  private remainingTimePercent: number;
+  private tempTime: number = 0;
+  private timer: NodeJS.Timeout;
+
+  
   constructor(private walletService: WalletService, private serverConnectionService: ServerConnectionService) {
     this.subscribeToBlockchainEvents();
+
+    this.remainingTimeForNextBlock.subscribe(seconds => {
+      this.totalRemainingTime = seconds;
+      this.tempTime = seconds;
+      
+      this.currentRemainingTime.setSeconds(this.tempTime);
+      this.remainingTimePercent = (this.totalRemainingTime - this.tempTime) / this.totalRemainingTime * 100;
+      if (this.timer) {
+        clearTimeout(this.timer);
+      }
+      this.updateRemainingTime();
+    });
   }
 
+  get currentRemainingTime(): Date {
+    return this.currentRemainingTimeVal;
+  }
+
+  get showRemainingTime(): boolean {
+    return this.tempTime > 0;
+  }
+
+  updateRemainingTime() {
+    this.timer = setTimeout(() => {
+      this.tempTime--;
+      this.currentRemainingTimeVal = new Date(0, 0, 0, 0, 0, 0);
+      this.currentRemainingTimeVal.setSeconds(this.tempTime);
+      this.remainingTimePercent = (this.totalRemainingTime - this.tempTime) / this.totalRemainingTime * 100;
+      if (this.tempTime === 0) {
+        clearTimeout(this.timer);
+      }
+      else {
+        this.updateRemainingTime();
+      }
+    }, 1000);
+  }
+
+
   ngOnInit() {
+
+  }
+
+  queryBlockJson(blockId:number): Promise<string>{
+
+    return new Promise<string>((resolve, reject) => {
+
+      if(this.currentBlockchain && this.currentBlockchain.id && this.currentBlockchain.id !== 0){
+        this.serverConnectionService.callQueryBlock(this.currentBlockchain.id, blockId).then(json => {
+          resolve(json);
+        }).catch(error => {
+          reject(error);
+        });
+      }
+      else{
+        resolve(null);
+      }
+    });
+
 
   }
 
@@ -49,7 +113,8 @@ export class BlockchainService implements OnInit {
     var blockId: number = infos["blockId"];
     var blockHash: string = infos["hash"];
     var publicBlockId: number = infos["publicBlockId"];
-    var blockTimestamp = new Date(infos["timestamp"]);
+
+    var blockTimestamp: Date =  moment(infos["timestamp"]).toDate();
     var lifespan: number = infos["lifespan"];
     var blockInfo = BlockInfo.create(blockId, blockTimestamp, blockHash, publicBlockId, lifespan);
     this.currentBlockchainInfo.blockInfo = blockInfo;
@@ -61,7 +126,7 @@ export class BlockchainService implements OnInit {
     var digestId: number = infos["digestId"];
     var digestHash: string = infos["digestHash"];
     var digestBlockId: number = infos["digestBlockId"];
-    var digestTimestamp: Date = new Date(infos["digestTimestamp"]);
+    var digestTimestamp: Date =  moment(infos["digestTimestamp"]).toDate();
     var publicDigestId: number = infos["publicDigestId"];
     var digestInfo = DigestInfo.create(digestId, digestBlockId, digestTimestamp, digestHash, publicDigestId);
     this.currentBlockchainInfo.digestInfo = digestInfo;
@@ -95,13 +160,13 @@ export class BlockchainService implements OnInit {
         .then(blockchains => {
           blockchains.forEach(blockchain => {
             if (blockchain["enabled"]) {
-              if (blockchain["id"] == NEURALIUM_BLOCKCHAIN.id) {
+              if (blockchain["id"] === NEURALIUM_BLOCKCHAIN.id) {
                 this.blockchains.push(NEURALIUM_BLOCKCHAIN);
               }
-              else if (blockchain["id"] == SECURITY_BLOCKCHAIN.id) {
+              else if (blockchain["id"] === SECURITY_BLOCKCHAIN.id) {
                 this.blockchains.push(SECURITY_BLOCKCHAIN);
               }
-              else if (blockchain["id"] == CONTRACT_BLOCKCHAIN.id) {
+              else if (blockchain["id"] === CONTRACT_BLOCKCHAIN.id) {
                 this.blockchains.push(CONTRACT_BLOCKCHAIN);
               }
             }
@@ -128,5 +193,24 @@ export class BlockchainService implements OnInit {
       this.updateCurrentBlockchainInfo(blockchain.id);
       resolve(true);
     })
+  }
+
+  updateChainStatus(): Promise<ChainStatus>{
+
+    return new Promise<ChainStatus>((resolve, reject) => {
+
+      if(this.currentBlockchain && this.currentBlockchain.id && this.currentBlockchain.id !== 0){
+        this.serverConnectionService.callQueryChainStatus(this.currentBlockchain.id).then(chainStatus => {
+          resolve(chainStatus);
+        }).catch(error => {
+          reject(error);
+        });
+      }
+      else{
+        resolve(null);
+      }
+    });
+
+
   }
 }

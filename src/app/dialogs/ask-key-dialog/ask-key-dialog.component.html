@@ -1,13 +1,13 @@
 <h1 mat-dialog-title>{{keyName}} - {{ 'app.PassphraseRequired' | translate }}</h1>
 <div mat-dialog-content>
     <mat-divider></mat-divider>
-    <p *ngIf="attempt == 1" >
+    <p *ngIf="attempt === 1" >
       {{ 'app.PleaseEnterYourPassphrase' | translate }}
     </p>
-    <p *ngIf="attempt == 2" >
+    <p *ngIf="attempt === 2" >
       {{ 'app.PleaseEnterYourPassphraseAgain' | translate }}
     </p>
-    <p *ngIf="attempt == 3" >
+    <p *ngIf="attempt === 3" >
       {{ 'app.PleaseEnterYourPassphraseLastAttempt' | translate }}
     </p>
     <mat-form-field appearance="legacy">

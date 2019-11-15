@@ -39,12 +39,12 @@ export class ContactsComponent implements OnInit {
 
   ngOnInit() {
     this.serverConnectionService.isConnectedToServer().subscribe(connected => {
-      if (connected != CONNECTED) {
+      if (connected !== CONNECTED) {
         this.router.navigate(['/dashboard']);
       }
       else {
         this.walletService.getCurrentAccount().subscribe(account => {
-          if (account == void (0) || account == NO_WALLET_ACCOUNT) {
+          if (!account || account === NO_WALLET_ACCOUNT) {
             this.router.navigate(["/"]);
           }
           else {
@@ -77,7 +77,7 @@ export class ContactsComponent implements OnInit {
       });
 
       dialogRef.afterClosed().subscribe(dialogResult => {
-        if (dialogResult == DialogResult.Yes) {
+        if (dialogResult === DialogResult.Yes) {
           this.contactService.deleteContact(contact);
         }
       })
@@ -92,7 +92,7 @@ export class ContactsComponent implements OnInit {
       });
 
       dialogRef.afterClosed().subscribe(dialogResult => {
-        if (dialogResult != DialogResult.Cancel) {
+        if (dialogResult !== DialogResult.Cancel) {
           this.contactService.saveContact(dialogResult)
           .then(()=>{
             this.translateService.get('contact.Success').subscribe(message =>{

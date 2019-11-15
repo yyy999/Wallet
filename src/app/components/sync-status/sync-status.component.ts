@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { SyncStatusService } from '../..//service/sync-status.service';
 import { SyncProcess, ProcessType, SyncStatus } from '../..//model/syncProcess';
 import { SyncUpdate, NO_SYNC_UPDATE } from '../..//model/sync-update';
@@ -7,7 +7,8 @@ import { MatDialog } from '@angular/material';
 import { ServerConnectionDialogComponent } from '../..//dialogs/server-connection-dialog/server-connection-dialog.component';
 import { CONNECTED } from '../..//model/serverConnectionEvent';
 import { ConfigService } from '../..//service/config.service';
-
+import { WalletSyncDisplayComponent } from '../../components/wallet-sync-display/wallet-sync-display.component';
+import { BlockchainSyncDisplayComponent } from '../../components/blockchain-sync-display/blockchain-sync-display.component';
 
 @Component({
   selector: 'app-sync-status',
@@ -15,8 +16,12 @@ import { ConfigService } from '../..//service/config.service';
   styleUrls: ['./sync-status.component.css']
 })
 export class SyncStatusComponent implements OnInit {
-  peersImage:string;
-  peersCount:number = 0;
+
+  @ViewChild('walletSync', null) private walletSync: WalletSyncDisplayComponent;
+  @ViewChild('blockchainSync', null) private blockchainSync: BlockchainSyncDisplayComponent;
+
+  peersImage: string;
+  peersCount: number = 0;
 
   notSynced: string;
   probablyNotSynced: string;
@@ -25,58 +30,40 @@ export class SyncStatusComponent implements OnInit {
   currentWalletSyncStatusColor: string;
   currentBlockchainSyncStatusColor: string;
 
-  currentWalletSyncUpdateColor:string = "primary";
-  currentBlockchainSyncUpdateColor:string = "primary";
+  currentWalletSyncUpdateColor: string = "primary";
+  currentBlockchainSyncUpdateColor: string = "primary";
 
-  currentWalletSyncUpdate:SyncUpdate = NO_SYNC_UPDATE;
-  currentBlockchainSyncUpdate:SyncUpdate = NO_SYNC_UPDATE;
+  currentWalletSyncUpdate: SyncUpdate = NO_SYNC_UPDATE;
+  currentBlockchainSyncUpdate: SyncUpdate = NO_SYNC_UPDATE;
 
   syncingList: Array<SyncProcess>;
   displaySyncList: boolean = false;
 
   serverNotConnected: boolean = true;
-  currentServerConnectionStatusColor:string = "warn";
+  currentServerConnectionStatusColor: string = "warn";
 
   constructor(
     private syncStatusService: SyncStatusService,
     private serverConnectionService: ServerConnectionService,
     private configService: ConfigService,
-    public dialog: MatDialog){
-    
+    public dialog: MatDialog) {
+
   }
 
   ngOnInit() {
     this.serverConnectionService.isConnectedToServer().subscribe(connected => {
-      if (connected != CONNECTED) {
-        if(this.configService.isServerPathValid()){
+      if (connected !== CONNECTED) {
+        if (this.configService.isServerPathValid()) {
           this.showServerConnectionDialog(false);
           this.serverConnectionService.tryConnectToServer();
           this.serverNotConnected = true;
           this.currentServerConnectionStatusColor = "warn";
         }
       }
-      else{
+      else {
         this.serverNotConnected = false;
         this.currentServerConnectionStatusColor = "primary";
       }
-    })
-    
-    this.syncStatusService.getCurrentBlockchainSyncStatus().subscribe(status => {
-      this.defineBlockchainCurrentSyncStatus(status);
-    })
-
-    this.syncStatusService.getCurrentWalletSyncStatus().subscribe(status => {
-      this.defineWalletCurrentSyncStatus(status);
-    })
-
-    this.syncStatusService.getCurrentBlockchainSyncUpdate().subscribe(update =>{
-      this.currentBlockchainSyncUpdate = update;
-      this.currentBlockchainSyncUpdateColor = this.defineCurrentSyncUpdateColor(update.percentage);
-    })
-
-    this.syncStatusService.getCurrentWalletSyncUpdate().subscribe(update =>{
-      this.currentWalletSyncUpdate = update;
-      this.currentWalletSyncUpdateColor = this.defineCurrentSyncUpdateColor(update.percentage);
     })
 
     this.syncStatusService.getSyncList().subscribe(syncList => {
@@ -86,78 +73,42 @@ export class SyncStatusComponent implements OnInit {
     this.syncStatusService.getPeerCount().subscribe(count => {
       this.peersCount = count;
       let basePath = "./assets/img/";
-      if(count >=4){
+      if (count >= 4) {
         this.peersImage = basePath + "pp5.png";
       }
-      else if(count == 3){
+      else if (count === 3) {
         this.peersImage = basePath + "pp4.png";
       }
-      else if(count == 2){
+      else if (count === 2) {
         this.peersImage = basePath + "pp3.png";
       }
-      else if(count == 1){
+      else if (count === 1) {
         this.peersImage = basePath + "pp2.png";
       }
-      else if(count == 0){
+      else if (count === 0) {
         this.peersImage = basePath + "pp1.png";
       }
     })
   }
 
-  get isSyncingWallet(): boolean{
-    return this.syncingList.filter(process => { return process.processType == ProcessType.SyncingWallet }).length > 0 || this.showWalletSyncUpdate();
+  get isSyncingWallet(): boolean {
+    return this.walletSync.isSyncing;
   }
 
-  get isSyncingBlockchain(): boolean{
-    return this.syncingList.filter(process => { return process.processType == ProcessType.SyncingBlockchain }).length > 0 || this.showBlockchainSyncUpdate()
+  get isSyncingBlockchain(): boolean {
+    return this.blockchainSync.isSyncing;
   }
 
-  showWalletSyncUpdate():boolean{
-    return this.currentWalletSyncUpdate != NO_SYNC_UPDATE;
-  }
-
-  showBlockchainSyncUpdate():boolean{
-    return this.currentBlockchainSyncUpdate != NO_SYNC_UPDATE;
-  }
-
-  defineWalletCurrentSyncStatus(status: SyncStatus) {
-    this.currentWalletSyncStatusColor = this.defineCurrentSyncStatusColor(status);
-  }
-
-  defineBlockchainCurrentSyncStatus(status: SyncStatus) {
-    this.currentBlockchainSyncStatusColor = this.defineCurrentSyncStatusColor(status);
-  }
-
-  defineCurrentSyncStatusColor(status: SyncStatus):string {
-    switch (status) {
-      case SyncStatus.Synced:
-        return "primary";
-      default:
-        return "warn";
-    }
-  }
-
-  defineCurrentSyncUpdateColor(percentage: number):string {
-    if(percentage > 75){
-      return "primary";
-    }
-    else if(percentage > 25){
-      return "accent";
-    }
-    else{
-      return "warn";
-    }
-  }
 
   get isSyncing(): boolean {
     return this.isSyncingBlockchain || this.isSyncingWallet;
   }
-
-  showServerConnectionDialog(manualyOpened:boolean){
+  
+  showServerConnectionDialog(manualyOpened: boolean) {
     setTimeout(() => {
       let dialogRef = this.dialog.open(ServerConnectionDialogComponent, {
         width: '350px',
-        data:manualyOpened
+        data: manualyOpened
       });
     });
   }

@@ -13,7 +13,7 @@
     @warn "The $threshold argment to contrast-color is no longer needed and will be removed in the next release.";
   }
 
-  @if $color == null {
+  @if $color === null {
     @return null;
   } @else {
     $color-brightness: brightness($color);
@@ -24,7 +24,7 @@
 }
 
 @function brightness($color) {
-  @if type-of($color) == color {
+  @if type-of($color) === color {
     @return (red($color) * 0.299 + green($color) * 0.587 + blue($color) * 0.114) / 255 * 100%;
   } @else {
     @return unquote("brightness(#{$color})");

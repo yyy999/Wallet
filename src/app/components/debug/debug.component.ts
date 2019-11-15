@@ -8,6 +8,7 @@ import { SyncStatusService } from '../..//service/sync-status.service';
 import { EventTypes, ResponseResult } from '../..//model/serverConnectionEvent';
 import { PassphraseParameters, KeyPassphraseParameters } from '../..//model/passphraseRequiredParameters';
 import { AppConfig } from '../../../environments/environment';
+import * as moment from 'moment';
 
 @Component({
   selector: 'app-debug',
@@ -40,10 +41,10 @@ export class DebugComponent implements OnInit {
     this.currentPlatform = this.config.currentPlatform;
 
     this.walletService.getCurrentAccount().subscribe(account => {
-      if (account != NO_WALLET_ACCOUNT) {
+      if (account !== NO_WALLET_ACCOUNT) {
         this.accountUuid = account.accountUuid;
         this.showAccountCommands = true;
-        this.addNeuraliumsEnabled = account.status == WalletAccountStatus.Published;
+        this.addNeuraliumsEnabled = account.status === WalletAccountStatus.Published;
       }
       else {
         this.showAccountCommands = false;
@@ -76,7 +77,7 @@ export class DebugComponent implements OnInit {
   }
 
   testRemainingTime() {
-    this.serverConnection.propagateEvent(0, EventTypes.BlockInserted, ResponseResult.Success, { "chainType": 0, "blockId": 1, "timestamp": new Date(Date.now()), "hash": "haché", "lifespan": 20 });
+    this.serverConnection.propagateEvent(0, EventTypes.BlockInserted, ResponseResult.Success, { "chainType": 0, "blockId": 1, "timestamp": moment().toDate(), "hash": "haché", "lifespan": 20 });
   }
 
   enterWalletPassphrase(){

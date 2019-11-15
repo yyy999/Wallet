@@ -1,7 +1,7 @@
-import { CommonCall } from "./commonCall";
-import { LogService } from "../..//service/log.service";
+import { CommonCall } from './commonCall';
+import { LogService } from '../..//service/log.service';
 import { ServerConnectionService } from '../..//service/server-connection.service';
-import { SystemInfo } from "../..//model/systemInfo";
+import { SystemInfo } from '../..//model/systemInfo';
 
 export class ServerCall extends CommonCall {
 
@@ -20,15 +20,15 @@ export class ServerCall extends CommonCall {
     callServerShutdown(): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
 
-            this.logEvent("shutdown - call", null);
-            this.serviceConnectionService.invoke<boolean>("Shutdown")
+            this.logEvent('shutdown - call', null);
+            this.serviceConnectionService.invoke<boolean>('Shutdown')
               .then(
                 response => {
-                  this.logEvent("shutdown - response", response);
+                  this.logEvent('shutdown - response', response);
                   resolve(response);
                 })
               .catch(reason => {
-                reject("shutdown error : " + reason);
+                reject('shutdown error : ' + reason);
               });
           });
       }
@@ -36,17 +36,17 @@ export class ServerCall extends CommonCall {
       callQuerySystemVersion() {
         return new Promise<SystemInfo>((resolve, reject) => {
 
-            this.logEvent("QuerySystemInfo - call", null);
+            this.logEvent('QuerySystemInfo - call', null);
 
 
-            this.serviceConnectionService.invoke<SystemInfo>("QuerySystemInfo")
+            this.serviceConnectionService.invoke<SystemInfo>('QuerySystemInfo')
               .then(
                 response => {
-                  this.logEvent("QuerySystemInfo - response", response);
+                  this.logEvent('QuerySystemInfo - response', response);
                   resolve(response);
                 })
               .catch(reason => {
-                reject("QuerySystemInfo error : " + reason);
+                reject('QuerySystemInfo error : ' + reason);
               });
           });
       }
@@ -54,15 +54,15 @@ export class ServerCall extends CommonCall {
       callQueryTotalConnectedPeersCount() {
         return new Promise<number>((resolve, reject) => {
 
-            this.logEvent("QueryTotalConnectedPeersCount - call", null);
-            this.serviceConnectionService.invoke<number>("QueryTotalConnectedPeersCount")
+            this.logEvent('QueryTotalConnectedPeersCount - call', null);
+            this.serviceConnectionService.invoke<number>('QueryTotalConnectedPeersCount')
               .then(
                 response => {
-                  this.logEvent("QueryTotalConnectedPeersCount - response", response);
+                  this.logEvent('QueryTotalConnectedPeersCount - response', response);
                   resolve(response);
                 })
               .catch(reason => {
-                reject("QueryTotalConnectedPeersCount error : " + reason);
+                reject('QueryTotalConnectedPeersCount error : ' + reason);
               });
           });
       }
@@ -70,15 +70,15 @@ export class ServerCall extends CommonCall {
       callQueryMiningPortConnectable(){
         return new Promise<boolean>((resolve, reject) => {
 
-          this.logEvent("QueryMiningPortConnectable - call", null);
-          this.serviceConnectionService.invoke<boolean>("QueryMiningPortConnectable")
+          this.logEvent('QueryMiningPortConnectable - call', null);
+          this.serviceConnectionService.invoke<boolean>('QueryMiningPortConnectable')
             .then(
               response => {
-                this.logEvent("QueryMiningPortConnectable - response", response);
+                this.logEvent('QueryMiningPortConnectable - response', response);
                 resolve(response);
               })
             .catch(reason => {
-              reject("QueryMiningPortConnectable error : " + reason);
+              reject('QueryMiningPortConnectable error : ' + reason);
             });
         });
       }
@@ -86,15 +86,15 @@ export class ServerCall extends CommonCall {
       callCompleteLongRunningEvent(correlationId: number) {
         return new Promise<boolean>((resolve, reject) => {
 
-            this.logEvent("completeLongRunningEvent - call", { 'correlationId': correlationId });
-            this.serviceConnectionService.invoke<boolean>("CompleteLongRunningEvent", correlationId)
+            this.logEvent('completeLongRunningEvent - call', { 'correlationId': correlationId });
+            this.serviceConnectionService.invoke<boolean>('CompleteLongRunningEvent', correlationId)
               .then(
                 response => {
-                  this.logEvent("completeLongRunningEvent - response", response);
+                  this.logEvent('completeLongRunningEvent - response', response);
                   resolve(response);
                 })
               .catch(reason => {
-                reject("CompleteLongRunningEvent error : " + reason);
+                reject('CompleteLongRunningEvent error : ' + reason);
               });
           });
       }
@@ -102,16 +102,33 @@ export class ServerCall extends CommonCall {
       callRenewLongRunningEvent(correlationId: number) {
         return new Promise<boolean>((resolve, reject) => {
 
-            this.logEvent("renewLongRunningEvent - call", { 'correlationId': correlationId });
-            this.serviceConnectionService.invoke<boolean>("RenewLongRunningEvent", correlationId)
+            this.logEvent('renewLongRunningEvent - call', { 'correlationId': correlationId });
+            this.serviceConnectionService.invoke<boolean>('RenewLongRunningEvent', correlationId)
               .then(
                 response => {
-                  this.logEvent("renewLongRunningEvent - response", response);
+                  this.logEvent('renewLongRunningEvent - response', response);
                   resolve(response);
                 })
               .catch(reason => {
-                reject("RenewLongRunningEvent error : " + reason);
+                reject('RenewLongRunningEvent error : ' + reason);
               });
           });
       }
+
+
+      callEnableConsoleMessages(enable:boolean): Promise<boolean> {
+      return new Promise<boolean>((resolve, reject) => {
+
+        this.logEvent('toggleServerMessages - call', { 'enable': enable });
+        this.serviceConnectionService.invoke<boolean>('ToggleServerMessages', enable)
+          .then(
+            (response) => {
+              this.logEvent('toggleServerMessages - response', response);
+              resolve(response);
+            })
+          .catch(reason => {
+            reject('toggleServerMessages error : ' + reason);
+          });
+      });
+  }
 }

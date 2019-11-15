@@ -6,7 +6,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 export class LimitStringPipe implements PipeTransform {
 
   transform(value: string, limit: number): any {
-    if(value != void(0) && value != "" && value.length > limit){
+    if(value && value !== "" && value.length > limit){
       return value.substr(0,limit) + "...";
     }
     else{

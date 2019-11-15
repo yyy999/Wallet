@@ -7,6 +7,7 @@ export enum ProcessType{
 }
 
 export enum SyncStatus{
+    Unknown = -1,
     NotSynced = 0,
     ProbablySynced = 1,
     Synced = 2
@@ -21,7 +22,7 @@ export class SyncProcess{
 
     static createNew(id:number = 0, subjet: string = "", processType:ProcessType = ProcessType.Undefined, stepsCount:number = 0): SyncProcess {
         var sync = new SyncProcess();
-        sync.id = id != 0 ? id : new Date().getMilliseconds() * Math.random();
+        sync.id = id !== 0 ? id : new Date().getMilliseconds() * Math.random();
         sync.subject = subjet;
         sync.processType = processType;
         sync.stepsTotal = stepsCount;

@@ -1,4 +1,5 @@
 import { WalletAccount } from "./walletAccount";
+import { WalletInfo } from "./blockchain";
 
 export enum EncryptionKey{
     Wallet = 0,
@@ -31,28 +32,31 @@ export class WalletCreation {
 }
 
 export class Wallet {
-    id: number;
+    walletInfo: WalletInfo;
     accounts:Array<WalletAccount>;
 
     private constructor(){
-        this.id = 0;
+        this.walletInfo = null;
         this.accounts = [];
     }
 
-    static createNew(id:number): Wallet {
-        var newWallet = new Wallet();
-        newWallet.id = id;
+    static createNew(walletInfo: WalletInfo): Wallet {
+        const newWallet = new Wallet();
+        newWallet.walletInfo = walletInfo;
         return newWallet;
     }
 
     get isLoaded(): boolean {
-        return  this.id !== 0;
+         if (this.walletInfo && this.walletInfo.isWalletLoaded) {
+             return true;
+         }
+         return false;
     }
 
 }
 
 export const NO_WALLET = <Wallet>{
-    id: 0
+
 }
 
 export enum WalletLoadStatus {

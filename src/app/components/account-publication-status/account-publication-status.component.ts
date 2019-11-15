@@ -28,12 +28,12 @@ export class AccountPublicationStatusComponent implements OnInit {
     })
 
     this.syncService.getCurrentBlockchainSyncStatus().subscribe(syncStatus =>{
-      this.canPublish = syncStatus == SyncStatus.Synced;
+      this.canPublish = syncStatus === SyncStatus.Synced;
     })
   }
 
   get showAccountStatus():boolean{
-    return this.account != NO_WALLET_ACCOUNT && this.account.status != 3;
+    return this.account !== NO_WALLET_ACCOUNT && this.account.status !== 3;
   }
 
   publishAccount(accountUuid:string){

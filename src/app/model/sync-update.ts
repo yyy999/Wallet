@@ -1,14 +1,18 @@
+import { EventTypes } from '../model/serverConnectionEvent';
+
 export class SyncUpdate{
     chainType: number; 
     currentBlockId: number;
     blockHeight: number; 
     percentage: number;
     estimatedTimeRemaining: string;
-
+    eventType: EventTypes;
     private constructor(){}
 
-    static create(chainType: number, currentBlockId: number, blockHeight: number, percentage: number, estimatedTimeRemaining: string){
-        var update = new SyncUpdate();
+    static create(eventType: EventTypes, chainType: number, currentBlockId: number, blockHeight: number, percentage: number, estimatedTimeRemaining: string){
+        let update = new SyncUpdate();
+
+        update.eventType = eventType;
         update.chainType = chainType;
         update.currentBlockId = currentBlockId;
         update.blockHeight = blockHeight;
@@ -27,5 +31,6 @@ export class SyncUpdate{
      currentBlockId:0,
      blockHeight:0,
      percentage:0,
+     eventType: 0,
      estimatedTimeRemaining: ''
     };

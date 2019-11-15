@@ -155,7 +155,7 @@ export class SendNeuraliumsComponent implements OnInit {
       });
 
       dialogRef.afterClosed().subscribe(dialogResult => {
-        if (dialogResult == DialogResult.Yes) {
+        if (dialogResult === DialogResult.Yes) {
           this.transactionService.saveTransaction(targetAccountId, neuraliums, tip, this.note)
             .then(() => {
               this.neuraliumsSent.emit(total);

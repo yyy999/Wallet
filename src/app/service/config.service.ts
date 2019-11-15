@@ -29,7 +29,7 @@ export class ConfigService {
   defaultSettingsValue:Settings;
 
   get defaultSettings():Settings{
-    if(this.defaultSettingsValue == void(0)){
+    if(!this.defaultSettingsValue){
       this.defaultSettingsValue = this.defineDefaultSettings();
     }
     return this.defaultSettingsValue;
@@ -41,9 +41,38 @@ export class ConfigService {
 
   getLanguagesList() {
     return [
-      { 'language': 'English', 'code': 'en' },
-      { 'language': 'Français', 'code': 'fr' },
-      { 'language': 'Español', 'code': 'es' }
+      { 'code': 'en', 'language': 'English' },
+      { 'code': 'fr', 'language': 'Français' },
+      { 'code': 'es', 'language': 'Español'  },
+      { 'code': 'zh', 'language': '汉语' },
+      { 'code': 'zh-TW', 'language': '漢語' },
+      { 'code': 'ar', 'language': 'العربية' },
+      { 'code': 'pt', 'language': 'Português' },
+      { 'code': 'ru', 'language': 'Русский' },
+      { 'code': 'yo', 'language': 'Èdè Yorùbá' },
+      { 'code': 'de', 'language': 'Deutsch' },
+      { 'code': 'it', 'language': 'Italiano' },
+      { 'code': 'iw', 'language': 'עברית' },
+      { 'code': 'ko', 'language': '조선말' },
+      { 'code': 'id', 'language': 'Bahasa Indonesia' },
+      { 'code': 'ur', 'language': 'اُردُو' },
+      { 'code': 'so', 'language': 'اللغة الصومالية' },
+      { 'code': 'hi', 'language': 'हिन्दी' },
+      { 'code': 'uk', 'language': 'Українська' },
+      { 'code': 'ja', 'language': '日本語' },
+      { 'code': 'bn', 'language': 'বাংলা' },
+      { 'code': 'ha', 'language': 'حَوْسَ' },
+      { 'code': 'pa', 'language': 'पंजाबी' },
+      { 'code': 'te', 'language': 'తెలుగు' },
+      { 'code': 'tr', 'language': 'Türkçe' },
+      { 'code': 'vi', 'language': 'Tiếng Việt Nam' },
+      { 'code': 'fa', 'language': 'فارسی' },
+      { 'code': 'bg', 'language': 'български език' },
+      { 'code': 'ta', 'language': 'தமிழ்' },
+      { 'code': 'pl', 'language': 'Język polski' },
+      { 'code': 'th', 'language': 'ภาษาไทย' },
+      { 'code': 'la', 'language': 'Lingua Latīna' }
+
     ];
   }
 
@@ -109,7 +138,7 @@ export class ConfigService {
   defineDefaultSettingIfNecessary(setting: string, defaultValue: any) {
     var message : string = `Define ${setting} if necessary with default value ${defaultValue}`;
     console.log(message)
-    if (this.settings[setting] === void (0)) {
+    if (!this.settings[setting]) {
       this.settings[setting] = defaultValue;
     }
   }
@@ -234,30 +263,29 @@ export class ConfigService {
     }
 
     return new Promise<string[]>((resolve, reject) => {
-      remote.dialog.showOpenDialog(
-        {
-          title: this.translateService.instant("server.SearchForServerPath"),
-          defaultPath: this.settings.serverPath,
-          properties: ['openDirectory']
-        },
-        (folderPath) => {
-          if (folderPath === undefined) {
+      remote.dialog.showOpenDialog({title: '', defaultPath: this.settings.serverPath, properties: ['openDirectory']}).then(result => {
+        const folderPath:string[] = result.filePaths;
+       
+        if (folderPath === undefined) {
+          reject(folderPath);
+        }
+        else {
+
+          let correctedFolderPath: string = this.validateServerPath(folderPath[0], this.settings.serverFileName);
+
+          if (!correctedFolderPath) {
             reject(folderPath);
           }
           else {
-
-            let correctedFolderPath: string = this.validateServerPath(folderPath[0], this.settings.serverFileName);
-
-            if (!correctedFolderPath) {
-              reject(folderPath);
-            }
-            else {
-              resolve(folderPath);
-            }
-
+            resolve(folderPath);
           }
-        })
-    })
+
+        }
+      }).catch(err => {
+        console.log(err);
+        reject('');
+      });
+    });
 
   }
 

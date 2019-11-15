@@ -90,8 +90,9 @@ Alert = 156,
 ConnectableStatusChanged = 157,
 
 
+
 AccountTotalUpdated = 1001,
-MiningBountyAllocated = 1002,
+NeuraliumMiningBountyAllocated = 1002,
 NeuraliumMiningPrimeElected = 1003,
 
 // INTERNAL TO WALLET DESKTOP

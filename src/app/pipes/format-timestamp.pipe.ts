@@ -8,7 +8,7 @@ import * as moment from 'moment';
 export class FormatTimestampPipe implements PipeTransform {
 
   transform(value: Date, format?: Array<string>): any {
-    if(value == void(0) || value.getFullYear() == 1){
+    if(!value || value.getFullYear() === 1){
       return null;
     }
     else{
@@ -26,7 +26,7 @@ export class FormatTimestampPipe implements PipeTransform {
 export class FormatDateWithTime extends DatePipe implements PipeTransform {
 
   transform(value: Date, args?: any): any {
-    if(value == void(0) || value.getFullYear() == 1){
+    if(!value || value.getFullYear() === 1){
       return null;
     }
     else{

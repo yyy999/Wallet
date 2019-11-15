@@ -25,11 +25,9 @@ export class DashboardComponent implements OnInit {
   title = this.translateService.instant("dashboard.Title");
   icon = "fas fa-wallet";
 
-  walletId: number = 0;
   walletAccounts: Array<WalletAccount> = [];
   currentAccount: WalletAccount;
 
-  private walletLoadingHelper : WalletLoadingHelper;
   private walletDialogOpen: boolean = false;
   private createLoadDialogOpen: boolean = false;
 
@@ -67,19 +65,16 @@ export class DashboardComponent implements OnInit {
         if (blockchainId !== 0) {
           if (!wallet.isLoaded) {
 
-            this.walletLoadingHelper = new WalletLoadingHelper(this.serverConnectionService, blockchainId);
-
-            this.walletLoadingHelper.loadWallet().then(isLoaded => {
+            this.walletService.loadWallet(blockchainId).then(isLoaded => {
               if (isLoaded === false) {
                 this.askCreateOrCopyWallet();
               }
               else {
                 this.walletService.refreshWallet(blockchainId);
               }
-            })
+            });
           }
           else {
-            this.walletId = wallet.id;
             this.walletAccounts = wallet.accounts;
             this.walletService.getCurrentAccount().subscribe(account => {
               this.currentAccount = account;
@@ -96,15 +91,15 @@ export class DashboardComponent implements OnInit {
   }
 
   get hasAccount(): boolean {
-    return this.walletAccounts !== void (0) && this.walletAccounts.length > 0;
+    return this.walletAccounts && this.walletAccounts.length > 0;
   }
 
   get hasCurrentAccount(): boolean {
-    return this.walletAccounts !== void (0) && this.walletAccounts.length > 0 && this.currentAccount !== NO_WALLET_ACCOUNT;
+    return this.walletAccounts && this.walletAccounts.length > 0 && this.currentAccount !== NO_WALLET_ACCOUNT;
   }
 
   get hasMoreThanOneAccount(): boolean {
-    return this.walletAccounts !== void (0) && this.walletAccounts.length > 1;
+    return this.walletAccounts && this.walletAccounts.length > 1;
   }
 
 
@@ -172,55 +167,5 @@ export class DashboardComponent implements OnInit {
         this.walletService.refreshWallet(this.blockchainService.currentBlockchain.id);
       })
     });
-  }
-}
-
-class WalletLoadingHelper{
-
-  private longRunningContextId:number;
-  constructor(private serverConnectionService: ServerConnectionService, private blockchainID:number){
-
-  }
-
-
-  loadWallet(): Promise<boolean>{
-    return new Promise<boolean>((resolve, reject) => {
-      this.serverConnectionService.callWalletExists(this.blockchainID).then(callWalletExistsResponse => {
-        if (callWalletExistsResponse === true) {
-
-          this.serverConnectionService.callIsWalletLoaded(this.blockchainID).then(callIsWalletLoadedResponse => {
-            if (callIsWalletLoadedResponse === false) {
-              
-              this.serverConnectionService.callLoadWallet(this.blockchainID)
-                .then(longRunningContextId => {
-
-                  this.longRunningContextId = longRunningContextId;
-                  
-                  this.serverConnectionService.eventNotifier.subscribe((event) => {
-                    if(event.correlationId === this.longRunningContextId){
-                      switch (event.eventType) {
-                        case EventTypes.WalletLoadingEnded:
-                          resolve(true);
-                          break;
-                        case EventTypes.WalletLoadingError:
-                            resolve(false);
-                            break;
-                        default:
-                          return;
-                      }
-                    }
-                  });
-                });
-            }
-            else {
-              resolve(true);
-            }
-          });
-        }else {
-          resolve(false);
-        }
-      });
-    });
-
   }
 }

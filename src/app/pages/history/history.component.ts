@@ -45,12 +45,12 @@ export class HistoryComponent implements OnInit {
   ngOnInit() {
 
     this.serverConnectionService.isConnectedToServer().subscribe(connected => {
-      if (connected != CONNECTED) {
+      if (connected !== CONNECTED) {
         this.router.navigate(['/dashboard']);
       }
       else {
         this.walletService.getCurrentAccount().subscribe(account => {
-          if (account == void (0) || account == NO_WALLET_ACCOUNT) {
+          if (!account || account === NO_WALLET_ACCOUNT) {
             var errorMessage = this.translateService.instant('account.PleaseImportOrCreateWalletAccount');
             var errorTitle = this.translateService.instant('account.NoAccount');
             this.notificationService.showError(errorMessage, errorTitle);
@@ -127,7 +127,7 @@ export class HistoryComponent implements OnInit {
 
   showTransactionDetails(transactionId: string) {
     this.transactionsService.getTransactionDetails(transactionId).then(transaction => {
-      if (transaction != NO_TRANSACTION) {
+      if (transaction && transaction !== NO_TRANSACTION) {
         setTimeout(() =>
           this.dialog.open(TransactionDetailsDialogComponent, {
             width: '800px',

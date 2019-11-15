@@ -1,8 +1,12 @@
 import { Component, OnInit, Optional, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
-import { PassphraseParameters, KeyPassphraseParameters } from '../..//model/passphraseRequiredParameters';
+import { PassphraseParameters, KeyPassphraseParameters, PassphraseRequestType } from '../..//model/passphraseRequiredParameters';
 import { TranslateService } from '@ngx-translate/core';
 
+class DialogParameters{
+  public parameters: PassphraseParameters;
+  public type: PassphraseRequestType;
+}
 @Component({
   selector: 'app-ask-key-dialog',
   templateUrl: './ask-key-dialog.component.html',
@@ -17,15 +21,18 @@ export class AskKeyDialogComponent implements OnInit {
   constructor(
     private translateService:TranslateService,
     public dialogRef: MatDialogRef<AskKeyDialogComponent>,
-    @Optional() @Inject(MAT_DIALOG_DATA) public data: PassphraseParameters) {
-      this.attempt = data.attempt;
-      if(data instanceof KeyPassphraseParameters){
-        this.keyName = data.keyname;
+    @Optional() @Inject(MAT_DIALOG_DATA) public data: DialogParameters) {
+
+      if(this.data.type === PassphraseRequestType.Key){
+
+        let keyRequest = (<KeyPassphraseParameters>this.data.parameters);
+        this.keyName = keyRequest.keyname;
       }
       else{
+        let walletRequest = (<PassphraseParameters>this.data.parameters);
         this.translateService.get("wallet.Wallet").subscribe(wallet =>{
           this.keyName = wallet;
-        })
+        });
       }
      }
 

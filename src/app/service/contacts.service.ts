@@ -38,7 +38,7 @@ export class ContactsService {
   }
 
   getContact(id:string):Contact{
-    return this.contacts.find(contact => {return contact.id == id});
+    return this.contacts.find(contact => {return contact.id === id});
   }
 
   createNew() {
@@ -46,20 +46,20 @@ export class ContactsService {
   }
 
   contactExists(id: string): boolean {
-    return this.contacts.find(item => { return item.id == id }) != undefined;
+    return this.contacts.find(item => { return item.id === id }) !== undefined;
   }
 
   saveContact(contact: Contact): Promise<string> {
     return new Promise<string>((resolve, reject) => {
-      var contactToSave = this.contacts.find(item => { return item.id == contact.id });
+      var contactToSave = this.contacts.find(item => { return item.id === contact.id });
 
-      if (contact.isNew && contactToSave != undefined) {
+      if (contact.isNew && contactToSave !== undefined) {
         this.translateService.get("contact.AlreadyExists", { id: contactToSave.id, name: contactToSave.friendlyName }).subscribe(message => {
           reject(message);
         })
       }
       else{
-        if (contactToSave == undefined) {
+        if (contactToSave === undefined) {
           contact.isNew = false;
           this.contacts.push(contact);
         }

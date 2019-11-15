@@ -4,6 +4,7 @@ import { CommonCall } from "./commonCall";
 import { LogService } from "../..//service/log.service";
 import { TimelineEntry, TimelineDay, TimelineHeader, EntryDirection, EntryCreditType } from "../..//model/timeline";
 import { NeuraliumTransaction, TransactionStatuses, TransactionVersion, TransactionType } from "../..//model/transaction";
+import * as moment from 'moment';
 
 export class NeuraliumCall extends CommonCall {
 
@@ -27,10 +28,10 @@ export class NeuraliumCall extends CommonCall {
                     .then(
                         response => {
                             this.logEvent("QueryAccountTotalNeuraliums - response", response);
-                            var total = Number(response["total"]);
-                            var debit = Number(response["reservedDebit"]);
-                            var credit = Number(response["reservedCredit"]);
-                            var frozen = Number(response["frozen"]);
+                            let total = Number(response["total"]);
+                            let debit = Number(response["reservedDebit"]);
+                            let credit = Number(response["reservedCredit"]);
+                            let frozen = Number(response["frozen"]);
                             resolve(TotalNeuralium.create(total, credit, debit, frozen));
                         })
                     .catch(reason => {
@@ -59,7 +60,7 @@ export class NeuraliumCall extends CommonCall {
 
 
         return new Promise<TimelineHeader>((resolve, reject) => {
-            if(accountUuid == undefined){
+            if(accountUuid === undefined){
                 reject();
             }
 
@@ -68,9 +69,9 @@ export class NeuraliumCall extends CommonCall {
                     .then(
                         response => {
                             this.logEvent("QueryNeuraliumTimelineHeader - response", response);
-                            var firstDay = new Date(response["firstDay"]);
-                            var numberOfDays = <number>Number(response["numberOfDays"]);
-                            var header = TimelineHeader.create(numberOfDays, firstDay);
+                            let firstDay =  moment(response["firstDay"]).toDate();
+                            let numberOfDays = <number>Number(response["numberOfDays"]);
+                            let header = TimelineHeader.create(numberOfDays, firstDay);
                             resolve(header);
                         })
                     .catch(reason => {
@@ -81,8 +82,10 @@ export class NeuraliumCall extends CommonCall {
     }
 
     createTimelineDayForTest(date: string): TimelineDay {
-        var timelineDay = TimelineDay.create(new Date(Date.parse(date)), 1, 20.2365);
-        var entryWithTransaction = TimelineEntry.create("1",new Date(Date.parse(date + " 17:40:00")), "SF", "SG", 10.256458, 0.000025, 0, EntryDirection.debit, EntryCreditType.none, true);
+
+        let convertedDate:Date = moment(date).toDate();
+        let timelineDay = TimelineDay.create(convertedDate, 1, 20.2365);
+        let entryWithTransaction = TimelineEntry.create("1",new Date(Date.parse(date + " 17:40:00")), "SF", "SG", 10.256458, 0.000025, 0, EntryDirection.debit, EntryCreditType.none, true);
         entryWithTransaction.transaction = new NeuraliumTransaction("123456","456",new Date(Date.now()),new TransactionVersion(TransactionType.DEBUG,1,1),null,TransactionStatuses.Confirmed,true,"notation","789",500,5);
         timelineDay.entries.push(entryWithTransaction);
         timelineDay.entries.push(TimelineEntry.create("1",new Date(Date.parse(date + " 15:30:00")), "SF", "SG", 10.256458, 0.000025, 0, EntryDirection.credit, EntryCreditType.transaction, true));
@@ -128,26 +131,27 @@ export class NeuraliumCall extends CommonCall {
                     .then(
                         response => {
                             this.logEvent("QueryNeuraliumTimelineSection - response", response);
-                            var list = new Array<TimelineDay>();
+                            let list = new Array<TimelineDay>();
                             response.forEach(element => {
-                                var Day = new Date(element["day"]);
+                                let Day:Date =  moment(element["day"]).toDate();
                                 var Id = <number>Number(element["id"]);
-                                var EndingTotal = <number>Number(element["endingTotal"]);
+                                let EndingTotal = <number>Number(element["endingTotal"]);
 
-                                var timelineDay = TimelineDay.create(Day, Id, EndingTotal);
-                                var Entries = <Array<any>>element["entries"];
+                                let timelineDay = TimelineDay.create(Day, Id, EndingTotal);
+                                let Entries = <Array<any>>element["entries"];
                                 Entries.forEach(item => {
-                                    var TransactionId = item["transactionId"];
-                                    var Timestamp = new Date(item["timestamp"]);
-                                    var SenderAccountId = item["senderAccountId"];
-                                    var RecipientAccountId = item["recipientAccountId"];
-                                    var Amount = <number>Number(item["amount"]);
-                                    var Tips = <number>Number(item["tips"]);
-                                    var Total = <number>Number(item["total"]);
-                                    var Direction = <EntryDirection>Number(item["direction"]);
-                                    var CreditType = <EntryCreditType>Number(item["creditType"]);
-                                    var Confirmed = <boolean>Boolean(item["confirmed"]);
-                                    var Entry = TimelineEntry.create(TransactionId,Timestamp, SenderAccountId, RecipientAccountId, Amount, Tips, Total, Direction, CreditType, Confirmed);
+                                    let TransactionId = item["transactionId"];
+
+                                    let Timestamp =  moment(item["timestamp"]).toDate();
+                                    let SenderAccountId = item["senderAccountId"];
+                                    let RecipientAccountId = item["recipientAccountId"];
+                                    let Amount = <number>Number(item["amount"]);
+                                    let Tips = <number>Number(item["tips"]);
+                                    let Total = <number>Number(item["total"]);
+                                    let Direction = <EntryDirection>Number(item["direction"]);
+                                    let CreditType = <EntryCreditType>Number(item["creditType"]);
+                                    let Confirmed = <boolean>Boolean(item["confirmed"]);
+                                    let Entry = TimelineEntry.create(TransactionId,Timestamp, SenderAccountId, RecipientAccountId, Amount, Tips, Total, Direction, CreditType, Confirmed);
                                     timelineDay.entries.push(Entry);
                                 });
                                 // sort from youngest to oldest

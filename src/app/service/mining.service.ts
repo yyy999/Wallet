@@ -4,9 +4,9 @@ import { ServerConnectionService } from './server-connection.service';
 import { BlockchainService } from './blockchain.service';
 import { TranslateService } from '@ngx-translate/core';
 import { EventTypes } from '../model/serverConnectionEvent';
+import * as moment from 'moment';
 
 const NO_BLOCKCHAIN_ID = 0;
-const MINING = true;
 
 export class MiningEvent {
   timestamp: Date;
@@ -14,7 +14,7 @@ export class MiningEvent {
 
   static create(eventName: string): MiningEvent {
     let event = new MiningEvent();
-    event.timestamp = new Date(Date.now());
+    event.timestamp = moment().toDate();
     event.eventName = eventName;
     return event;
   }
@@ -24,7 +24,7 @@ export class MiningEvent {
   providedIn: 'root'
 })
 export class MiningService {
-  isMining: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(!MINING);
+  isMining: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
   currentBlockchainId: number = NO_BLOCKCHAIN_ID;
   public miningEventsList: Array<MiningEvent> = [];
   private miningEvents: BehaviorSubject<Array<MiningEvent>> = new BehaviorSubject<Array<MiningEvent>>(this.miningEventsList);
@@ -45,7 +45,7 @@ export class MiningService {
   }
 
   checkServerIsMiningEnabled() {
-    if (this.currentBlockchainId != NO_BLOCKCHAIN_ID) {
+    if (this.currentBlockchainId !== NO_BLOCKCHAIN_ID) {
       this.serverConnection.callIsMiningEnabled(this.currentBlockchainId).then(response => {
         this.isMining.next(response);
       })
@@ -53,17 +53,17 @@ export class MiningService {
   }
 
   startMining() {
-    if (this.currentBlockchainId != NO_BLOCKCHAIN_ID) {
+    if (this.currentBlockchainId !== NO_BLOCKCHAIN_ID) {
       this.serverConnection.callStartMining(this.currentBlockchainId, null).then(response => {
-        this.isMining.next(MINING);
+          // the answer means nothing. we must wait for the event
       })
     }
   }
 
   stopMining() {
-    if (this.currentBlockchainId != NO_BLOCKCHAIN_ID) {
+    if (this.currentBlockchainId !== NO_BLOCKCHAIN_ID) {
       this.serverConnection.callStopMining(this.currentBlockchainId).then(response => {
-        this.isMining.next(!MINING);
+        this.isMining.next(false);
       })
     }
   }
@@ -71,25 +71,31 @@ export class MiningService {
   startListeningMiningEvents() {
     this.serverConnection.eventNotifier.subscribe(event => {
       switch (event.eventType) {
-        case EventTypes.MiningBountyAllocated:
-          this.addEvent(this.translate.instant("event.MiningBountyAllocated"));
+       
+        case EventTypes.NeuraliumMiningBountyAllocated:
+          this.addEvent(this.translate.instant("event.NeuraliumMiningBountyAllocated"));
           break;
         case EventTypes.MiningStarted:
           this.addEvent(this.translate.instant("event.MiningStarted"));
+          this.isMining.next(true);
           break;
         case EventTypes.MiningEnded:
           this.addEvent(this.translate.instant("event.MiningEnded"));
+          this.isMining.next(false);
           break;
         case EventTypes.MiningElected:
           this.addEvent(this.translate.instant("event.MiningElected"));
           break;
         case EventTypes.MiningPrimeElected:
-          this.addEvent(this.translate.instant("event.MiningPrimeElected"));
+          //this.addEvent(this.translate.instant("event.MiningPrimeElected"));
           break;
+        case EventTypes.NeuraliumMiningPrimeElected:
+           this.addEvent(this.translate.instant("event.MiningPrimeElected"));
+            break;
         case EventTypes.MiningStatusChanged:
-          this.addEvent(this.translate.instant("event.MiningStatusChanged"));
+          //this.addEvent(this.translate.instant("event.MiningStatusChanged"));
+          this.isMining.next(event.message);
           break;
-
           case EventTypes.ConnectableStatusChanged:
             this.isConnectable.next(event.message.connectable);
             break;

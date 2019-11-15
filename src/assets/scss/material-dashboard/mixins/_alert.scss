@@ -17,23 +17,23 @@
 // interpolation of mixin-name is not allowed evidently, so we statically include based on the mixin-name given
 @mixin call-variations-content-mixin($args) {
   $mixin-name: map-get($args, mixin-name);
-  @if $mixin-name == variations-content {
+  @if $mixin-name === variations-content {
     @include variations-content($args);
-  } @else if $mixin-name == background-variations-content {
+  } @else if $mixin-name === background-variations-content {
     @include background-variations-content($args);
-  } @else if $mixin-name == text-variations-content {
+  } @else if $mixin-name === text-variations-content {
     @include text-variations-content($args);
-  } @else if $mixin-name == button-variations-content {
+  } @else if $mixin-name === button-variations-content {
     @include button-variations-content($args);
-  } @else if $mixin-name == bg-color-variations-content {
+  } @else if $mixin-name === bg-color-variations-content {
     @include bg-color-variations-content($args);
-  } @else if $mixin-name == bg-box-shadow-variations-content {
+  } @else if $mixin-name === bg-box-shadow-variations-content {
     @include bg-box-shadow-variations-content($args);
-  } @else if $mixin-name == bg-img-variations-content {
+  } @else if $mixin-name === bg-img-variations-content {
     @include bg-img-variations-content($args);
-  } @else if $mixin-name == navbar-variations-content {
+  } @else if $mixin-name === navbar-variations-content {
     @include navbar-variations-content($args);
-  }@else if $mixin-name == alert-variations-content {
+  }@else if $mixin-name === alert-variations-content {
     @include alert-variations-content($args);
   } @else {
     @error "Unknown mixin: #{$mixin-name}"

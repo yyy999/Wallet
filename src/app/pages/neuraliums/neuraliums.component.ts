@@ -35,15 +35,15 @@ export class NeuraliumsComponent implements OnInit {
 
   ngOnInit() {
     this.serverConnectionService.isConnectedToServer().subscribe(connected => {
-      if (connected != CONNECTED) {
+      if (connected !== CONNECTED) {
         this.router.navigate(['/dashboard']);
       }
       else {
         try {
           this.blockchainService.selectedBlockchain.subscribe(blockchain => {
-            if (blockchain == NEURALIUM_BLOCKCHAIN && blockchain.menuConfig.showSend) {
+            if (blockchain === NEURALIUM_BLOCKCHAIN && blockchain.menuConfig.showSend) {
               this.walletService.getCurrentAccount().subscribe(account => {
-                if (account != void (0) && account != NO_WALLET_ACCOUNT && account.isActive && account.status == WalletAccountStatus.Published) { // && account.status == WalletAccountStatus.Published
+                if (account && account !== NO_WALLET_ACCOUNT && account.isActive && account.status === WalletAccountStatus.Published) { // && account.status === WalletAccountStatus.Published
                   this.initialise(account);
                 }
                 else {
@@ -74,7 +74,7 @@ export class NeuraliumsComponent implements OnInit {
   }
 
   get hasCurrentAccount(): boolean {
-    return this.currentAccount != NO_WALLET_ACCOUNT;
+    return this.currentAccount !== NO_WALLET_ACCOUNT;
   }
 
   neuraliumsSent(total:number){

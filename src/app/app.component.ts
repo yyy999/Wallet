@@ -5,6 +5,8 @@ import { BlockchainService } from './service/blockchain.service';
 import { MatDialog } from '@angular/material/dialog';
 import { SelectBlockchainDialogComponent } from './dialogs/select-blockchain-dialog/select-blockchain-dialog.component';
 import { NotificationService } from './service/notification.service';
+import { ServerService } from './service/server.service';
+
 import { TranslateService } from '@ngx-translate/core';
 import { Router } from '@angular/router';
 import { LanguageSelectionDialogComponent } from './dialogs/language-selection-dialog/language-selection-dialog.component';
@@ -19,7 +21,7 @@ import { remote, ipcRenderer } from 'electron';
 import { AboutDialogComponent } from './dialogs/about-dialog/about-dialog.component';
 import { CONNECTED, EventTypes } from './model/serverConnectionEvent';
 import { AskKeyDialogComponent } from './dialogs/ask-key-dialog/ask-key-dialog.component';
-import { PassphraseParameters, KeyPassphraseParameters } from './model/passphraseRequiredParameters';
+import { PassphraseParameters, KeyPassphraseParameters, PassphraseRequestType } from './model/passphraseRequiredParameters';
 
 @Component({
   selector: 'app-root',
@@ -42,6 +44,7 @@ export class AppComponent {
     private blockchainService: BlockchainService,
     private notificationService: NotificationService,
     private serverConnectionService: ServerConnectionService,
+    private serverService: ServerService,
     private dialog: MatDialog) {
     this.translateService.setDefaultLang("en");
     this.serverPath = this.configService.serverPath;
@@ -63,9 +66,15 @@ export class AppComponent {
 
   ngOnInit() {
     this.electronService.ipcRenderer.on("quit",(event) =>{
-      this.serverConnectionService.canManuallyStopServer.subscribe(canStop =>{
-        if(true){
-          this.serverConnectionService.callServerShutdown().finally(()=>{
+      this.serverService.canManuallyStopServer.subscribe(canStop =>{
+        if(canStop){
+
+          this.serverService.stopServer().then((success) => {
+
+            event.sender.send("ok-quit");
+
+          }).catch((error) => {
+            console.log(error);
             event.sender.send("ok-quit");
           });
         }
@@ -78,10 +87,10 @@ export class AppComponent {
     })
 
     var lng = this.configService.language;
-    if (lng == void (0)) {
+    if (!lng) {
       setTimeout(() => {
         let dialogRef = this.dialog.open(LanguageSelectionDialogComponent, {
-          width: '400px'
+          width: '600px'
         })
 
         dialogRef.afterClosed().subscribe(() => {
@@ -149,7 +158,7 @@ export class AppComponent {
     }
     else {
       this.serverConnectionService.isConnectedToServer().subscribe(connected => {
-        if (connected != CONNECTED) {
+        if (connected !== CONNECTED) {
           if(!this.configService.isServerPathValid()){
             this.router.navigate(['/settings']);
           }
@@ -162,13 +171,13 @@ export class AppComponent {
           this.selectedBlockchain = this.blockchainService.getSelectedBlockchain();
 
           this.selectedBlockchain.subscribe(blockchain => {
-            if (blockchain == NO_BLOCKCHAIN) {
+            if (blockchain === NO_BLOCKCHAIN) {
               this.blockchainService.getAvailableBlockchains().then(blockchains => {
                 let availableBlockchainsCount = blockchains.length
-                if (availableBlockchainsCount == 0) {
+                if (availableBlockchainsCount === 0) {
                   this.notificationService.showWarn("No blockchain available");
                 }
-                else if (availableBlockchainsCount == 1) {
+                else if (availableBlockchainsCount === 1) {
                   this.currentBlockchain = blockchains[0];
                   this.blockchainService.setSelectedBlockchain(this.currentBlockchain);
                 }
@@ -203,28 +212,28 @@ export class AppComponent {
     })
   }
 
-  askForWalletPassphrase(data:PassphraseParameters){
+  askForWalletPassphrase(parameters:PassphraseParameters){
     setTimeout(() =>{
       var dialog = this.dialog.open(AskKeyDialogComponent, {
         width: '450px',
-        data: data
-      })
+        data: {parameters: parameters, type: PassphraseRequestType.Wallet}
+      });
 
       dialog.afterClosed().subscribe(result =>{
-        this.serverConnectionService.callEnterWalletPassphrase(data.correlationId, data.chainType, data.keyCorrelationCode,result);
+        this.serverConnectionService.callEnterWalletPassphrase(parameters.correlationId, parameters.chainType, parameters.keyCorrelationCode,result);
       })
     });
   }
 
-  askForKeyPassphrase(data:KeyPassphraseParameters){
+  askForKeyPassphrase(parameters:KeyPassphraseParameters){
     setTimeout(() =>{
       var dialog = this.dialog.open(AskKeyDialogComponent, {
         width: '450px',
-        data: data
+        data: {parameters: parameters, type: PassphraseRequestType.Key}
       })
 
       dialog.afterClosed().subscribe(result =>{
-        this.serverConnectionService.callEnterKeyPassphrase(data.correlationId, data.chainType, data.keyCorrelationCode,result);
+        this.serverConnectionService.callEnterKeyPassphrase(parameters.correlationId, parameters.chainType, parameters.keyCorrelationCode,result);
       })
     });
   }
@@ -253,7 +262,7 @@ export class AppComponent {
 
       }).afterClosed().subscribe(dialogResult => {
         if(!shown){
-          if (dialogResult == DialogResult.Yes) {
+          if (dialogResult === DialogResult.Yes) {
             this.configService.softwareLicenseAgreementShown = true;
             this.configService.saveSettings();
             this.initialise();

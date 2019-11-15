@@ -24,6 +24,8 @@ export class MainMenuComponent implements OnInit, OnDestroy {
   showHistory:boolean = false;
   showContacts:boolean = false;
   showSettings:boolean = false;
+  showTools:boolean = false;
+  
 
   constructor(
     private configService:ConfigService,
@@ -35,7 +37,7 @@ export class MainMenuComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.serverConnectionService.isConnectedToServer().subscribe(connected => {
-      if (connected != CONNECTED) {
+      if (connected !== CONNECTED) {
         // nothing to do
       }
       else{
@@ -55,10 +57,11 @@ export class MainMenuComponent implements OnInit, OnDestroy {
   }
 
   displayMenu(blockchain: BlockChain) {
-    if (blockchain != NO_BLOCKCHAIN) {
+    if (blockchain !== NO_BLOCKCHAIN) {
       this.showDashboard = blockchain.menuConfig.showDashboard;
       this.showSend = blockchain.menuConfig.showSend;
       this.showHistory = blockchain.menuConfig.showHistory;
+      this.showTools = blockchain.menuConfig.showTools;
       this.showContacts = blockchain.menuConfig.showContacts;
       this.showSettings = blockchain.menuConfig.showSettings;
     }
@@ -75,7 +78,7 @@ export class MainMenuComponent implements OnInit, OnDestroy {
       this.dialog.open(SoftwareLicenseAgreementComponent, {
         width: '250px'
       }).afterClosed().subscribe(dialogResult => {
-        if (dialogResult == DialogResult.Yes) {
+        if (dialogResult === DialogResult.Yes) {
           this.configService.softwareLicenseAgreementShown = true;
           this.configService.saveSettings();
         }

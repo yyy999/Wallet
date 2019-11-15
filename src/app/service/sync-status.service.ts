@@ -13,8 +13,8 @@ import { LogService } from './log.service';
 export class SyncStatusService {
   blockchainId: number = 0;
 
-  currentBlockchainSyncStatus: BehaviorSubject<SyncStatus> = new BehaviorSubject<SyncStatus>(SyncStatus.NotSynced);
-  currentWalletSyncStatus: BehaviorSubject<SyncStatus> = new BehaviorSubject<SyncStatus>(SyncStatus.NotSynced);
+  currentBlockchainSyncStatus: BehaviorSubject<SyncStatus> = new BehaviorSubject<SyncStatus>(SyncStatus.Unknown);
+  currentWalletSyncStatus: BehaviorSubject<SyncStatus> = new BehaviorSubject<SyncStatus>(SyncStatus.Unknown);
   currentBlockchainSyncUpdate: BehaviorSubject<SyncUpdate> = new BehaviorSubject<SyncUpdate>(NO_SYNC_UPDATE);
   currentWalletSyncUpdate: BehaviorSubject<SyncUpdate> = new BehaviorSubject<SyncUpdate>(NO_SYNC_UPDATE);
 
@@ -26,20 +26,25 @@ export class SyncStatusService {
   walletSyncProcess: SyncProcess = null;
   blockchainSyncProcess: SyncProcess = null;
 
+
+
   constructor(
     private logService: LogService,
     private serverConnectionService: ServerConnectionService
   ) {
+    this.blockchainId = 0;
     this.clearSync();
 
     this.serverConnectionService.isConnectedToServer().subscribe(connected => {
       if (connected === CONNECTED) {
-          this.getPeerCountFromServer();
-          this.initialiseBlockchainSyncStatus();
+        this.getPeerCountFromServer();
+        this.initialiseBlockchainSyncStatus();
       }
-     });
-     this.subscribeToEvents();
+    });
+
+    this.subscribeToEvents();
   }
+
 
   initialiseStatus(blockchainId: number) {
     this.blockchainId = blockchainId;
@@ -63,7 +68,7 @@ export class SyncStatusService {
   }
 
   private initialiseBlockchainSyncStatus() {
-    if(this.blockchainId !== 0){
+    if (this.blockchainId && this.blockchainId !== 0) {
       this.serverConnectionService.callQueryBlockchainSynced(this.blockchainId)
         .then(isSynced => {
           if (isSynced) {
@@ -82,46 +87,106 @@ export class SyncStatusService {
   private subscribeToEvents() {
 
     this.serverConnectionService.eventNotifier.subscribe(event => {
+
+      let chainType: number;
+      let currentBlockId: number;
+      let blockHeight: number;
+      let percentage: number;
+      let estimatedTimeRemaining: string;
+      let status: SyncStatus = SyncStatus.NotSynced;
+
+
       switch (event.eventType) {
         case EventTypes.WalletSyncStarted:
+          chainType = event.message["chainType"];
+          currentBlockId = event.message["currentBlockId"];
+          blockHeight = event.message["blockHeight"];
+          percentage = event.message["percentage"];
+
           this.walletSyncProcess = SyncProcess.createNew(event.correlationId, event.message, ProcessType.SyncingWallet);
           this.startSync(this.walletSyncProcess);
-          this.currentWalletSyncStatus.next(SyncStatus.NotSynced);
+          this.currentWalletSyncUpdate.next(SyncUpdate.create(EventTypes.WalletSyncStarted, chainType, currentBlockId, blockHeight, percentage, ''));
+
+
+          if (currentBlockId === blockHeight) {
+            status = SyncStatus.Synced;
+          }
+          this.currentWalletSyncStatus.next(status);
           break;
         case EventTypes.WalletSyncEnded:
+          chainType = event.message["chainType"];
+          currentBlockId = event.message["currentBlockId"];
+          blockHeight = event.message["blockHeight"];
+          percentage = event.message["percentage"];
+
           this.endSync(this.walletSyncProcess);
-          this.currentWalletSyncUpdate.next(NO_SYNC_UPDATE);
-          this.currentWalletSyncStatus.next(SyncStatus.Synced);
+          this.currentWalletSyncUpdate.next(SyncUpdate.create(EventTypes.WalletSyncEnded, chainType, currentBlockId, blockHeight, percentage, ''));
+
+          if (currentBlockId === blockHeight) {
+            status = SyncStatus.Synced;
+          }
+          this.currentWalletSyncStatus.next(status);
           break;
         case EventTypes.WalletSyncUpdate:
-          var chainType: number = event.message["chainType"];
-          var currentBlockId: number = event.message["currentBlockId"];
-          var blockHeight: number = event.message["blockHeight"];
-          var percentage: number = event.message["percentage"];
+          chainType = event.message["chainType"];
+          currentBlockId = event.message["currentBlockId"];
+          blockHeight = event.message["blockHeight"];
+          percentage = event.message["percentage"];
 
-          this.currentWalletSyncUpdate.next(SyncUpdate.create(chainType, currentBlockId, blockHeight, percentage, ''));
-          this.currentWalletSyncStatus.next(SyncStatus.NotSynced);
+          estimatedTimeRemaining = event.message["estimatedTimeRemaining"];
+
+          this.currentWalletSyncUpdate.next(SyncUpdate.create(EventTypes.WalletSyncUpdate, chainType, currentBlockId, blockHeight, percentage, estimatedTimeRemaining));
+          if (currentBlockId === blockHeight) {
+            status = SyncStatus.Synced;
+          }
+
+          this.currentWalletSyncStatus.next(status);
           break;
         case EventTypes.BlockchainSyncStarted:
+          chainType = event.message["chainType"];
+          currentBlockId = event.message["currentBlockId"];
+          blockHeight = event.message["publicBlockHeight"];
+          percentage = event.message["percentage"];
+
           this.blockchainSyncProcess = SyncProcess.createNew(event.correlationId, event.message, ProcessType.SyncingBlockchain);
           this.startSync(this.blockchainSyncProcess);
-          this.currentBlockchainSyncStatus.next(SyncStatus.NotSynced);
+          this.currentBlockchainSyncUpdate.next(SyncUpdate.create(EventTypes.BlockchainSyncStarted, chainType, currentBlockId, blockHeight, percentage, ''));
+
+          if (currentBlockId === blockHeight) {
+            status = SyncStatus.Synced;
+          }
+          this.currentWalletSyncStatus.next(status);
+          this.currentBlockchainSyncStatus.next(status);
           break;
         case EventTypes.BlockchainSyncEnded:
+          chainType = event.message["chainType"];
+          currentBlockId = event.message["currentBlockId"];
+          blockHeight = event.message["publicBlockHeight"];
+          percentage = event.message["percentage"];
+
           this.endSync(this.blockchainSyncProcess);
-          this.currentBlockchainSyncUpdate.next(NO_SYNC_UPDATE);
+          this.currentBlockchainSyncUpdate.next(SyncUpdate.create(EventTypes.BlockchainSyncEnded, chainType, currentBlockId, blockHeight, percentage, ''));
+          if (currentBlockId === blockHeight) {
+            status = SyncStatus.Synced;
+          }
+          
+          this.currentBlockchainSyncStatus.next(status);
           this.initialiseBlockchainSyncStatus();
           break;
         case EventTypes.BlockchainSyncUpdate:
-          var chainType: number = event.message["chainType"];
-          var currentBlockId: number = event.message["currentBlockId"];
-          var blockHeight: number = event.message["publicBlockHeight"];
-          var percentage: number = event.message["percentage"];
+          chainType = event.message["chainType"];
+          currentBlockId = event.message["currentBlockId"];
+          blockHeight = event.message["publicBlockHeight"];
+          percentage = event.message["percentage"];
 
-          var estimatedTimeRemaining: string = event.message["estimatedTimeRemaining"];
+          estimatedTimeRemaining = event.message["estimatedTimeRemaining"];
 
-          this.currentBlockchainSyncUpdate.next(SyncUpdate.create(chainType, currentBlockId, blockHeight, percentage, estimatedTimeRemaining));
-          this.currentBlockchainSyncStatus.next(SyncStatus.NotSynced);
+          if (currentBlockId === blockHeight) {
+            status = SyncStatus.Synced;
+          }
+          this.currentBlockchainSyncUpdate.next(SyncUpdate.create(EventTypes.BlockchainSyncUpdate, chainType, currentBlockId, blockHeight, percentage, estimatedTimeRemaining));
+
+          this.currentBlockchainSyncStatus.next(status);
           break;
         case EventTypes.PeerTotalUpdated:
           this.getPeerCountFromServer();
@@ -175,12 +240,16 @@ export class SyncStatusService {
   }
 
   endSync(syncProcess: SyncProcess) {
-    this.syncList = this.syncList.filter(item => item.id !== syncProcess.id);
-    this.notifySyncing();
+    if (syncProcess) {
+      this.endSyncWithId(syncProcess.id);
+    }
   }
 
   endSyncWithId(id: number) {
-    this.syncList = this.syncList.filter(item => item.id !== id);
+    try {
+      this.syncList = this.syncList.filter(item => item !== null && item.id !== id);
+    }
+    catch{ }
     this.notifySyncing();
   }
 
@@ -230,27 +299,27 @@ export class SyncStatusService {
     this.currentWalletSyncStatus.next(SyncStatus.NotSynced);
 
     setTimeout(() => {
-      this.currentWalletSyncUpdate.next(SyncUpdate.create(1, 1, 5, 20, "2 days"));
+      this.currentWalletSyncUpdate.next(SyncUpdate.create(1, 1, 1, 5, 20, "2 days"));
       this.currentWalletSyncStatus.next(SyncStatus.NotSynced);
     }, 1000);
 
     setTimeout(() => {
-      this.currentWalletSyncUpdate.next(SyncUpdate.create(1, 2, 5, 40, "2 days"));
+      this.currentWalletSyncUpdate.next(SyncUpdate.create(1, 1, 2, 5, 40, "2 days"));
       this.currentWalletSyncStatus.next(SyncStatus.NotSynced);
     }, 2000);
 
     setTimeout(() => {
-      this.currentWalletSyncUpdate.next(SyncUpdate.create(1, 3, 5, 60, "2 days"));
+      this.currentWalletSyncUpdate.next(SyncUpdate.create(1, 1, 3, 5, 60, "2 days"));
       this.currentWalletSyncStatus.next(SyncStatus.NotSynced);
     }, 3000);
 
     setTimeout(() => {
-      this.currentWalletSyncUpdate.next(SyncUpdate.create(1, 4, 5, 80, "2 days"));
+      this.currentWalletSyncUpdate.next(SyncUpdate.create(1, 1, 4, 5, 80, "2 days"));
       this.currentWalletSyncStatus.next(SyncStatus.NotSynced);
     }, 4000);
 
     setTimeout(() => {
-      this.currentWalletSyncUpdate.next(SyncUpdate.create(1, 5, 5, 100, "2 days"));
+      this.currentWalletSyncUpdate.next(SyncUpdate.create(1, 1, 5, 5, 100, "2 days"));
       this.currentWalletSyncStatus.next(SyncStatus.NotSynced);
     }, 5000);
 

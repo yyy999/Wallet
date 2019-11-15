@@ -3,6 +3,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { ServerConnectionService } from '../../service/server-connection.service';
 import { NotificationService } from '../../service/notification.service';
 import { ConfigService } from '../../service/config.service';
+import { ServerService } from '../../service/server.service';
 import { TranslateService } from '@ngx-translate/core';
 import { CONNECTED, EventTypes } from '../..//model/serverConnectionEvent';
 
@@ -27,6 +28,7 @@ export class ServerConnectionDialogComponent implements OnInit {
     private serverConnectionService: ServerConnectionService,
     private notificationService: NotificationService,
     private configService: ConfigService,
+    private serverService: ServerService,
     private translateService: TranslateService,
     public dialogRef: MatDialogRef<ServerConnectionDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: boolean
@@ -45,7 +47,7 @@ export class ServerConnectionDialogComponent implements OnInit {
 
     this.serverConnectionService.isConnectedToServer().subscribe(connected => {
       this.showServerNotConnected = !connected;
-      if (connected != CONNECTED) {
+      if (connected !== CONNECTED) {
         this.serverConnectionService.tryConnectToServer();
         setTimeout(() =>{
           this.canStartServer = true;
@@ -62,50 +64,20 @@ export class ServerConnectionDialogComponent implements OnInit {
   }
 
   startServer() {
-    this.canStartServer = false;
-    let serverPath = this.configService.serverPath;
-    let serverName = this.configService.serverFileName;
-    var path = require('path');
-    
-    var filePath = path.join(serverPath, serverName) + " --accept-license-agreement=YES";
-    var child_process = require('child_process');
+    this.serverService.startServer().then(success => {
 
-    this.notificationService.showInfo(this.translateService.instant("server.StartingServer"));
-     
-    const server = child_process.execFile(filePath, { shell:true }, (error, stdout, stderr) => {
-      if (error) {
-        console.log(error);
+      this.serverConnectionService.tryConnectToServer();
+      if(success){
+        this.close();
       }
-
-      if(stderr){
-        console.log(stderr);
-      }
-
-      console.log(stdout);
     });
-    this.serverConnectionService.setCanManuallyStopServer(true);
-    this.close();
+    
   }
 
   stopServer() {
-    try {
-      this.notificationService.showInfo(this.translateService.instant("server.StartingServerShutdown"));
-      this.serverConnectionService.eventNotifier.subscribe(event => {
-        if (event.eventType == EventTypes.ShutdownStarted) {
-          this.translateService.instant("server.ServerShutdownStarted");
-        }
-        else if (event.eventType == EventTypes.ShutdownCompleted) {
-          this.translateService.instant("server.ServerShutdownCompleted");
-        }
-      })
-      this.serverConnectionService.callServerShutdown().then(() => {
-        this.serverConnectionService.setCanManuallyStopServer(false);
-        this.close();
-      });
-    } catch (error) {
-      this.notificationService.showError(error);
-    }
-
+    this.serverService.stopServer().then((success) => {
+      this.close();
+    });
   }
 
   close() {

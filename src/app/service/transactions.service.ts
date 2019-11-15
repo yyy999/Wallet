@@ -42,8 +42,7 @@ export class TransactionsService {
 
    
     this.walletService.getWallet().subscribe(wallet => {
-      this.walletId = wallet.id;
-      if (wallet.accounts != void (0) && wallet.accounts.length > 0) {
+      if (wallet.accounts && wallet.accounts.length > 0) {
         this.accountId = wallet.accounts.filter(account => account.isActive)[0].accountUuid;
       }
       else {
@@ -53,37 +52,35 @@ export class TransactionsService {
     })
 
     this.serverConnectionService.eventNotifier.subscribe(event => {
-      if (event.eventType == EventTypes.TransactionSent
-        || event.eventType == EventTypes.TransactionConfirmed
-        || event.eventType == EventTypes.TransactionReceived
-        || event.eventType == EventTypes.TransactionRefused
-        || event.eventType == EventTypes.TransactionError) {
+      if (event.eventType === EventTypes.TransactionSent
+        || event.eventType === EventTypes.TransactionConfirmed
+        || event.eventType === EventTypes.TransactionReceived
+        || event.eventType === EventTypes.TransactionRefused
+        || event.eventType === EventTypes.TransactionError) {
         this.refrechTransactions();
       };
 
-      if (event.eventType == EventTypes.TransactionMessage) {
+      if (event.eventType === EventTypes.TransactionMessage) {
         this.notificationService.showInfo(event.message);
       }
 
-      if (event.eventType == EventTypes.TransactionError) {
+      if (event.eventType === EventTypes.TransactionError) {
         this.notificationService.showError(event.message);
       }
 
-      if (event.eventType == EventTypes.PeerTotalUpdated) {
+      if (event.eventType === EventTypes.PeerTotalUpdated) {
         this.updateCanSendTransaction();
       }
     })
   }
 
   updateChainStatus(){
-    if(this.blockchainId !== 0){
-      this.serverConnectionService.callQueryChainStatus(this.blockchainId).then(chainStatus => {
-        if (chainStatus !== void (0)) {
-          this.minRequiredPeerCount = chainStatus["minRequiredPeerCount"];
-          this.updateCanSendTransaction();
-        }
-      });
-  }
+    this.blockchainService.updateChainStatus().then(chainStatus => {
+      if (chainStatus) {
+        this.minRequiredPeerCount = chainStatus["minRequiredPeerCount"];
+        this.updateCanSendTransaction();
+      }
+    });
   }
 
   updateCanSendTransaction() {
@@ -126,7 +123,7 @@ export class TransactionsService {
   }
 
   refrechTransactions() {
-    if (this.blockchainId != 0 && this.accountId != undefined) {
+    if (this.blockchainId !== 0 && this.accountId !== undefined) {
       this.serverConnectionService.callQueryWalletTransactionHistory(this.blockchainId, this.accountId)
         .then(transactions => {
           this.transactions = transactions;

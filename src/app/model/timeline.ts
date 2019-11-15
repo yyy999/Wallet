@@ -67,7 +67,7 @@ export class TimelineEntry {
     private constructor() { }
 
     get showTransaction():boolean{
-        return this.showDetails && this.transaction != null && this.transaction != NO_NEURALIUM_TRANSACTION;
+        return this.showDetails && this.transaction !== null && this.transaction !== NO_NEURALIUM_TRANSACTION;
     }
 
     static create(transactionId:string, timestamp: Date, senderAccountId: string, recipientAccountId: string,
@@ -80,7 +80,7 @@ export class TimelineEntry {
         timelineEntry.amount = amount;
         timelineEntry.tips = tips;
         timelineEntry.total = total;
-        if (direction == EntryDirection.debit) {
+        if (direction === EntryDirection.debit) {
             timelineEntry.type = EntryType.debit;
         }
         else {

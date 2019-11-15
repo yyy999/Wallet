@@ -26,7 +26,7 @@ export class AccountDetailsComponent implements OnInit {
 
   ngOnInit() {
     this.syncService.getCurrentBlockchainSyncStatus().subscribe(syncStatus => {
-      this.canPublish = syncStatus == SyncStatus.Synced;
+      this.canPublish = syncStatus === SyncStatus.Synced;
     })
   }
 

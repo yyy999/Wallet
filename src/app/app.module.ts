@@ -3,8 +3,10 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import {ScrollingModule} from '@angular/cdk/scrolling';
+import { ScrollingModule} from '@angular/cdk/scrolling';
 import { NgxElectronModule } from 'ngx-electron';
+import { NgxJsonViewerModule } from 'ngx-json-viewer';
+
 
 import { AppRoutingModule } from './modules/app-routing.module';
 import { TooltipModule } from 'ng2-tooltip-directive';
@@ -28,6 +30,7 @@ import { ContactsComponent } from './pages/contacts/contacts.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { HistoryComponent } from './pages/history/history.component';
 import { SettingsComponent } from './pages/settings/settings.component';
+import { ToolsComponent } from './pages/tools/tools.component';
 import { ServerComponent } from './pages/server/server.component';
 import { SendComponent } from './pages/send/send.component';
 import { ReceiveComponent } from './pages/receive/receive.component';
@@ -55,6 +58,7 @@ import { TestModeMessageComponent } from './components/test-mode-message/test-mo
 import { HelpIconComponent } from './components/help-icon/help-icon.component';
 import { SendNeuraliumsComponent } from './components/send-neuraliums/send-neuraliums.component';
 import { NeuraliumsHistoryComponent } from './components/neuraliums-history/neuraliums-history.component';
+import { BlockExplorerComponent } from './components/blockexplorer/blockexplorer.component';
 
 import { SelectBlockchainDialogComponent } from './dialogs/select-blockchain-dialog/select-blockchain-dialog.component';
 import { AskOrCreateWalletDialogComponent } from './dialogs/ask-or-create-wallet-dialog/ask-or-create-wallet-dialog.component';
@@ -84,6 +88,7 @@ export function createTranslateLoader(http: HttpClient) {
     ContactsComponent,
     DashboardComponent,
     HistoryComponent,
+    ToolsComponent,
     SettingsComponent,
     ServerComponent,
     SendComponent,
@@ -127,6 +132,7 @@ export function createTranslateLoader(http: HttpClient) {
     NeuraliumsComponent,
     SendNeuraliumsComponent,
     NeuraliumsHistoryComponent,
+    BlockExplorerComponent,
     AskKeyDialogComponent,
     TestPageComponent,
     FormatTimelineDatePipe,
@@ -137,6 +143,7 @@ export function createTranslateLoader(http: HttpClient) {
     BrowserModule,
     BrowserAnimationsModule,
     NgxElectronModule,
+    NgxJsonViewerModule,
     AppRoutingModule,
     ScrollingModule,
     TooltipModule,

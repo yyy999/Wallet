@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { NotificationService } from './notification.service';
 
 import { HubConnectionBuilder, HttpTransportType, HubConnection, LogLevel, HubConnectionState } from '@microsoft/signalr';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Subject, Observable } from 'rxjs';
 import { LogService } from './log.service';
 import { WalletCreation } from '../model/wallet';
 import { ConfigService } from './config.service';
@@ -21,7 +21,7 @@ import { remote } from 'electron';
 import * as moment from 'moment';
 
 const RETRY_DURATION = 3000;
-const MESSAGE_BUFFER_SIZE = 4096;
+export const MESSAGE_BUFFER_SIZE = 4000;
 
 export class ServerMessage {
 
@@ -51,11 +51,6 @@ export class ServerConnectionService {
     return this.showServerNotConnectedObs;
   }
 
-  get canManuallyStopServer(): Observable<boolean> {
-    return this.canManuallyStopServerObs;
-  }
-
-
   constructor(
     private notificationService: NotificationService,
     private logService: LogService,
@@ -77,6 +72,7 @@ export class ServerConnectionService {
           skipNegotiation: true,
           transport: HttpTransportType.WebSockets
         })
+      
         .withAutomaticReconnect()
         .build();
 
@@ -85,6 +81,7 @@ export class ServerConnectionService {
     }
 
     this.cnx.onclose(() => {
+      this.cnx.stop();
       this.logService.logDebug(" Connection Closed", {  });
       this.notifyServerConnectionStatusIfNeeded(false);
       this.isConnecting = false;
@@ -93,16 +90,24 @@ export class ServerConnectionService {
     
     return this.cnx;
   }
+
+  registerConnectionEvent(action:string, newMethod: (...args: any[]) => void): void{
+    const cnx = this.connection;
+
+    cnx.off(action);
+    cnx.on(action, newMethod);
+  }
+  
   private showServerNotConnectedObs: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(true);
-  private canManuallyStopServerObs: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
   serverPort: number;
   serverPath: string;
-  eventNotifier: BehaviorSubject<ServerConnectionEvent> = new BehaviorSubject<ServerConnectionEvent>(ServerConnectionEvent.NO_EVENT);
+  eventNotifier: Subject<ServerConnectionEvent> = new Subject<ServerConnectionEvent>();
   serverConnection: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
   private isCurrentlyConnected: boolean = false;
 
   public messages:Array<ServerMessage> = new Array<ServerMessage>();
+  consoleMessagesEnabled: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
 
   private isConnecting:boolean = false;
@@ -113,11 +118,8 @@ export class ServerConnectionService {
     this.showServerNotConnectedObs.next(value);
   }
 
-  setCanManuallyStopServer(value: boolean) {
-    this.canManuallyStopServerObs.next(value);
-  }
 
-  private beginConnection(){
+  public beginConnection(){
     
     this.tryConnectToServer().then(() => {
       this.notifyServerConnectionStatusIfNeeded(true);
@@ -144,6 +146,9 @@ getMessages(): Array<ServerMessage> {
 
     this.listenToAccountTotalUpdated();
     this.listenToPeerTotalUpdated();
+
+    this.listenToServerShutdownStarted();
+    this.listenToServerShutdownCompleted();
 
     this.listenToBlockInserted();
 
@@ -212,8 +217,9 @@ getMessages(): Array<ServerMessage> {
   }
 
   startListeningMiningEvents() {
-    this.listenToMiningBountyAllocated();
+    this.listenToNeuraliumMiningBountyAllocated();
     this.listenToMiningConnectableStatusChanged();
+    this.listenToNeuraliumMiningPrimeElected();
     this.listenToMiningElected();
     this.listenToMiningEnded();
     this.listenToMiningStarted();
@@ -258,7 +264,13 @@ getMessages(): Array<ServerMessage> {
 
   callQuerySystemVersion() {
     var service = ServerCall.create(this, this.logService);
-    return service.callQuerySystemVersion();
+    var result = service.callQuerySystemVersion();
+
+    result.then(response => {
+      // capture the results
+      this.consoleMessagesEnabled.next(response.consoleEnabled);
+    });
+    return result;
   }
 
   callQueryWalletTransactionHistory(chainType: number, accountUuid: string) {
@@ -304,6 +316,16 @@ getMessages(): Array<ServerMessage> {
   callQueryChainStatus(chainType: number) {
     var service = BlockchainCall.create(this, this.logService);
     return service.callQueryChainStatus(chainType);
+  }
+
+  callQueryBlock(chainType: number, blockId:number){
+    var service = BlockchainCall.create(this, this.logService);
+    return service.callQueryBlock(chainType, blockId);
+  }
+
+  callQueryWalletInfo(chainType: number){
+    var service = BlockchainCall.create(this, this.logService);
+    return service.callQueryWalletInfo(chainType);
   }
 
   callStartMining(chainType: number, delegateAccountId: string) {
@@ -361,9 +383,9 @@ getMessages(): Array<ServerMessage> {
     return service.callWalletExists(chainType);
   }
 
-  callLoadWallet(chainType: number) {
+  callLoadWallet(chainType: number, passphrase:string) {
     var service = WalletCall.create(this, this.logService);
-    return service.callLoadWallet(chainType);
+    return service.callLoadWallet(chainType, passphrase);
   }
 
   callIsWalletSynced(chainType: number): Promise<boolean> {
@@ -413,13 +435,25 @@ getMessages(): Array<ServerMessage> {
     return service.callEnterKeyPassphrase(correlationId, chainType, keyCorrelationCode, passphrase);
   }
 
+  callEnableConsoleMessages(enabled:boolean): Promise<boolean> {
+    var service = ServerCall.create(this, this.logService);
+    var result = service.callEnableConsoleMessages(enabled);
+
+    result.then(enabled => {
+      // capture the result and propagate it
+      this.consoleMessagesEnabled.next(enabled);
+    });
+    return result;
+
+  }
+
   //server listening
   listenToServerShutdownStarted() {
     const cnx = this.connection;
     const action = "ShutdownStarted";
     
 
-    cnx.on(action, () => {
+    this.registerConnectionEvent(action, () => {
       this.logEvent(action + " - event", null);
       this.propagateEvent(0, EventTypes.ShutdownStarted, ResponseResult.Success, "Shutdown Started");
     });
@@ -430,7 +464,7 @@ getMessages(): Array<ServerMessage> {
     const action = "ShutdownCompleted";
     
 
-    cnx.on(action, () => {
+    this.registerConnectionEvent(action, () => {
       this.logEvent(action + " - event", null);
       this.propagateEvent(0, EventTypes.ShutdownCompleted, ResponseResult.Success, "Shutdown Completed");
     });
@@ -441,7 +475,7 @@ getMessages(): Array<ServerMessage> {
     const action = "requestCopyWallet";
     
 
-    cnx.on(action, (chainType: number, message: string) => {
+    this.registerConnectionEvent(action, (chainType: number, message: string) => {
       this.logEvent(action + " - event", { 'chainType': chainType, 'message': message });
       this.propagateEvent(chainType, EventTypes.RequestCopyWallet, ResponseResult.Success, message);
     });
@@ -452,7 +486,7 @@ getMessages(): Array<ServerMessage> {
     const action = "miningStatusChanged";
     
 
-    cnx.on(action, (chainType: number, isMining: boolean) => {
+    this.registerConnectionEvent(action, (chainType: number, isMining: boolean) => {
       this.logEvent(action + " - event", { 'chainType': chainType, 'isMining': isMining });
       this.propagateEvent(chainType, EventTypes.MiningStatusChanged, ResponseResult.Success, isMining);
     });
@@ -463,9 +497,9 @@ getMessages(): Array<ServerMessage> {
     const action = "returnClientLongRunningEvent";
     
 
-    cnx.on("returnClientLongRunningEvent", (correlationId: number, result: number, message: string) => {
+    this.registerConnectionEvent("returnClientLongRunningEvent", (correlationId: number, result: number, message: string) => {
       this.logEvent("returnClientLongRunningEvent - event", { 'correlationId': correlationId, 'result': result, 'message': message });
-      if (result == 0) {
+      if (result === 0) {
         this.propagateEvent(correlationId, EventTypes.Message, ResponseResult.Success, message);
       }
       else {
@@ -479,7 +513,7 @@ getMessages(): Array<ServerMessage> {
     const action = "longRunningStatusUpdate";
     
 
-    cnx.on("longRunningStatusUpdate", (correlationId: number, eventId: number, eventType: number, message: any) => {
+    this.registerConnectionEvent("longRunningStatusUpdate", (correlationId: number, eventId: number, eventType: number, message: any) => {
       var eventName = EventTypes[eventId];
       this.logEvent("longRunningStatusUpdate - event", { 'correlationId': correlationId, 'eventId': eventId, 'eventName': eventName, 'eventType': eventType, 'message': message });
       this.propagateEvent(correlationId, eventId, ResponseResult.Success, message);
@@ -494,9 +528,9 @@ getMessages(): Array<ServerMessage> {
     const action = "accountTotalUpdated";
     
 
-    cnx.on(action, (correlationId: number, accountId: string, total: number) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId, 'accountId': accountId, 'total': total });
-      this.propagateEvent(correlationId, EventTypes.AccountTotalUpdated, ResponseResult.Success, total.toString());
+    this.registerConnectionEvent(action, (accountId: string, total: number) => {
+      this.logEvent(action + " - event", { 'accountId': accountId, 'total': total });
+      this.propagateEvent(0, EventTypes.AccountTotalUpdated, ResponseResult.Success, total.toString());
     });
   }
 
@@ -505,7 +539,7 @@ getMessages(): Array<ServerMessage> {
     const action = "peerTotalUpdated";
     
 
-    cnx.on(action, (count: number) => {
+    this.registerConnectionEvent(action, (count: number) => {
       this.logEvent(action + " - event", { 'count': count });
       this.propagateEvent(count, EventTypes.PeerTotalUpdated, ResponseResult.Success, count.toString());
     });
@@ -516,7 +550,7 @@ getMessages(): Array<ServerMessage> {
     const action = "enterWalletPassphrase";
     
 
-    cnx.on(action, (correlationId: number, chainType: number, keyCorrelationCode: number, attempt: number) => {
+    this.registerConnectionEvent(action, (correlationId: number, chainType: number, keyCorrelationCode: number, attempt: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'chainType': chainType, 'keyCorrelationCode': keyCorrelationCode, 'attempt': attempt });
       var event = ServerConnectionEvent.createNew(correlationId, EventTypes.RequestWalletPassphrase, ResponseResult.Success, <PassphraseParameters>{ 'correlationId': correlationId, 'chainType': chainType, 'keyCorrelationCode': keyCorrelationCode, 'attempt': attempt });
       this.eventNotifier.next(event);
@@ -528,7 +562,7 @@ getMessages(): Array<ServerMessage> {
     const action = "enterKeysPassphrase";
     
 
-    cnx.on(action, (correlationId: number, chainType: number, keyCorrelationCode: number, accountID: string, keyname: string, attempt: number) => {
+    this.registerConnectionEvent(action, (correlationId: number, chainType: number, keyCorrelationCode: number, accountID: string, keyname: string, attempt: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'chainType': chainType, 'keyCorrelationCode': keyCorrelationCode, 'accountID': accountID, 'keyname': keyname, 'attempt': attempt });
       var event = ServerConnectionEvent.createNew(correlationId, EventTypes.RequestKeyPassphrase, ResponseResult.Success, <KeyPassphraseParameters>{ 'correlationId': correlationId, 'chainType': chainType, 'keyCorrelationCode': keyCorrelationCode, 'accountID': accountID, 'keyname': keyname, 'attempt': attempt });
       this.eventNotifier.next(event);
@@ -536,15 +570,15 @@ getMessages(): Array<ServerMessage> {
   }
 
 
+  
 
   // WALLET CREATION EVENTS
 
   listenToWalletCreationStarted() {
-    const cnx = this.connection;
+   
     const action = "walletCreationStarted";
-    
 
-    cnx.on(action, (correlationId: number) => {
+    this.registerConnectionEvent(action, (correlationId: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId });
       this.propagateEvent(correlationId, EventTypes.WalletCreationStarted);
     });
@@ -555,7 +589,7 @@ getMessages(): Array<ServerMessage> {
     const action = "walletCreationEnded";
     
 
-    cnx.on(action, (correlationId: number) => {
+    this.registerConnectionEvent(action, (correlationId: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId });
       this.propagateEvent(correlationId, EventTypes.WalletCreationEnded);
     });
@@ -567,7 +601,7 @@ getMessages(): Array<ServerMessage> {
     const action = "aalletCreationMessage";
     
 
-    cnx.on(action, (correlationId: number, message: string) => {
+    this.registerConnectionEvent(action, (correlationId: number, message: string) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'message': message });
       this.propagateEvent(correlationId, EventTypes.WalletCreationMessage, ResponseResult.Success, message);
     });
@@ -578,7 +612,7 @@ getMessages(): Array<ServerMessage> {
     const action = "aalletCreationStep";
     
 
-    cnx.on(action, (correlationId: number, stepName: string, stepIndex: number, stepTotal: number) => {
+    this.registerConnectionEvent(action, (correlationId: number, stepName: string, stepIndex: number, stepTotal: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'stepName': stepName, 'stepIndex': stepIndex, 'stepTotal': stepTotal });
       this.propagateEvent(correlationId, EventTypes.WalletCreationStep, ResponseResult.Success, { 'stepName': stepName, 'stepIndex': stepIndex, 'stepTotal': stepTotal });
     });
@@ -589,7 +623,7 @@ getMessages(): Array<ServerMessage> {
     const action = "aalletCreationError";
     
 
-    cnx.on(action, (correlationId: number, error: string) => {
+    this.registerConnectionEvent(action, (correlationId: number, error: string) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'error': error });
       this.propagateEvent(correlationId, EventTypes.WalletCreationError, ResponseResult.Error, error);
     });
@@ -602,7 +636,7 @@ getMessages(): Array<ServerMessage> {
     const action = "accountCreationStarted";
     
 
-    cnx.on(action, (correlationId: number) => {
+    this.registerConnectionEvent(action, (correlationId: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId });
       this.propagateEvent(correlationId, EventTypes.AccountCreationStarted);
     });
@@ -613,7 +647,7 @@ getMessages(): Array<ServerMessage> {
     const action = "accountCreationEnded";
     
 
-    cnx.on(action, (correlationId: number, accountUuid: string) => {
+    this.registerConnectionEvent(action, (correlationId: number, accountUuid: string) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'accountUuid': accountUuid });
       this.propagateEvent(correlationId, EventTypes.AccountCreationEnded);
     });
@@ -623,7 +657,7 @@ getMessages(): Array<ServerMessage> {
     const cnx = this.connection;
     const action = "accountCreationMessage";
     
-    cnx.on(action, (correlationId: number, message: string) => {
+    this.registerConnectionEvent(action, (correlationId: number, message: string) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'message': message });
       this.propagateEvent(correlationId, EventTypes.AccountCreationMessage, ResponseResult.Success, message);
     });
@@ -634,7 +668,7 @@ getMessages(): Array<ServerMessage> {
     const action = "accountCreationStep";
     
 
-    cnx.on(action, (correlationId: number, stepName: string, stepIndex: number, stepTotal: number) => {
+    this.registerConnectionEvent(action, (correlationId: number, stepName: string, stepIndex: number, stepTotal: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'stepName': stepName, 'stepIndex': stepIndex, 'stepTotal': stepTotal });
       this.propagateEvent(correlationId, EventTypes.AccountCreationStep, ResponseResult.Success, { 'stepName': stepName, 'stepIndex': stepIndex, 'stepTotal': stepTotal });
     });
@@ -645,7 +679,7 @@ getMessages(): Array<ServerMessage> {
     const action = "accountCreationError";
     
 
-    cnx.on(action, (correlationId: number, error: string) => {
+    this.registerConnectionEvent(action, (correlationId: number, error: string) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'error': error });
       this.propagateEvent(correlationId, EventTypes.AccountCreationError, ResponseResult.Error, error);
     });
@@ -658,7 +692,7 @@ getMessages(): Array<ServerMessage> {
     const action = "keyGenerationStarted";
     
 
-    cnx.on(action, (correlationId: number, keyName: string, keyIndex : number, totalKeys: number) => {
+    this.registerConnectionEvent(action, (correlationId: number, keyName: string, keyIndex : number, totalKeys: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'keyName': keyName, 'keyIndex' : keyIndex, 'totalKeys': totalKeys });
       this.propagateEvent(correlationId, EventTypes.KeyGenerationStarted, ResponseResult.Success, { 'keyName': keyName, 'keyIndex': keyIndex, 'totalKeys': totalKeys });
     });
@@ -669,7 +703,7 @@ getMessages(): Array<ServerMessage> {
     const action = "keyGenerationEnded";
     
 
-    cnx.on(action, (correlationId: number, keyName: string, keyIndex : number, totalKeys: number) => {
+    this.registerConnectionEvent(action, (correlationId: number, keyName: string, keyIndex : number, totalKeys: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'keyName': keyName, 'keyIndex' : keyIndex, 'totalKeys': totalKeys });
       this.propagateEvent(correlationId, EventTypes.KeyGenerationEnded, ResponseResult.Success, { 'keyName': keyName, 'keyIndex': keyIndex, 'totalKeys': totalKeys });
     });
@@ -680,7 +714,7 @@ getMessages(): Array<ServerMessage> {
     const action = "keyGenerationMessage";
     
 
-    cnx.on(action, (correlationId: number, keyName: string, message: string) => {
+    this.registerConnectionEvent(action, (correlationId: number, keyName: string, message: string) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'keyName': keyName, 'message': message });
       this.propagateEvent(correlationId, EventTypes.KeyGenerationMessage, ResponseResult.Success, { 'keyName': keyName, 'message': message });
     });
@@ -691,7 +725,7 @@ getMessages(): Array<ServerMessage> {
     const action = "keyGenerationPercentageUpdate";
     
 
-    cnx.on(action, (correlationId: number, keyName: string, percentage: number) => {
+    this.registerConnectionEvent(action, (correlationId: number, keyName: string, percentage: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'keyName': keyName, 'percentage': percentage });
       this.propagateEvent(correlationId, EventTypes.KeyGenerationPercentageUpdate, ResponseResult.Success, { 'keyName': keyName, 'percentage': percentage });
     });
@@ -703,7 +737,7 @@ getMessages(): Array<ServerMessage> {
     const action = "KeyGenerationError";
     
 
-    cnx.on(action, (correlationId: number, keyName: string, error: string) => {
+    this.registerConnectionEvent(action, (correlationId: number, keyName: string, error: string) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'keyName': keyName, 'error': error });
       this.propagateEvent(correlationId, EventTypes.KeyGenerationError, ResponseResult.Error, { 'keyName': keyName, 'error': error });
     });
@@ -716,7 +750,7 @@ getMessages(): Array<ServerMessage> {
     const action = "accountPublicationStarted";
     
 
-    cnx.on(action, (correlationId: number) => {
+    this.registerConnectionEvent(action, (correlationId: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId });
       this.propagateEvent(correlationId, EventTypes.AccountPublicationStarted);
     });
@@ -727,7 +761,7 @@ getMessages(): Array<ServerMessage> {
     const action = "accountPublicationEnded";
     
 
-    cnx.on(action, (correlationId: number) => {
+    this.registerConnectionEvent(action, (correlationId: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId });
       this.propagateEvent(correlationId, EventTypes.AccountPublicationEnded);
     });
@@ -738,7 +772,7 @@ getMessages(): Array<ServerMessage> {
     const action = "accountPublicationMessage";
     
 
-    cnx.on(action, (correlationId: number, message: string) => {
+    this.registerConnectionEvent(action, (correlationId: number, message: string) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'message': message });
       this.propagateEvent(correlationId, EventTypes.AccountPublicationMessage, ResponseResult.Success, message);
     });
@@ -749,7 +783,7 @@ getMessages(): Array<ServerMessage> {
     const action = "accountPublicationStep";
     
 
-    cnx.on(action, (correlationId: number, stepName: string, stepIndex: number, stepTotal: number) => {
+    this.registerConnectionEvent(action, (correlationId: number, stepName: string, stepIndex: number, stepTotal: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'stepName': stepName, 'stepIndex': stepIndex, 'stepTotal': stepTotal });
       this.propagateEvent(correlationId, EventTypes.AccountPublicationStep, ResponseResult.Success, { 'stepName': stepName, 'stepIndex': stepIndex, 'stepTotal': stepTotal });
     });
@@ -760,7 +794,7 @@ getMessages(): Array<ServerMessage> {
     const action = "accountPublicationPOWNonceIteration";
     
 
-    cnx.on(action, (correlationId: number, nonce: number, difficulty: number) => {
+    this.registerConnectionEvent(action, (correlationId: number, nonce: number, difficulty: number) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'nonce': nonce, 'difficulty': difficulty });
       this.propagateEvent(correlationId, EventTypes.AccountPublicationPOWNonceIteration, ResponseResult.Success, { 'nonce': nonce, 'difficulty': difficulty });
     });
@@ -771,7 +805,7 @@ getMessages(): Array<ServerMessage> {
     const action = "accountPublicationPOWNonceFound";
     
 
-    cnx.on(action, (correlationId: number, nonce: number, difficulty: number, solutions: Array<number>) => {
+    this.registerConnectionEvent(action, (correlationId: number, nonce: number, difficulty: number, solutions: Array<number>) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'nonce': nonce, 'difficulty': difficulty, 'solutions': solutions });
       this.propagateEvent(correlationId, EventTypes.AccountPublicationPOWNonceFound, ResponseResult.Success, { 'nonce': nonce, 'difficulty': difficulty, 'solutions': solutions });
     });
@@ -782,7 +816,7 @@ getMessages(): Array<ServerMessage> {
     const action = "accountPublicationError";
     
 
-    cnx.on(action, (correlationId: number, error: string) => {
+    this.registerConnectionEvent(action, (correlationId: number, error: string) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'error': error });
       this.propagateEvent(correlationId, EventTypes.AccountPublicationError, ResponseResult.Error, error);
     });
@@ -795,9 +829,9 @@ getMessages(): Array<ServerMessage> {
     const action = "walletSyncStarted";
     
 
-    cnx.on(action, (chainType: number) => {
-      this.logEvent(action + " - event", { 'chainType': chainType });
-      this.propagateEvent(chainType, EventTypes.WalletSyncStarted, ResponseResult.Success);
+    this.registerConnectionEvent(action, (chainType: number, currentBlockId: number, blockHeight: number, percentage: number) => {
+      this.logEvent(action + " - event", { 'chainType': chainType, 'currentBlockId': currentBlockId, 'blockHeight': blockHeight, 'percentage': percentage });
+      this.propagateEvent(chainType, EventTypes.WalletSyncStarted, ResponseResult.Success, { 'chainType': chainType, 'currentBlockId': currentBlockId, 'blockHeight': blockHeight, 'percentage': percentage });
     });
   }
 
@@ -806,9 +840,9 @@ getMessages(): Array<ServerMessage> {
     const action = "walletSyncEnded";
     
 
-    cnx.on(action, (chainType: number) => {
-      this.logEvent(action + " - event", { 'chainType': chainType });
-      this.propagateEvent(chainType, EventTypes.WalletSyncEnded, ResponseResult.Success);
+    this.registerConnectionEvent(action, (chainType: number, currentBlockId: number, blockHeight: number, percentage: number) => {
+      this.logEvent(action + " - event", { 'chainType': chainType, 'currentBlockId': currentBlockId, 'blockHeight': blockHeight, 'percentage': percentage });
+      this.propagateEvent(chainType, EventTypes.WalletSyncEnded, ResponseResult.Success, { 'chainType': chainType, 'currentBlockId': currentBlockId, 'blockHeight': blockHeight, 'percentage': percentage });
     });
   }
 
@@ -817,9 +851,9 @@ getMessages(): Array<ServerMessage> {
     const action = "WalletSyncUpdate";
     
 
-    cnx.on(action, (chainType: number, currentBlockId: number, blockHeight: number, percentage: number) => {
-      this.logEvent(action + " - event", { 'chainType': chainType, 'currentBlockId': currentBlockId, 'blockHeight': blockHeight, 'percentage': percentage });
-      this.propagateEvent(chainType, EventTypes.WalletSyncUpdate, ResponseResult.Success, { 'chainType': chainType, 'currentBlockId': currentBlockId, 'blockHeight': blockHeight, 'percentage': percentage });
+    this.registerConnectionEvent(action, (chainType: number, currentBlockId: number, blockHeight: number, percentage: number, estimatedTimeRemaining: string) => {
+      this.logEvent(action + " - event", { 'chainType': chainType, 'currentBlockId': currentBlockId, 'blockHeight': blockHeight, 'percentage': percentage, 'estimatedTimeRemaining': estimatedTimeRemaining });
+      this.propagateEvent(chainType, EventTypes.WalletSyncUpdate, ResponseResult.Success, { 'chainType': chainType, 'currentBlockId': currentBlockId, 'blockHeight': blockHeight, 'percentage': percentage, 'estimatedTimeRemaining': estimatedTimeRemaining });
     });
   }
 
@@ -828,7 +862,7 @@ getMessages(): Array<ServerMessage> {
     const action = "walletSyncError";
     
 
-    cnx.on(action, (correlationId: number, error: string) => {
+    this.registerConnectionEvent(action, (correlationId: number, error: string) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'error': error });
       this.propagateEvent(correlationId, EventTypes.WalletSyncError, ResponseResult.Error, error);
     });
@@ -841,9 +875,9 @@ getMessages(): Array<ServerMessage> {
     const action = "blockchainSyncStarted";
     
 
-    cnx.on(action, (chainType: number) => {
-      this.logEvent(action + " - event", { 'chainType': chainType });
-      this.propagateEvent(chainType, EventTypes.BlockchainSyncStarted, ResponseResult.Success);
+    this.registerConnectionEvent(action, (chainType: number, currentBlockId: number, publicBlockHeight: number) => {
+      this.logEvent(action + " - event", { 'chainType': chainType, 'currentBlockId': currentBlockId, 'publicBlockHeight': publicBlockHeight });
+      this.propagateEvent(chainType, EventTypes.BlockchainSyncStarted, ResponseResult.Success, { 'chainType': chainType, 'currentBlockId': currentBlockId, 'publicBlockHeight': publicBlockHeight});
     });
   }
 
@@ -852,9 +886,9 @@ getMessages(): Array<ServerMessage> {
     const action = "blockchainSyncEnded";
     
 
-    cnx.on(action, (chainType: number) => {
-      this.logEvent(action + " - event", { 'chainType': chainType });
-      this.propagateEvent(chainType, EventTypes.BlockchainSyncEnded, ResponseResult.Success);
+    this.registerConnectionEvent(action, (chainType: number, currentBlockId: number, publicBlockHeight: number) => {
+      this.logEvent(action + " - event", { 'chainType': chainType, 'currentBlockId': currentBlockId, 'publicBlockHeight': publicBlockHeight });
+      this.propagateEvent(chainType, EventTypes.BlockchainSyncEnded, ResponseResult.Success, { 'chainType': chainType, 'currentBlockId': currentBlockId, 'publicBlockHeight': publicBlockHeight});
     });
   }
 
@@ -863,7 +897,7 @@ getMessages(): Array<ServerMessage> {
     const action = "blockchainSyncUpdate";
     
 
-    cnx.on(action, (chainType: number, currentBlockId: number, publicBlockHeight: number, percentage: number, estimatedTimeRemaining: string) => {
+    this.registerConnectionEvent(action, (chainType: number, currentBlockId: number, publicBlockHeight: number, percentage: number, estimatedTimeRemaining: string) => {
       this.logEvent(action + " - event", { 'chainType': chainType, 'currentBlockId': currentBlockId, 'publicBlockHeight': publicBlockHeight, 'percentage': percentage, 'estimatedTimeRemaining': estimatedTimeRemaining });
       this.propagateEvent(chainType, EventTypes.BlockchainSyncUpdate, ResponseResult.Success, { 'chainType': chainType, 'currentBlockId': currentBlockId, 'publicBlockHeight': publicBlockHeight, 'percentage': percentage, 'estimatedTimeRemaining': estimatedTimeRemaining });
     });
@@ -874,7 +908,7 @@ getMessages(): Array<ServerMessage> {
     const action = "blockchainSyncError";
     
 
-    cnx.on(action, (correlationId: number, error: string) => {
+    this.registerConnectionEvent(action, (correlationId: number, error: string) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'error': error });
       this.propagateEvent(correlationId, EventTypes.BlockchainSyncError, ResponseResult.Error, error);
     });
@@ -887,7 +921,7 @@ getMessages(): Array<ServerMessage> {
     const action = "transactionSent";
     
 
-    cnx.on(action, (transactionId: number, transaction: any) => {
+    this.registerConnectionEvent(action, (transactionId: number, transaction: any) => {
       this.logEvent(action + " - event", { 'transactionId': transactionId, 'transaction': transaction });
       this.propagateEvent(transactionId, EventTypes.TransactionSent, ResponseResult.Success, transaction);
     });
@@ -898,7 +932,7 @@ getMessages(): Array<ServerMessage> {
     const action = "transactionConfirmed";
     
 
-    cnx.on(action, (transactionId: number, transaction: any) => {
+    this.registerConnectionEvent(action, (transactionId: number, transaction: any) => {
       this.logEvent(action + " - event", { 'transactionId': transactionId, 'transaction': transaction });
       this.propagateEvent(transactionId, EventTypes.TransactionConfirmed, ResponseResult.Success, transaction);
     });
@@ -908,7 +942,7 @@ getMessages(): Array<ServerMessage> {
     const cnx = this.connection;
     const action = "transactionReceived";
 
-    cnx.on(action, (transactionId: string) => {
+    this.registerConnectionEvent(action, (transactionId: string) => {
       this.logEvent(action + " - event", { 'transactionId': transactionId });
       this.propagateEvent(1, EventTypes.TransactionReceived, ResponseResult.Success, transactionId);
     });
@@ -919,7 +953,7 @@ getMessages(): Array<ServerMessage> {
     const action = "transactionMessage";
     
 
-    cnx.on(action, (transactionId: number, message: string) => {
+    this.registerConnectionEvent(action, (transactionId: number, message: string) => {
       this.logEvent(action + " - event", { 'transactionId': transactionId, 'message': message });
       this.propagateEvent(transactionId, EventTypes.TransactionMessage, ResponseResult.Success, message);
     });
@@ -930,7 +964,7 @@ getMessages(): Array<ServerMessage> {
     const action = "transactionRefused";
     
 
-    cnx.on(action, (transactionId: number, message: string) => {
+    this.registerConnectionEvent(action, (transactionId: number, message: string) => {
       this.logEvent(action + " - event", { 'transactionId': transactionId, 'message': message });
       this.propagateEvent(transactionId, EventTypes.TransactionRefused, ResponseResult.Error, message);
     });
@@ -941,7 +975,7 @@ getMessages(): Array<ServerMessage> {
     const action = "transactionError";
     
 
-    cnx.on(action, (transactionId: number, errorCodes: Array<number>) => {
+    this.registerConnectionEvent(action, (transactionId: number, errorCodes: Array<number>) => {
       this.logEvent(action + " - event", { 'transactionId': transactionId, 'message': errorCodes });
       this.propagateEvent(transactionId, EventTypes.TransactionError, ResponseResult.Error, errorCodes);
     });
@@ -954,7 +988,7 @@ getMessages(): Array<ServerMessage> {
     const action = "miningStarted";
     
 
-    cnx.on(action, (chainType: number) => {
+    this.registerConnectionEvent(action, (chainType: number) => {
       this.logEvent(action + " - event", { 'chainType': chainType });
       this.notificationService.showSuccess("Neuralium mining started.", "Start Mining");
       this.propagateEvent(chainType, EventTypes.MiningStarted, ResponseResult.Success);
@@ -966,7 +1000,7 @@ getMessages(): Array<ServerMessage> {
     const action = "miningEnded";
     
 
-    cnx.on(action, (chainType: number) => {
+    this.registerConnectionEvent(action, (chainType: number) => {
       this.logEvent(action + " - event", { 'chainType': chainType });
       this.notificationService.showSuccess("Neuralium mining stopped.", "Stop Mining");
       this.propagateEvent(chainType, EventTypes.MiningEnded, ResponseResult.Success);
@@ -978,22 +1012,35 @@ getMessages(): Array<ServerMessage> {
     const action = "miningElected";
     
 
-    cnx.on(action, (chainType: number) => {
+    this.registerConnectionEvent(action, (chainType: number) => {
       this.logEvent(action + " - event", { 'chainType': chainType });
-      this.notificationService.showSuccess("You've been elected.", "Elected");
+      this.notificationService.showSuccess("you are candidate.", "Candidate");
       this.propagateEvent(chainType, EventTypes.MiningElected, ResponseResult.Success);
     });
   }
 
-  listenToMiningBountyAllocated() {
+
+  listenToNeuraliumMiningPrimeElected() {
     const cnx = this.connection;
-    const action = "miningBountyAllocated";
+    const action = "neuraliumMiningPrimeElected";
     
 
-    cnx.on(action, (chainType: number) => {
+    this.registerConnectionEvent(action, (chainType: number, blockId: number, bounty: number, transactionTip: number, delegateAccountId: string) => {
+      this.logEvent(action + " - event", { 'chainType': chainType , blockId, bounty, transactionTip, delegateAccountId});
+      this.notificationService.showSuccess("You've been elected.", "Elected");
+      this.propagateEvent(chainType, EventTypes.NeuraliumMiningPrimeElected, ResponseResult.Success, {chainType, blockId, bounty, transactionTip, delegateAccountId});
+    });
+  }
+
+  listenToNeuraliumMiningBountyAllocated() {
+    const cnx = this.connection;
+    const action = "neuraliumMiningBountyAllocated";
+    
+
+    this.registerConnectionEvent(action, (chainType: number) => {
       this.logEvent(action + " - event", { 'chainType': chainType });
       this.notificationService.showSuccess("Bounty has been allocated.", "Bounty Allocated");
-      this.propagateEvent(chainType, EventTypes.MiningBountyAllocated, ResponseResult.Success);
+      this.propagateEvent(chainType, EventTypes.NeuraliumMiningBountyAllocated, ResponseResult.Success);
     });
   }
 
@@ -1002,7 +1049,7 @@ getMessages(): Array<ServerMessage> {
     const action = "connectableStatusChanged";
     
 
-    cnx.on(action, (connectable: boolean) => {
+    this.registerConnectionEvent(action, (connectable: boolean) => {
       this.logEvent(action + " - event", { 'connectable': connectable });
       this.propagateEvent(0, EventTypes.ConnectableStatusChanged, ResponseResult.Success, { connectable });
     });
@@ -1015,7 +1062,7 @@ getMessages(): Array<ServerMessage> {
     const action = "blockInserted";
     
 
-    cnx.on(action, (chainType: number, blockId: number, timestamp: Date, hash: string, publicBlockId: number, lifespan: number) => {
+    this.registerConnectionEvent(action, (chainType: number, blockId: number, timestamp: Date, hash: string, publicBlockId: number, lifespan: number) => {
       this.logEvent(action + " - event", { chainType, blockId, publicBlockId, timestamp, hash, lifespan });
       this.propagateEvent(blockId, EventTypes.BlockInserted, ResponseResult.Success, { chainType, blockId, publicBlockId, timestamp, hash, lifespan });
     });
@@ -1031,7 +1078,7 @@ getMessages(): Array<ServerMessage> {
     const action = "message";
     
 
-    cnx.on(action, (message: string, timestamp: Date, level:string, properties:Array<Object>) => {
+    this.registerConnectionEvent(action, (message: string, timestamp: Date, level:string, properties:Array<Object>) => {
 
       if(this.messages.length > MESSAGE_BUFFER_SIZE){
         this.messages.shift();
@@ -1048,7 +1095,7 @@ getMessages(): Array<ServerMessage> {
     const action = "error";
     
 
-    cnx.on(action, (correlationId: number, message: string) => {
+    this.registerConnectionEvent(action, (correlationId: number, message: string) => {
       this.logEvent(action + " - event", { 'correlationId': correlationId, 'message': message });
       this.propagateEvent(correlationId, EventTypes.TransactionError, ResponseResult.Error, message);
     });
@@ -1059,6 +1106,11 @@ getMessages(): Array<ServerMessage> {
   isConnectedToServer(): Observable<boolean> {
     return this.serverConnection;
   }
+
+  isConsoleMessagesEnabled(): Observable<boolean> {
+    return this.consoleMessagesEnabled;
+  }
+  
 
   logEvent(message: string, data: any) {
     this.logService.logDebug(message, data);
@@ -1086,6 +1138,7 @@ getMessages(): Array<ServerMessage> {
         return;
       }
       this.isCurrentlyConnected = false;
+      this.notifyServerConnectionStatusIfNeeded(false);
       setTimeout(() => {
           if(!this.isCurrentlyConnected && !this.isConnecting){
             this.isConnecting = true;

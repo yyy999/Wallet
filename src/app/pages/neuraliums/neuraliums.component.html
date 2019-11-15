@@ -1,7 +1,7 @@
 <app-page-title [title]="title" [icon]="icon" showNeuraliumsTotal="true" helpMessage="neuralium.Explain"></app-page-title>
 <mat-tab-group>
     <mat-tab *ngIf="hasCurrentAccount && currentAccount.isActive ">
-        <!-- && currentAccount.status == 3 -->
+        <!-- && currentAccount.status === 3 -->
         <ng-template mat-tab-label>
             <img src="./assets/img/mine_icon_s.png" class="img-fluid" />&nbsp; {{ 'mining.Mining' | translate }}
         </ng-template>

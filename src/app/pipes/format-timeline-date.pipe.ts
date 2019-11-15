@@ -7,7 +7,7 @@ import { DatePipe } from '@angular/common';
 export class FormatTimelineDatePipe extends DatePipe implements PipeTransform {
 
   transform(value: Date, args?: any): any {
-    if(value == void(0)){
+    if(!value){
       return null;
     }
     else{

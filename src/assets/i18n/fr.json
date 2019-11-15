@@ -112,7 +112,7 @@
 		"InformationsNotCorrectPleaseRetry": "Les informations fournies ne sont pas correctes. Merci de corriger."
 	},
 	"event": {
-		"MiningBountyAllocated": "Prime de mineur allouée",
+		"NeuraliumMiningBountyAllocated": "Prime de mineur allouée",
 		"MiningElected": "Mineur candidat",
 		"MiningEnded": "Minage Terminé",
 		"MiningPrimeElected": "Mineur élu",
@@ -198,13 +198,26 @@
 		"StartServer": "Démarrer le serveur",
 		"StartingServer": "Démarrage du serveur",
 		"StartingServerShutdown": "Début de l'extinction du serveur",
+		"ExternallyStarted" : "Impossible d'arrêter un serveur démarré en externe",
+		"FailedToStartServer" : "Impossible de démarrer le serveur",
+		"Title": "Serveur",
 		"StopServer": "Arrêter le serveur",
-		"Explain" : "Une fenêtre pour les utilisateurs avancés qui permet de gérer le serveur de noeud Neuralium."
+		"Explain" : "Une fenêtre pour les utilisateurs avancés qui permet de gérer le serveur de noeud Neuralium.",
+		"EnableConsole" : "Activer la console",
+		"DisableConsole" : "Désactiver la console"
 	},
 	"settings": {
 		"SettingsSaved": "Paramètres sauvegardés",
 		"Title": "Paramètres",
 		"Explain" : "Diverses options que vous pouvez configurer pour ajuster votre portefeuille."
+	},
+	"tools": {
+		"Title": "Outils",
+		"Explain": "Des outils utiles pour améliorer votre expérience Neuralium.",
+		"BlockExplorer" : "Explorateur de blocs"
+	},
+	"blockexplorer" : {
+		"Search" : "chercher"
 	},
 	"sync": {
 		"BlockchainStatus": "Statut de la Blockchain",
@@ -219,7 +232,7 @@
 		"ParagrahThree": "",
 		"ParagrahTwo": "En mode TESTNET, les jetons de Neuralium obtenus ne servent qu'à des fins de test et ne peuvent pas être utilisés dans le réseau de production «MainNet». Les jetons gagnés en mode TESTNET peuvent également être perdus ou réinitialisés à tout moment sans préavis.",
 		"Warning": "Le serveur et le porte-monnaie sont actuellement en mode \"TESTNET\" sur un réseau isolé..",
-		"Period": "La periode d'essai IV de TESTNET durera du 15 Octobre 19h (EST) au 20 Octobre à 19h (EST)"
+		"Period": "La periode d'essai V de TESTNET durera du 14 Novembre 19h (EST) au 17 Novembre à 19h (EST)"
 	},
 	"wallet": {
 		"AccountCreation": "Création du compte",

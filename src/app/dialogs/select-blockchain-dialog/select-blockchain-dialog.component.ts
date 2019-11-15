@@ -33,7 +33,7 @@ export class SelectBlockchainDialogComponent implements OnInit {
   }
 
   changeBlockchain(blockchain: BlockChain) {
-    if (this.currentBlockchain == void (0) || this.currentBlockchain == NO_BLOCKCHAIN || blockchain.id != this.currentBlockchain.id) {
+    if (!this.currentBlockchain || this.currentBlockchain === NO_BLOCKCHAIN || blockchain.id !== this.currentBlockchain.id) {
       this.blockchainService.setSelectedBlockchain(blockchain).then(response => {
         this.hideChangeBlockchainWindow();
         this.router.navigate(['/']);

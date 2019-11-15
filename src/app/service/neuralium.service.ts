@@ -15,17 +15,6 @@ const CURRENT_DAY_INDEX : number = 0;
   providedIn: 'root'
 })
 export class NeuraliumService {
-  private showNeuraliumTotal: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  private neuraliumTotal: BehaviorSubject<TotalNeuralium> = new BehaviorSubject<TotalNeuralium>(NO_NEURALIUM_TOTAL);
-
-  private accountUUid: string;
-  private timelineHeader: TimelineHeader;
-  private timelineCurrentIndex: number;
-  private timelineDays: Array<TimelineDay>;
-  private timeline: BehaviorSubject<Array<TimelineDay>> = new BehaviorSubject<Array<TimelineDay>>(this.timelineDays);
-  
-  private canGoNextBS: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  private canGoPreviousBS: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
   constructor(
     private blockchainService: BlockchainService,
@@ -48,15 +37,43 @@ export class NeuraliumService {
     })
   }
 
+
+  get neuraliumTimeline(): Observable<Array<TimelineDay>> {
+    return this.timeline;
+  }
+
+  get canIncrementIndex():Observable<boolean>{
+    return this.canGoPreviousBS;
+   
+  }
+
+  get canDecrementIndex():Observable<boolean>{
+    return this.canGoNextBS;
+  }
+  private showNeuraliumTotal: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+  private neuraliumTotal: BehaviorSubject<TotalNeuralium> = new BehaviorSubject<TotalNeuralium>(NO_NEURALIUM_TOTAL);
+
+  private accountUUid: string;
+  private timelineHeader: TimelineHeader;
+  private timelineCurrentIndex: number;
+  private timelineDays: Array<TimelineDay>;
+  private timeline: BehaviorSubject<Array<TimelineDay>> = new BehaviorSubject<Array<TimelineDay>>(this.timelineDays);
+  
+  private canGoNextBS: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+  private canGoPreviousBS: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+
+  timelineStated:boolean = false;
+
   manageEvent(event:ServerConnectionEvent){
     if(event.eventType === EventTypes.MiningPrimeElected
+      || event.eventType === EventTypes.NeuraliumMiningPrimeElected
       || event.eventType === EventTypes.TransactionConfirmed
       || event.eventType === EventTypes.TransactionReceived
       || event.eventType === EventTypes.TransactionSent
       || event.eventType === EventTypes.TransactionCreated){
 
         if(this.timelineCurrentIndex === CURRENT_DAY_INDEX){
-          this.getMiningTimelineSection();
+          this.getMiningTimelineSection(true);
         }
 
       }
@@ -79,7 +96,7 @@ export class NeuraliumService {
   private displayNeuraliums(blockchain: BlockChain) {
     if (blockchain === NEURALIUM_BLOCKCHAIN && blockchain.menuConfig.showDashboard) {
       this.walletService.getCurrentAccount().subscribe(account => {
-        if (account != void (0) && account != NO_WALLET_ACCOUNT && account.isActive && account.status == WalletAccountStatus.Published) {//&& account.isActive && account.status == WalletAccountStatus.Published
+        if (account && account !== NO_WALLET_ACCOUNT && account.isActive && account.status === WalletAccountStatus.Published) {//&& account.isActive && account.status === WalletAccountStatus.Published
           this.updateNeuraliumsTotal(account.accountUuid);
           this.showNeuraliumTotal.next(true);
 
@@ -95,34 +112,35 @@ export class NeuraliumService {
       })
     }
   }
-
-
-  get neuraliumTimeline(): Observable<Array<TimelineDay>> {
-    return this.timeline;
-  }
-
   startTimeline() {
-    if (this.accountUUid !== void (0)) {
-      this.initialiseTimeline();
+    if (this.accountUUid && this.timelineStated === false) {
+      this.initialiseTimeline(false);
       this.serverConnectionService.eventNotifier.subscribe(event =>{
           this.manageEvent(event);
       });
+      this.timelineStated = true;
     }
   }
 
-  initialiseTimeline(){
-    this.timelineCurrentIndex = 0;
-    this.timelineDays = new Array<TimelineDay>();
-    this.serverConnectionService.callQueryNeuraliumTimelineHeader(this.accountUUid).then(header => {
-      this.timelineHeader = header;
-      this.getMiningTimelineSection();
-    });
+  initialiseTimeline(force:boolean):Promise<TimelineHeader>{
+    if(this.timelineStated === false || force === true) {
+      this.timelineCurrentIndex = 0;
+      this.timelineDays = new Array<TimelineDay>();
+      var response = this.serverConnectionService.callQueryNeuraliumTimelineHeader(this.accountUUid);
+      response.then(header => {
+        this.timelineHeader = header;
+        this.getMiningTimelineSection(false);
+      });
+
+      return response;
+    }
+    return null;
   }
 
   incrementTimelineIndexAndLoad() {
     if (this.timelineCurrentIndex > 0) {
       this.timelineCurrentIndex--;
-      this.getMiningTimelineSection();
+      this.getMiningTimelineSection(true);
     }
     
   }
@@ -130,33 +148,35 @@ export class NeuraliumService {
   decrementTimelineIndexAndLoad() {
     if (this.timelineCurrentIndex < this.timelineHeader.numberOfDays - 1) {
       this.timelineCurrentIndex++;
-      this.getMiningTimelineSection();
+      this.getMiningTimelineSection(true);
     }
   }
 
 
-  private getMiningTimelineSection() {
-    this.serverConnectionService.callQueryNeuraliumTimelineSection(this.accountUUid, this.timelineHeader.firstDay, this.timelineCurrentIndex, 1).then(sections => {
-      this.timelineDays = [];
-      sections.forEach(section => {
-        this.timelineDays.push(section);
+  private getMiningTimelineSection(getMissingHeader:boolean) {
+
+    if(this.timelineHeader.numberOfDays === 0 && getMissingHeader){
+      // we dont have a proper header, lets query it again
+      var promise = this.initialiseTimeline(true);
+      promise.then(header => {
+        this.timelineHeader = header;
+        this.getMiningTimelineSection(false);
       });
-      this.timeline.next(this.timelineDays);
-      this.calculateIndexMoves();
-    })
+    }
+    else{
+      this.serverConnectionService.callQueryNeuraliumTimelineSection(this.accountUUid, this.timelineHeader.firstDay, this.timelineCurrentIndex, 1).then(sections => {
+        this.timelineDays = [];
+        sections.forEach(section => {
+          this.timelineDays.push(section);
+        });
+        this.timeline.next(this.timelineDays);
+        this.calculateIndexMoves();
+      });
+    }
   }
 
   private calculateIndexMoves(){
     this.canGoPreviousBS.next(this.timelineCurrentIndex < this.timelineHeader.numberOfDays - 1);
     this.canGoNextBS.next(this.timelineCurrentIndex > 0);
-  }
-
-  get canIncrementIndex():Observable<boolean>{
-    return this.canGoPreviousBS;
-   
-  }
-
-  get canDecrementIndex():Observable<boolean>{
-    return this.canGoNextBS;
   }
 }

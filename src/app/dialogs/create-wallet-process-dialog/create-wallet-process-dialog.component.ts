@@ -99,23 +99,29 @@ export class CreateWalletProcessDialogComponent implements OnInit {
   }
 
   endProcess() {
-    this.serverConnectionService.callLoadWallet(this.currentBlockchainId).then(walletId => {
-      var newWallet = Wallet.createNew(walletId);
-      this.walletService.setWallet(this.currentBlockchainId, newWallet);
-      this.notificationService.showSuccess(this.translateService.instant("wallet.WalletCreated"));
-      this.walletService.endCreateWalletProcess(this.walletCreationSyncProcess);
-      if (this.walletToCreate.publishAccount) {
-        this.dialogRef.close(this.accountUuid);
-      } else {
-        this.dialogRef.close(DialogResult.WalletCreated);
-      }
 
-    })
+    this.walletService.loadWallet(this.currentBlockchainId).then(isLoaded => {
+      if (isLoaded === true) {
+        this.walletService.refreshWallet(this.currentBlockchainId).then(wallet => {
+
+          this.notificationService.showSuccess(this.translateService.instant("wallet.WalletCreated"));
+          this.walletService.endCreateWalletProcess(this.walletCreationSyncProcess);
+          if (this.walletToCreate.publishAccount) {
+            this.dialogRef.close(this.accountUuid);
+          } else {
+            this.dialogRef.close(DialogResult.WalletCreated);
+          }
+        });
+      }
+      else {
+        console.log('failed to load wallet info.');
+      }
+    });
   }
 
   startSyncStatusProcess() {
     this.syncStatusService.syncListObservable.subscribe(processes => {
-      this.walletCreationProcesses = processes.filter(process => process.processType == ProcessType.WalletCreation);
+      this.walletCreationProcesses = processes.filter(process => process.processType === ProcessType.WalletCreation);
     })
   }
 
@@ -220,14 +226,14 @@ export class CreateWalletProcessDialogComponent implements OnInit {
   }
 
   passPhraseValid(index: string) {
-    if (this.walletToCreate != void (0)) {
+    if (this.walletToCreate) {
       return !this.isNullOrEmpty(this.walletToCreate.passPhrases[index]) && this.passPhraseConfirmed(index);
     }
   }
 
   passPhraseConfirmed(index: string) {
-    if (this.walletToCreate != void (0)) {
-      return this.walletToCreate.passPhrases[index] == this.passPhrasesConfirm[index];
+    if (this.walletToCreate) {
+      return this.walletToCreate.passPhrases[index] === this.passPhrasesConfirm[index];
     }
   }
 
@@ -240,6 +246,6 @@ export class CreateWalletProcessDialogComponent implements OnInit {
   }
 
   private isNullOrEmpty(text: string) {
-    return text == void (0) || text == "";
+    return !text || text === "";
   }
 }

@@ -2,6 +2,7 @@ import { CommonCall } from "./commonCall";
 import { LogService } from "../..//service/log.service";
 import { ServerConnectionService } from '../..//service/server-connection.service';
 import { TransactionStatuses, TransactionVersion, Transaction, NeuraliumTransaction, NO_TRANSACTION } from "../..//model/transaction";
+import * as moment from 'moment';
 
 export class TransactionsCall extends CommonCall {
 
@@ -31,7 +32,8 @@ export class TransactionsCall extends CommonCall {
                     try {
                       var id = transaction["transactionId"];
                       var source = transaction["sender"];
-                      var date = new Date(transaction["timestamp"]);
+                     
+                      var date =  moment(transaction["timestamp"]).toDate();
                       var status = <TransactionStatuses>transaction["status"];
                       var version = <TransactionVersion>transaction["version"];
                       var amount = <number>Number(transaction["amount"]);
@@ -66,7 +68,7 @@ export class TransactionsCall extends CommonCall {
                     try {
                       var id = response["transactionId"];
                       var source = response["sender"];
-                      var date = new Date(response["timestamp"]);
+                      var date =  moment(response["timestamp"]).toDate();
                       var details = JSON.parse(response["contents"]);//{details:"détails to show"};
                       var status = <TransactionStatuses>response["status"];
                       var version = <TransactionVersion>response["version"];
