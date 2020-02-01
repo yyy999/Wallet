@@ -25,19 +25,19 @@ export const MESSAGE_BUFFER_SIZE = 4000;
 
 export class ServerMessage {
 
-  public message:string;
-  public timestamp:moment.Moment;
-public level:string;
-public properties:Array<Object>;
+  public message: string;
+  public timestamp: moment.Moment;
+public level: string;
+public properties: Array<Object>;
 
-  constructor(message:string, timestamp: Date, level:string, properties:Array<Object>){
+  constructor(message: string, timestamp: Date, level: string, properties: Array<Object>) {
       this.message = message;
       this.timestamp = moment(timestamp);
       this.level = level;
       this.properties = properties;
   }
 
-  GetThread():object{
+  GetThread(): object {
     return this.properties[0];
   }
 }
@@ -62,13 +62,17 @@ export class ServerConnectionService {
     this.beginConnection();
   }
 
+  public get IsConnected(): boolean {
+    return this.connection && this.connection.state === HubConnectionState.Connected;
+}
+
   get connection(): HubConnection {
     if(!this.cnx){
 
       this.serverPort = this.configService.serverPort;
       this.cnx = new HubConnectionBuilder()
         .configureLogging(LogLevel.None)
-        .withUrl("http://127.0.0.1:" + this.serverPort + "/signal", {
+        .withUrl('http://127.0.0.1:' + this.serverPort + '/signal', {
           skipNegotiation: true,
           transport: HttpTransportType.WebSockets
         })
@@ -82,20 +86,13 @@ export class ServerConnectionService {
 
     this.cnx.onclose(() => {
       this.cnx.stop();
-      this.logService.logDebug(" Connection Closed", {  });
+      this.logService.logDebug(' Connection Closed', {  });
       this.notifyServerConnectionStatusIfNeeded(false);
       this.isConnecting = false;
       this.beginConnection();
     });
     
     return this.cnx;
-  }
-
-  registerConnectionEvent(action:string, newMethod: (...args: any[]) => void): void{
-    const cnx = this.connection;
-
-    cnx.off(action);
-    cnx.on(action, newMethod);
   }
   
   private showServerNotConnectedObs: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(true);
@@ -113,6 +110,13 @@ export class ServerConnectionService {
   private isConnecting:boolean = false;
 
   private cnx:HubConnection;
+
+  registerConnectionEvent(action:string, newMethod: (...args: any[]) => void): void{
+    const cnx = this.connection;
+
+    cnx.off(action);
+    cnx.on(action, newMethod);
+  }
 
   setShowServerNotConnected(value: boolean) {
     this.showServerNotConnectedObs.next(value);
@@ -141,6 +145,7 @@ getMessages(): Array<ServerMessage> {
 
   startOtherEventsListening() {
     this.listenToRequestCopyWallet();
+    this.listenToRequestCopyWalletKeyFile();
     this.listenToLongRunningStatusUpdate();
     this.listenToReturnClientLongRunningEvent();
 
@@ -157,6 +162,8 @@ getMessages(): Array<ServerMessage> {
 
     this.listenToEnterKeyPassphrase();
     this.listenToEnterWalletPassphrase();
+
+    this.listenToRequireNodeUpdate();
   }
 
   startListeningWalletCreationEvents() {
@@ -221,6 +228,7 @@ getMessages(): Array<ServerMessage> {
     this.listenToMiningConnectableStatusChanged();
     this.listenToNeuraliumMiningPrimeElected();
     this.listenToMiningElected();
+    this.listenToMiningPrimeElectedMissed();
     this.listenToMiningEnded();
     this.listenToMiningStarted();
   }
@@ -230,7 +238,7 @@ getMessages(): Array<ServerMessage> {
   // DEBUG
 
   callRefillNeuraliums(accountUuid: string): Promise<boolean> {
-    var service = DebugCall.create(this, this.logService);
+    let service = DebugCall.create(this, this.logService);
     return service.callRefillNeuraliums(accountUuid);
   }
 
@@ -238,33 +246,33 @@ getMessages(): Array<ServerMessage> {
 
   //server call methods
   callSetActiveAccount(chainType: number, accountUuid: string): Promise<boolean> {
-    var service = AccountCall.create(this, this.logService);
+    let service = AccountCall.create(this, this.logService);
     return service.callSetActiveAccount(chainType, accountUuid);
   }
 
   callServerShutdown(): Promise<boolean> {
-    var service = ServerCall.create(this, this.logService);
+    let service = ServerCall.create(this, this.logService);
     return service.callServerShutdown();
   }
 
   callCreateNewWallet(chainType: number, wallet: WalletCreation): Promise<number> {
-    var service = WalletCall.create(this, this.logService);
+    let service = WalletCall.create(this, this.logService);
     return service.callCreateNewWallet(chainType, wallet);
   }
 
   callSetWalletPassphrase(correlationId: number, password: string) {
-    var service = WalletCall.create(this, this.logService);
+    let service = WalletCall.create(this, this.logService);
     return service.callSetWalletPassphrase(correlationId, password);
   }
 
   callSetKeysPassphrase(correlationId: number, password: string) {
-    var service = WalletCall.create(this, this.logService);
+    let service = WalletCall.create(this, this.logService);
     return service.callSetKeysPassphrase(correlationId, password);
   }
 
   callQuerySystemVersion() {
-    var service = ServerCall.create(this, this.logService);
-    var result = service.callQuerySystemVersion();
+    let service = ServerCall.create(this, this.logService);
+    let result = service.callQuerySystemVersion();
 
     result.then(response => {
       // capture the results
@@ -274,170 +282,175 @@ getMessages(): Array<ServerMessage> {
   }
 
   callQueryWalletTransactionHistory(chainType: number, accountUuid: string) {
-    var service = TransactionsCall.create(this, this.logService);
+    let service = TransactionsCall.create(this, this.logService);
     return service.callQueryWalletTransactionHistory(chainType, accountUuid);
   }
 
   callQueryTransationHistoryDetails(chainType: number, accountUuid: string, transactionId: string) {
-    var service = TransactionsCall.create(this, this.logService);
+    let service = TransactionsCall.create(this, this.logService);
     return service.callQueryTransationHistoryDetails(chainType, accountUuid, transactionId);
   }
 
   callQueryWalletAccounts(chainType: number) {
-    var service = WalletCall.create(this, this.logService);
+    let service = WalletCall.create(this, this.logService);
     return service.callQueryWalletAccounts(chainType);
   }
 
   callQueryWalletAccountDetails(chainType: number, accountUuid: string) {
-    var service = WalletCall.create(this, this.logService);
+    let service = WalletCall.create(this, this.logService);
     return service.callQueryWalletAccountDetails(chainType, accountUuid);
   }
 
   callQueryBlockChainInfo(chainType: number) {
-    var service = BlockchainCall.create(this, this.logService);
+    let service = BlockchainCall.create(this, this.logService);
     return service.callQueryBlockChainInfo(chainType);
   }
 
   callQuerySupportedChains() {
-    var service = BlockchainCall.create(this, this.logService);
+    let service = BlockchainCall.create(this, this.logService);
     return service.callQuerySupportedChains();
   }
 
   callCompleteLongRunningEvent(correlationId: number) {
-    var service = ServerCall.create(this, this.logService);
+    let service = ServerCall.create(this, this.logService);
     return service.callCompleteLongRunningEvent(correlationId);
   }
 
   callRenewLongRunningEvent(correlationId: number) {
-    var service = ServerCall.create(this, this.logService);
+    let service = ServerCall.create(this, this.logService);
     return service.callRenewLongRunningEvent(correlationId);
   }
 
   callQueryChainStatus(chainType: number) {
-    var service = BlockchainCall.create(this, this.logService);
+    let service = BlockchainCall.create(this, this.logService);
     return service.callQueryChainStatus(chainType);
   }
 
   callQueryBlock(chainType: number, blockId:number){
-    var service = BlockchainCall.create(this, this.logService);
+    let service = BlockchainCall.create(this, this.logService);
     return service.callQueryBlock(chainType, blockId);
   }
 
   callQueryWalletInfo(chainType: number){
-    var service = BlockchainCall.create(this, this.logService);
+    let service = BlockchainCall.create(this, this.logService);
     return service.callQueryWalletInfo(chainType);
   }
 
   callStartMining(chainType: number, delegateAccountId: string) {
-    var service = MiningCall.create(this, this.logService);
+    let service = MiningCall.create(this, this.logService);
     return service.callStartMining(chainType, delegateAccountId);
   }
 
   callStopMining(chainType: number) {
-    var service = MiningCall.create(this, this.logService);
+    let service = MiningCall.create(this, this.logService);
     return service.callStopMining(chainType);
   }
 
   callIsMiningEnabled(chainType: number) {
-    var service = MiningCall.create(this, this.logService);
+    let service = MiningCall.create(this, this.logService);
     return service.callIsMiningEnabled(chainType);
   }
 
-  callQueryMiningHistory(chainType: number) {
-    var service = MiningCall.create(this, this.logService);
-    return service.callQueryMiningHistory(chainType);
+  callQueryMiningHistory(chainType: number, page: number, pageSize: number, maxLevel: number) {
+    let service = MiningCall.create(this, this.logService);
+    return service.callQueryMiningHistory(chainType, page, pageSize, maxLevel);
   }
 
   callQueryTotalConnectedPeersCount() {
-    var service = ServerCall.create(this, this.logService);
+    let service = ServerCall.create(this, this.logService);
     return service.callQueryTotalConnectedPeersCount();
   }
 
   callQueryMiningPortConnectable(){
-    var service = ServerCall.create(this, this.logService);
+    let service = ServerCall.create(this, this.logService);
     return service.callQueryMiningPortConnectable();
   }
 
   callQueryBlockchainSynced(chainType: number) {
-    var service = BlockchainCall.create(this, this.logService);
+    let service = BlockchainCall.create(this, this.logService);
     return service.callQueryBlockchainSynced(chainType);
   }
 
   callIsBlockchainSynced(chainType: number): Promise<boolean> {
-    var service = BlockchainCall.create(this, this.logService);
+    let service = BlockchainCall.create(this, this.logService);
     return service.callIsBlockchainSynced(chainType);
   }
 
   callQueryWalletSynced(chainType: number) {
-    var service = WalletCall.create(this, this.logService);
+    let service = WalletCall.create(this, this.logService);
     return service.callQueryWalletSynced(chainType);
   }
 
   callIsWalletLoaded(chainType: number) {
-    var service = WalletCall.create(this, this.logService);
+    let service = WalletCall.create(this, this.logService);
     return service.callIsWalletLoaded(chainType);
   }
 
   callWalletExists(chainType: number) {
-    var service = WalletCall.create(this, this.logService);
+    let service = WalletCall.create(this, this.logService);
     return service.callWalletExists(chainType);
   }
 
   callLoadWallet(chainType: number, passphrase:string) {
-    var service = WalletCall.create(this, this.logService);
+    let service = WalletCall.create(this, this.logService);
     return service.callLoadWallet(chainType, passphrase);
   }
 
   callIsWalletSynced(chainType: number): Promise<boolean> {
-    var service = WalletCall.create(this, this.logService);
+    let service = WalletCall.create(this, this.logService);
     return service.callIsWalletSynced(chainType);
   }
 
   callQueryBlockHeight(chainType: number) {
-    var service = BlockchainCall.create(this, this.logService);
+    let service = BlockchainCall.create(this, this.logService);
     return service.callQueryBlockHeight(chainType);
   }
 
   callPublishAccount(chainType: number, accountUuId: string) {
-    var service = AccountCall.create(this, this.logService);
+    let service = AccountCall.create(this, this.logService);
     return service.callPublishAccount(chainType, accountUuId);
   }
 
   callSendNeuraliums(targetAccountId: string, amount: number, tip: number, note: string) {
-    var service = NeuraliumCall.create(this, this.logService);
+    let service = NeuraliumCall.create(this, this.logService);
     return service.callSendNeuraliums(targetAccountId, amount, tip, note);
   }
 
   callQueryAccountTotalNeuraliums(accountUuid: string) {
-    var service = NeuraliumCall.create(this, this.logService);
+    let service = NeuraliumCall.create(this, this.logService);
     return service.callQueryAccountTotalNeuraliums(accountUuid);
   }
 
   callQueryNeuraliumTimelineHeader(accountUuid: string) {
-    var service = NeuraliumCall.create(this, this.logService);
+    let service = NeuraliumCall.create(this, this.logService);
     return service.callQueryNeuraliumTimelineHeader(accountUuid);
   }
 
   callQueryNeuraliumTimelineSection(accountUuid: string, firstday: Date, skip: number, take: number) {
-    var service = NeuraliumCall.create(this, this.logService);
+    let service = NeuraliumCall.create(this, this.logService);
     return service.callQueryNeuraliumTimelineSection(accountUuid, firstday, skip, take);
   }
 
   // PASSPHRASES CALL
 
   callEnterWalletPassphrase(correlationId: number, chainType: number, keyCorrelationCode: number, passphrase: string): Promise<boolean> {
-    var service = PassphrasesCall.create(this, this.logService);
+    let service = PassphrasesCall.create(this, this.logService);
     return service.callEnterWalletPassphrase(correlationId, chainType, keyCorrelationCode, passphrase);
   }
 
   callEnterKeyPassphrase(correlationId: number, chainType: number, keyCorrelationCode: number, passphrase: string): Promise<boolean> {
-    var service = PassphrasesCall.create(this, this.logService);
+    let service = PassphrasesCall.create(this, this.logService);
     return service.callEnterKeyPassphrase(correlationId, chainType, keyCorrelationCode, passphrase);
   }
 
+  callWalletKeyFileCopied(correlationId: number, chainType: number, keyCorrelationCode: number): Promise<boolean> {
+    let service = PassphrasesCall.create(this, this.logService);
+    return service.callWalletKeyFileCopied(correlationId, chainType, keyCorrelationCode);
+  }
+
   callEnableConsoleMessages(enabled:boolean): Promise<boolean> {
-    var service = ServerCall.create(this, this.logService);
-    var result = service.callEnableConsoleMessages(enabled);
+    let service = ServerCall.create(this, this.logService);
+    let result = service.callEnableConsoleMessages(enabled);
 
     result.then(enabled => {
       // capture the result and propagate it
@@ -450,55 +463,64 @@ getMessages(): Array<ServerMessage> {
   //server listening
   listenToServerShutdownStarted() {
     const cnx = this.connection;
-    const action = "ShutdownStarted";
+    const action = 'ShutdownStarted';
     
 
     this.registerConnectionEvent(action, () => {
-      this.logEvent(action + " - event", null);
-      this.propagateEvent(0, EventTypes.ShutdownStarted, ResponseResult.Success, "Shutdown Started");
+      this.logEvent(action + ' - event', null);
+      this.propagateEvent(0, EventTypes.ShutdownStarted, ResponseResult.Success, 'Shutdown Started');
     });
   }
 
   listenToServerShutdownCompleted() {
     const cnx = this.connection;
-    const action = "ShutdownCompleted";
+    const action = 'ShutdownCompleted';
     
 
     this.registerConnectionEvent(action, () => {
-      this.logEvent(action + " - event", null);
-      this.propagateEvent(0, EventTypes.ShutdownCompleted, ResponseResult.Success, "Shutdown Completed");
+      this.logEvent(action + ' - event', null);
+      this.propagateEvent(0, EventTypes.ShutdownCompleted, ResponseResult.Success, 'Shutdown Completed');
     });
   }
 
   listenToRequestCopyWallet() {
     const cnx = this.connection;
-    const action = "requestCopyWallet";
+    const action = 'requestCopyWallet';
     
-
-    this.registerConnectionEvent(action, (chainType: number, message: string) => {
-      this.logEvent(action + " - event", { 'chainType': chainType, 'message': message });
-      this.propagateEvent(chainType, EventTypes.RequestCopyWallet, ResponseResult.Success, message);
+    this.registerConnectionEvent(action, (correlationId: number, chainType: number) => {
+      this.logEvent(action + ' - event', { 'correlationId': correlationId, 'chainType': chainType });
+      this.propagateEvent(correlationId, EventTypes.RequestCopyWallet, ResponseResult.Success, {'correlationId': correlationId, 'chainType': chainType});
+    });
+  }
+  listenToRequestCopyWalletKeyFile() {
+    const cnx = this.connection;
+    const action = 'requestCopyWalletKeyFile';
+    
+    this.registerConnectionEvent(action, (correlationId: number, chainType: number, keyCorrelationCode: number, accountID:string, keyname:string, attempt:number) => {
+      this.logEvent(action + ' - event', { 'correlationId':correlationId, 'chainType': chainType, 'keyCorrelationCode' : keyCorrelationCode, 'accountID' : accountID, 'keyname' : keyname, 'attempt' : attempt });
+      this.propagateEvent(correlationId, EventTypes.RequestCopyKeyFile, ResponseResult.Success, { 'correlationId':correlationId,'chainType': chainType, 'keyCorrelationCode' : keyCorrelationCode, 'accountID' : accountID, 'keyname' : keyname, 'attempt' : attempt });
     });
   }
 
+  
   listenToMiningStatusChanged() {
     const cnx = this.connection;
-    const action = "miningStatusChanged";
+    const action = 'miningStatusChanged';
     
 
     this.registerConnectionEvent(action, (chainType: number, isMining: boolean) => {
-      this.logEvent(action + " - event", { 'chainType': chainType, 'isMining': isMining });
+      this.logEvent(action + ' - event', { 'chainType': chainType, 'isMining': isMining });
       this.propagateEvent(chainType, EventTypes.MiningStatusChanged, ResponseResult.Success, isMining);
     });
   }
 
   listenToReturnClientLongRunningEvent() {
     const cnx = this.connection;
-    const action = "returnClientLongRunningEvent";
+    const action = 'returnClientLongRunningEvent';
     
 
-    this.registerConnectionEvent("returnClientLongRunningEvent", (correlationId: number, result: number, message: string) => {
-      this.logEvent("returnClientLongRunningEvent - event", { 'correlationId': correlationId, 'result': result, 'message': message });
+    this.registerConnectionEvent('returnClientLongRunningEvent', (correlationId: number, result: number, message: string) => {
+      this.logEvent('returnClientLongRunningEvent - event', { 'correlationId': correlationId, 'result': result, 'message': message });
       if (result === 0) {
         this.propagateEvent(correlationId, EventTypes.Message, ResponseResult.Success, message);
       }
@@ -510,12 +532,12 @@ getMessages(): Array<ServerMessage> {
 
   listenToLongRunningStatusUpdate() {
     const cnx = this.connection;
-    const action = "longRunningStatusUpdate";
+    const action = 'longRunningStatusUpdate';
     
 
-    this.registerConnectionEvent("longRunningStatusUpdate", (correlationId: number, eventId: number, eventType: number, message: any) => {
-      var eventName = EventTypes[eventId];
-      this.logEvent("longRunningStatusUpdate - event", { 'correlationId': correlationId, 'eventId': eventId, 'eventName': eventName, 'eventType': eventType, 'message': message });
+    this.registerConnectionEvent('longRunningStatusUpdate', (correlationId: number, eventId: number, eventType: number, message: any) => {
+      let eventName = EventTypes[eventId];
+      this.logEvent('longRunningStatusUpdate - event', { 'correlationId': correlationId, 'eventId': eventId, 'eventName': eventName, 'eventType': eventType, 'message': message });
       this.propagateEvent(correlationId, eventId, ResponseResult.Success, message);
     });
   }
@@ -525,46 +547,46 @@ getMessages(): Array<ServerMessage> {
 
   listenToAccountTotalUpdated() {
     const cnx = this.connection;
-    const action = "accountTotalUpdated";
+    const action = 'accountTotalUpdated';
     
 
     this.registerConnectionEvent(action, (accountId: string, total: number) => {
-      this.logEvent(action + " - event", { 'accountId': accountId, 'total': total });
+      this.logEvent(action + ' - event', { 'accountId': accountId, 'total': total });
       this.propagateEvent(0, EventTypes.AccountTotalUpdated, ResponseResult.Success, total.toString());
     });
   }
 
   listenToPeerTotalUpdated() {
     const cnx = this.connection;
-    const action = "peerTotalUpdated";
+    const action = 'peerTotalUpdated';
     
 
     this.registerConnectionEvent(action, (count: number) => {
-      this.logEvent(action + " - event", { 'count': count });
+      this.logEvent(action + ' - event', { 'count': count });
       this.propagateEvent(count, EventTypes.PeerTotalUpdated, ResponseResult.Success, count.toString());
     });
   }
 
   listenToEnterWalletPassphrase() {
     const cnx = this.connection;
-    const action = "enterWalletPassphrase";
+    const action = 'enterWalletPassphrase';
     
 
     this.registerConnectionEvent(action, (correlationId: number, chainType: number, keyCorrelationCode: number, attempt: number) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId, 'chainType': chainType, 'keyCorrelationCode': keyCorrelationCode, 'attempt': attempt });
-      var event = ServerConnectionEvent.createNew(correlationId, EventTypes.RequestWalletPassphrase, ResponseResult.Success, <PassphraseParameters>{ 'correlationId': correlationId, 'chainType': chainType, 'keyCorrelationCode': keyCorrelationCode, 'attempt': attempt });
+      this.logEvent(action + ' - event', { 'correlationId': correlationId, 'chainType': chainType, 'keyCorrelationCode': keyCorrelationCode, 'attempt': attempt });
+      let event = ServerConnectionEvent.createNew(correlationId, EventTypes.RequestWalletPassphrase, ResponseResult.Success, <PassphraseParameters>{ 'correlationId': correlationId, 'chainType': chainType, 'keyCorrelationCode': keyCorrelationCode, 'attempt': attempt });
       this.eventNotifier.next(event);
     });
   }
 
   listenToEnterKeyPassphrase() {
     const cnx = this.connection;
-    const action = "enterKeysPassphrase";
+    const action = 'enterKeysPassphrase';
     
 
     this.registerConnectionEvent(action, (correlationId: number, chainType: number, keyCorrelationCode: number, accountID: string, keyname: string, attempt: number) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId, 'chainType': chainType, 'keyCorrelationCode': keyCorrelationCode, 'accountID': accountID, 'keyname': keyname, 'attempt': attempt });
-      var event = ServerConnectionEvent.createNew(correlationId, EventTypes.RequestKeyPassphrase, ResponseResult.Success, <KeyPassphraseParameters>{ 'correlationId': correlationId, 'chainType': chainType, 'keyCorrelationCode': keyCorrelationCode, 'accountID': accountID, 'keyname': keyname, 'attempt': attempt });
+      this.logEvent(action + ' - event', { 'correlationId': correlationId, 'chainType': chainType, 'keyCorrelationCode': keyCorrelationCode, 'accountID': accountID, 'keyname': keyname, 'attempt': attempt });
+      let event = ServerConnectionEvent.createNew(correlationId, EventTypes.RequestKeyPassphrase, ResponseResult.Success, <KeyPassphraseParameters>{ 'correlationId': correlationId, 'chainType': chainType, 'keyCorrelationCode': keyCorrelationCode, 'accountID': accountID, 'keyname': keyname, 'attempt': attempt });
       this.eventNotifier.next(event);
     });
   }
@@ -576,21 +598,21 @@ getMessages(): Array<ServerMessage> {
 
   listenToWalletCreationStarted() {
    
-    const action = "walletCreationStarted";
+    const action = 'walletCreationStarted';
 
     this.registerConnectionEvent(action, (correlationId: number) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId });
+      this.logEvent(action + ' - event', { 'correlationId': correlationId });
       this.propagateEvent(correlationId, EventTypes.WalletCreationStarted);
     });
   }
 
   listenToWalletCreationEnded() {
     const cnx = this.connection;
-    const action = "walletCreationEnded";
+    const action = 'walletCreationEnded';
     
 
     this.registerConnectionEvent(action, (correlationId: number) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId });
+      this.logEvent(action + ' - event', { 'correlationId': correlationId });
       this.propagateEvent(correlationId, EventTypes.WalletCreationEnded);
     });
   }
@@ -598,33 +620,33 @@ getMessages(): Array<ServerMessage> {
 
   listenToWalletCreationMessage() {
     const cnx = this.connection;
-    const action = "aalletCreationMessage";
+    const action = 'aalletCreationMessage';
     
 
     this.registerConnectionEvent(action, (correlationId: number, message: string) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId, 'message': message });
+      this.logEvent(action + ' - event', { 'correlationId': correlationId, 'message': message });
       this.propagateEvent(correlationId, EventTypes.WalletCreationMessage, ResponseResult.Success, message);
     });
   }
 
   listenToWalletCreationStep() {
     const cnx = this.connection;
-    const action = "aalletCreationStep";
+    const action = 'aalletCreationStep';
     
 
     this.registerConnectionEvent(action, (correlationId: number, stepName: string, stepIndex: number, stepTotal: number) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId, 'stepName': stepName, 'stepIndex': stepIndex, 'stepTotal': stepTotal });
+      this.logEvent(action + ' - event', { 'correlationId': correlationId, 'stepName': stepName, 'stepIndex': stepIndex, 'stepTotal': stepTotal });
       this.propagateEvent(correlationId, EventTypes.WalletCreationStep, ResponseResult.Success, { 'stepName': stepName, 'stepIndex': stepIndex, 'stepTotal': stepTotal });
     });
   }
 
   listenToWalletCreationError() {
     const cnx = this.connection;
-    const action = "aalletCreationError";
+    const action = 'aalletCreationError';
     
 
     this.registerConnectionEvent(action, (correlationId: number, error: string) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId, 'error': error });
+      this.logEvent(action + ' - event', { 'correlationId': correlationId, 'error': error });
       this.propagateEvent(correlationId, EventTypes.WalletCreationError, ResponseResult.Error, error);
     });
   }
@@ -633,54 +655,54 @@ getMessages(): Array<ServerMessage> {
 
   listenToAccountCreationStarted() {
     const cnx = this.connection;
-    const action = "accountCreationStarted";
+    const action = 'accountCreationStarted';
     
 
     this.registerConnectionEvent(action, (correlationId: number) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId });
+      this.logEvent(action + ' - event', { 'correlationId': correlationId });
       this.propagateEvent(correlationId, EventTypes.AccountCreationStarted);
     });
   }
 
   listenToAccountCreationEnded() {
     const cnx = this.connection;
-    const action = "accountCreationEnded";
+    const action = 'accountCreationEnded';
     
 
     this.registerConnectionEvent(action, (correlationId: number, accountUuid: string) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId, 'accountUuid': accountUuid });
+      this.logEvent(action + ' - event', { 'correlationId': correlationId, 'accountUuid': accountUuid });
       this.propagateEvent(correlationId, EventTypes.AccountCreationEnded);
     });
   }
 
   listenToAccountCreationMessage() {
     const cnx = this.connection;
-    const action = "accountCreationMessage";
+    const action = 'accountCreationMessage';
     
     this.registerConnectionEvent(action, (correlationId: number, message: string) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId, 'message': message });
+      this.logEvent(action + ' - event', { 'correlationId': correlationId, 'message': message });
       this.propagateEvent(correlationId, EventTypes.AccountCreationMessage, ResponseResult.Success, message);
     });
   }
 
   listenToAccountCreationStep() {
     const cnx = this.connection;
-    const action = "accountCreationStep";
+    const action = 'accountCreationStep';
     
 
     this.registerConnectionEvent(action, (correlationId: number, stepName: string, stepIndex: number, stepTotal: number) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId, 'stepName': stepName, 'stepIndex': stepIndex, 'stepTotal': stepTotal });
+      this.logEvent(action + ' - event', { 'correlationId': correlationId, 'stepName': stepName, 'stepIndex': stepIndex, 'stepTotal': stepTotal });
       this.propagateEvent(correlationId, EventTypes.AccountCreationStep, ResponseResult.Success, { 'stepName': stepName, 'stepIndex': stepIndex, 'stepTotal': stepTotal });
     });
   }
 
   listenToAccountCreationError() {
     const cnx = this.connection;
-    const action = "accountCreationError";
+    const action = 'accountCreationError';
     
 
     this.registerConnectionEvent(action, (correlationId: number, error: string) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId, 'error': error });
+      this.logEvent(action + ' - event', { 'correlationId': correlationId, 'error': error });
       this.propagateEvent(correlationId, EventTypes.AccountCreationError, ResponseResult.Error, error);
     });
   }
@@ -689,44 +711,44 @@ getMessages(): Array<ServerMessage> {
 
   listenToKeyGenerationStarted() {
     const cnx = this.connection;
-    const action = "keyGenerationStarted";
+    const action = 'keyGenerationStarted';
     
 
     this.registerConnectionEvent(action, (correlationId: number, keyName: string, keyIndex : number, totalKeys: number) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId, 'keyName': keyName, 'keyIndex' : keyIndex, 'totalKeys': totalKeys });
+      this.logEvent(action + ' - event', { 'correlationId': correlationId, 'keyName': keyName, 'keyIndex' : keyIndex, 'totalKeys': totalKeys });
       this.propagateEvent(correlationId, EventTypes.KeyGenerationStarted, ResponseResult.Success, { 'keyName': keyName, 'keyIndex': keyIndex, 'totalKeys': totalKeys });
     });
   }
 
   listenToKeyGenerationEnded() {
     const cnx = this.connection;
-    const action = "keyGenerationEnded";
+    const action = 'keyGenerationEnded';
     
 
     this.registerConnectionEvent(action, (correlationId: number, keyName: string, keyIndex : number, totalKeys: number) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId, 'keyName': keyName, 'keyIndex' : keyIndex, 'totalKeys': totalKeys });
+      this.logEvent(action + ' - event', { 'correlationId': correlationId, 'keyName': keyName, 'keyIndex' : keyIndex, 'totalKeys': totalKeys });
       this.propagateEvent(correlationId, EventTypes.KeyGenerationEnded, ResponseResult.Success, { 'keyName': keyName, 'keyIndex': keyIndex, 'totalKeys': totalKeys });
     });
   }
 
   listenToKeyGenerationMessage() {
     const cnx = this.connection;
-    const action = "keyGenerationMessage";
+    const action = 'keyGenerationMessage';
     
 
     this.registerConnectionEvent(action, (correlationId: number, keyName: string, message: string) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId, 'keyName': keyName, 'message': message });
+      this.logEvent(action + ' - event', { 'correlationId': correlationId, 'keyName': keyName, 'message': message });
       this.propagateEvent(correlationId, EventTypes.KeyGenerationMessage, ResponseResult.Success, { 'keyName': keyName, 'message': message });
     });
   }
 
   listenToKeyGenerationPercentageUpdate() {
     const cnx = this.connection;
-    const action = "keyGenerationPercentageUpdate";
+    const action = 'keyGenerationPercentageUpdate';
     
 
     this.registerConnectionEvent(action, (correlationId: number, keyName: string, percentage: number) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId, 'keyName': keyName, 'percentage': percentage });
+      this.logEvent(action + ' - event', { 'correlationId': correlationId, 'keyName': keyName, 'percentage': percentage });
       this.propagateEvent(correlationId, EventTypes.KeyGenerationPercentageUpdate, ResponseResult.Success, { 'keyName': keyName, 'percentage': percentage });
     });
   }
@@ -734,11 +756,11 @@ getMessages(): Array<ServerMessage> {
 
   listenToKeyGenerationError() {
     const cnx = this.connection;
-    const action = "KeyGenerationError";
+    const action = 'KeyGenerationError';
     
 
     this.registerConnectionEvent(action, (correlationId: number, keyName: string, error: string) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId, 'keyName': keyName, 'error': error });
+      this.logEvent(action + ' - event', { 'correlationId': correlationId, 'keyName': keyName, 'error': error });
       this.propagateEvent(correlationId, EventTypes.KeyGenerationError, ResponseResult.Error, { 'keyName': keyName, 'error': error });
     });
   }
@@ -747,77 +769,77 @@ getMessages(): Array<ServerMessage> {
 
   listenToAccountPublicationStarted() {
     const cnx = this.connection;
-    const action = "accountPublicationStarted";
+    const action = 'accountPublicationStarted';
     
 
     this.registerConnectionEvent(action, (correlationId: number) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId });
+      this.logEvent(action + ' - event', { 'correlationId': correlationId });
       this.propagateEvent(correlationId, EventTypes.AccountPublicationStarted);
     });
   }
 
   listenToAccountPublicationEnded() {
     const cnx = this.connection;
-    const action = "accountPublicationEnded";
+    const action = 'accountPublicationEnded';
     
 
     this.registerConnectionEvent(action, (correlationId: number) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId });
+      this.logEvent(action + ' - event', { 'correlationId': correlationId });
       this.propagateEvent(correlationId, EventTypes.AccountPublicationEnded);
     });
   }
 
   listenToAccountPublicationMessage() {
     const cnx = this.connection;
-    const action = "accountPublicationMessage";
+    const action = 'accountPublicationMessage';
     
 
     this.registerConnectionEvent(action, (correlationId: number, message: string) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId, 'message': message });
+      this.logEvent(action + ' - event', { 'correlationId': correlationId, 'message': message });
       this.propagateEvent(correlationId, EventTypes.AccountPublicationMessage, ResponseResult.Success, message);
     });
   }
 
   listenToAccountPublicationStep() {
     const cnx = this.connection;
-    const action = "accountPublicationStep";
+    const action = 'accountPublicationStep';
     
 
     this.registerConnectionEvent(action, (correlationId: number, stepName: string, stepIndex: number, stepTotal: number) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId, 'stepName': stepName, 'stepIndex': stepIndex, 'stepTotal': stepTotal });
+      this.logEvent(action + ' - event', { 'correlationId': correlationId, 'stepName': stepName, 'stepIndex': stepIndex, 'stepTotal': stepTotal });
       this.propagateEvent(correlationId, EventTypes.AccountPublicationStep, ResponseResult.Success, { 'stepName': stepName, 'stepIndex': stepIndex, 'stepTotal': stepTotal });
     });
   }
 
   listenToAccountPublicationPOWNonceIteration() {
     const cnx = this.connection;
-    const action = "accountPublicationPOWNonceIteration";
+    const action = 'accountPublicationPOWNonceIteration';
     
 
     this.registerConnectionEvent(action, (correlationId: number, nonce: number, difficulty: number) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId, 'nonce': nonce, 'difficulty': difficulty });
+      this.logEvent(action + ' - event', { 'correlationId': correlationId, 'nonce': nonce, 'difficulty': difficulty });
       this.propagateEvent(correlationId, EventTypes.AccountPublicationPOWNonceIteration, ResponseResult.Success, { 'nonce': nonce, 'difficulty': difficulty });
     });
   }
 
   listenToAccountPublicationPOWNonceFound() {
     const cnx = this.connection;
-    const action = "accountPublicationPOWNonceFound";
+    const action = 'accountPublicationPOWNonceFound';
     
 
     this.registerConnectionEvent(action, (correlationId: number, nonce: number, difficulty: number, solutions: Array<number>) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId, 'nonce': nonce, 'difficulty': difficulty, 'solutions': solutions });
+      this.logEvent(action + ' - event', { 'correlationId': correlationId, 'nonce': nonce, 'difficulty': difficulty, 'solutions': solutions });
       this.propagateEvent(correlationId, EventTypes.AccountPublicationPOWNonceFound, ResponseResult.Success, { 'nonce': nonce, 'difficulty': difficulty, 'solutions': solutions });
     });
   }
 
   listenToAccountPublicationError() {
     const cnx = this.connection;
-    const action = "accountPublicationError";
+    const action = 'accountPublicationError';
     
 
     this.registerConnectionEvent(action, (correlationId: number, error: string) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId, 'error': error });
+      this.logEvent(action + ' - event', { 'correlationId': correlationId, 'error': error });
       this.propagateEvent(correlationId, EventTypes.AccountPublicationError, ResponseResult.Error, error);
     });
   }
@@ -826,44 +848,44 @@ getMessages(): Array<ServerMessage> {
 
   listenToWalletSyncStarted() {
     const cnx = this.connection;
-    const action = "walletSyncStarted";
+    const action = 'walletSyncStarted';
     
 
     this.registerConnectionEvent(action, (chainType: number, currentBlockId: number, blockHeight: number, percentage: number) => {
-      this.logEvent(action + " - event", { 'chainType': chainType, 'currentBlockId': currentBlockId, 'blockHeight': blockHeight, 'percentage': percentage });
+      this.logEvent(action + ' - event', { 'chainType': chainType, 'currentBlockId': currentBlockId, 'blockHeight': blockHeight, 'percentage': percentage });
       this.propagateEvent(chainType, EventTypes.WalletSyncStarted, ResponseResult.Success, { 'chainType': chainType, 'currentBlockId': currentBlockId, 'blockHeight': blockHeight, 'percentage': percentage });
     });
   }
 
   listenToWalletSyncEnded() {
     const cnx = this.connection;
-    const action = "walletSyncEnded";
+    const action = 'walletSyncEnded';
     
 
     this.registerConnectionEvent(action, (chainType: number, currentBlockId: number, blockHeight: number, percentage: number) => {
-      this.logEvent(action + " - event", { 'chainType': chainType, 'currentBlockId': currentBlockId, 'blockHeight': blockHeight, 'percentage': percentage });
+      this.logEvent(action + ' - event', { 'chainType': chainType, 'currentBlockId': currentBlockId, 'blockHeight': blockHeight, 'percentage': percentage });
       this.propagateEvent(chainType, EventTypes.WalletSyncEnded, ResponseResult.Success, { 'chainType': chainType, 'currentBlockId': currentBlockId, 'blockHeight': blockHeight, 'percentage': percentage });
     });
   }
 
   listenToWalletSyncUpdate() {
     const cnx = this.connection;
-    const action = "WalletSyncUpdate";
+    const action = 'WalletSyncUpdate';
     
 
     this.registerConnectionEvent(action, (chainType: number, currentBlockId: number, blockHeight: number, percentage: number, estimatedTimeRemaining: string) => {
-      this.logEvent(action + " - event", { 'chainType': chainType, 'currentBlockId': currentBlockId, 'blockHeight': blockHeight, 'percentage': percentage, 'estimatedTimeRemaining': estimatedTimeRemaining });
+      this.logEvent(action + ' - event', { 'chainType': chainType, 'currentBlockId': currentBlockId, 'blockHeight': blockHeight, 'percentage': percentage, 'estimatedTimeRemaining': estimatedTimeRemaining });
       this.propagateEvent(chainType, EventTypes.WalletSyncUpdate, ResponseResult.Success, { 'chainType': chainType, 'currentBlockId': currentBlockId, 'blockHeight': blockHeight, 'percentage': percentage, 'estimatedTimeRemaining': estimatedTimeRemaining });
     });
   }
 
   listenToWalletSyncError() {
     const cnx = this.connection;
-    const action = "walletSyncError";
+    const action = 'walletSyncError';
     
 
     this.registerConnectionEvent(action, (correlationId: number, error: string) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId, 'error': error });
+      this.logEvent(action + ' - event', { 'correlationId': correlationId, 'error': error });
       this.propagateEvent(correlationId, EventTypes.WalletSyncError, ResponseResult.Error, error);
     });
   }
@@ -872,44 +894,44 @@ getMessages(): Array<ServerMessage> {
 
   listenToBlockchainSyncStarted() {
     const cnx = this.connection;
-    const action = "blockchainSyncStarted";
+    const action = 'blockchainSyncStarted';
     
 
     this.registerConnectionEvent(action, (chainType: number, currentBlockId: number, publicBlockHeight: number) => {
-      this.logEvent(action + " - event", { 'chainType': chainType, 'currentBlockId': currentBlockId, 'publicBlockHeight': publicBlockHeight });
+      this.logEvent(action + ' - event', { 'chainType': chainType, 'currentBlockId': currentBlockId, 'publicBlockHeight': publicBlockHeight });
       this.propagateEvent(chainType, EventTypes.BlockchainSyncStarted, ResponseResult.Success, { 'chainType': chainType, 'currentBlockId': currentBlockId, 'publicBlockHeight': publicBlockHeight});
     });
   }
 
   listenToBlockchainSyncEnded() {
     const cnx = this.connection;
-    const action = "blockchainSyncEnded";
+    const action = 'blockchainSyncEnded';
     
 
     this.registerConnectionEvent(action, (chainType: number, currentBlockId: number, publicBlockHeight: number) => {
-      this.logEvent(action + " - event", { 'chainType': chainType, 'currentBlockId': currentBlockId, 'publicBlockHeight': publicBlockHeight });
+      this.logEvent(action + ' - event', { 'chainType': chainType, 'currentBlockId': currentBlockId, 'publicBlockHeight': publicBlockHeight });
       this.propagateEvent(chainType, EventTypes.BlockchainSyncEnded, ResponseResult.Success, { 'chainType': chainType, 'currentBlockId': currentBlockId, 'publicBlockHeight': publicBlockHeight});
     });
   }
 
   listenToBlockchainSyncUpdate() {
     const cnx = this.connection;
-    const action = "blockchainSyncUpdate";
+    const action = 'blockchainSyncUpdate';
     
 
     this.registerConnectionEvent(action, (chainType: number, currentBlockId: number, publicBlockHeight: number, percentage: number, estimatedTimeRemaining: string) => {
-      this.logEvent(action + " - event", { 'chainType': chainType, 'currentBlockId': currentBlockId, 'publicBlockHeight': publicBlockHeight, 'percentage': percentage, 'estimatedTimeRemaining': estimatedTimeRemaining });
+      this.logEvent(action + ' - event', { 'chainType': chainType, 'currentBlockId': currentBlockId, 'publicBlockHeight': publicBlockHeight, 'percentage': percentage, 'estimatedTimeRemaining': estimatedTimeRemaining });
       this.propagateEvent(chainType, EventTypes.BlockchainSyncUpdate, ResponseResult.Success, { 'chainType': chainType, 'currentBlockId': currentBlockId, 'publicBlockHeight': publicBlockHeight, 'percentage': percentage, 'estimatedTimeRemaining': estimatedTimeRemaining });
     });
   }
 
   listenToBlockchainSyncError() {
     const cnx = this.connection;
-    const action = "blockchainSyncError";
+    const action = 'blockchainSyncError';
     
 
     this.registerConnectionEvent(action, (correlationId: number, error: string) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId, 'error': error });
+      this.logEvent(action + ' - event', { 'correlationId': correlationId, 'error': error });
       this.propagateEvent(correlationId, EventTypes.BlockchainSyncError, ResponseResult.Error, error);
     });
   }
@@ -918,66 +940,65 @@ getMessages(): Array<ServerMessage> {
 
   listenToTransactionSent() {
     const cnx = this.connection;
-    const action = "transactionSent";
+    const action = 'transactionSent';
     
 
-    this.registerConnectionEvent(action, (transactionId: number, transaction: any) => {
-      this.logEvent(action + " - event", { 'transactionId': transactionId, 'transaction': transaction });
-      this.propagateEvent(transactionId, EventTypes.TransactionSent, ResponseResult.Success, transaction);
+    this.registerConnectionEvent(action, (correlationId: number, transactionId: string, transaction: any) => {
+      this.logEvent(action + ' - event', { 'correlationId':correlationId, 'transactionId': transactionId, 'transaction': transaction });
+      this.propagateEvent(correlationId, EventTypes.TransactionSent, ResponseResult.Success, transaction);
     });
   }
 
   listenToTransactionConfirmed() {
     const cnx = this.connection;
-    const action = "transactionConfirmed";
+    const action = 'transactionConfirmed';
     
 
-    this.registerConnectionEvent(action, (transactionId: number, transaction: any) => {
-      this.logEvent(action + " - event", { 'transactionId': transactionId, 'transaction': transaction });
-      this.propagateEvent(transactionId, EventTypes.TransactionConfirmed, ResponseResult.Success, transaction);
+    this.registerConnectionEvent(action, (correlationId: number, transactionId: string, transaction: any) => {
+      this.logEvent(action + ' - event', {  'correlationId':correlationId,'transactionId': transactionId, 'transaction': transaction });
+      this.propagateEvent(correlationId, EventTypes.TransactionConfirmed, ResponseResult.Success, transaction);
     });
   }
 
   listenToTransactionReceived() {
     const cnx = this.connection;
-    const action = "transactionReceived";
+    const action = 'transactionReceived';
 
-    this.registerConnectionEvent(action, (transactionId: string) => {
-      this.logEvent(action + " - event", { 'transactionId': transactionId });
-      this.propagateEvent(1, EventTypes.TransactionReceived, ResponseResult.Success, transactionId);
+    this.registerConnectionEvent(action, (correlationId: number, transactionId: string) => {
+      this.logEvent(action + ' - event', { 'correlationId':correlationId, 'transactionId': transactionId });
+      this.propagateEvent(correlationId, EventTypes.TransactionReceived, ResponseResult.Success, transactionId);
     });
   }
   
   listenToTransactionMessage() {
     const cnx = this.connection;
-    const action = "transactionMessage";
+    const action = 'transactionMessage';
     
 
-    this.registerConnectionEvent(action, (transactionId: number, message: string) => {
-      this.logEvent(action + " - event", { 'transactionId': transactionId, 'message': message });
-      this.propagateEvent(transactionId, EventTypes.TransactionMessage, ResponseResult.Success, message);
+    this.registerConnectionEvent(action, (correlationId: number, transactionId: string, message: string) => {
+      this.logEvent(action + ' - event', { 'correlationId':correlationId, 'transactionId': transactionId, 'message': message });
+      this.propagateEvent(correlationId, EventTypes.TransactionMessage, ResponseResult.Success, message);
     });
   }
 
   listenToTransactionRefused() {
     const cnx = this.connection;
-    const action = "transactionRefused";
+    const action = 'transactionRefused';
     
 
-    this.registerConnectionEvent(action, (transactionId: number, message: string) => {
-      this.logEvent(action + " - event", { 'transactionId': transactionId, 'message': message });
-      this.propagateEvent(transactionId, EventTypes.TransactionRefused, ResponseResult.Error, message);
+    this.registerConnectionEvent(action, (correlationId: number, transactionId: string, message: string) => {
+      this.logEvent(action + ' - event', { 'correlationId':correlationId, 'transactionId': transactionId, 'message': message });
+      this.propagateEvent(correlationId, EventTypes.TransactionRefused, ResponseResult.Error, message);
     });
   }
 
   listenToTransactionError() {
     const cnx = this.connection;
-    const action = "transactionError";
+    const action = 'transactionError';
     
-
-    this.registerConnectionEvent(action, (transactionId: number, errorCodes: Array<number>) => {
-      this.logEvent(action + " - event", { 'transactionId': transactionId, 'message': errorCodes });
-      this.propagateEvent(transactionId, EventTypes.TransactionError, ResponseResult.Error, errorCodes);
+    this.registerConnectionEvent(action, (correlationId: number, transactionId: string, errorCodes: Array<number>) => {
+      this.logEvent(action + ' - event', { 'correlationId':correlationId, 'transactionId': transactionId, 'errorCodes': errorCodes });
+      this.propagateEvent(correlationId, EventTypes.TransactionError, ResponseResult.Error, {'transactionId': transactionId, 'errorCodes': errorCodes });
     });
   }
 
@@ -985,72 +1006,74 @@ getMessages(): Array<ServerMessage> {
 
   listenToMiningStarted() {
     const cnx = this.connection;
-    const action = "miningStarted";
+    const action = 'miningStarted';
     
-
     this.registerConnectionEvent(action, (chainType: number) => {
-      this.logEvent(action + " - event", { 'chainType': chainType });
-      this.notificationService.showSuccess("Neuralium mining started.", "Start Mining");
+      this.logEvent(action + ' - event', { 'chainType': chainType });
       this.propagateEvent(chainType, EventTypes.MiningStarted, ResponseResult.Success);
     });
   }
 
   listenToMiningEnded() {
     const cnx = this.connection;
-    const action = "miningEnded";
+    const action = 'miningEnded';
     
 
-    this.registerConnectionEvent(action, (chainType: number) => {
-      this.logEvent(action + " - event", { 'chainType': chainType });
-      this.notificationService.showSuccess("Neuralium mining stopped.", "Stop Mining");
-      this.propagateEvent(chainType, EventTypes.MiningEnded, ResponseResult.Success);
+    this.registerConnectionEvent(action, (chainType: number, status: number) => {
+      this.logEvent(action + ' - event', { 'chainType': chainType, 'status': status });
+      this.propagateEvent(chainType, EventTypes.MiningEnded, ResponseResult.Success, {chainType, status});
     });
   }
 
   listenToMiningElected() {
     const cnx = this.connection;
-    const action = "miningElected";
-    
+    const action = 'miningElected';
 
-    this.registerConnectionEvent(action, (chainType: number) => {
-      this.logEvent(action + " - event", { 'chainType': chainType });
-      this.notificationService.showSuccess("you are candidate.", "Candidate");
-      this.propagateEvent(chainType, EventTypes.MiningElected, ResponseResult.Success);
+    this.registerConnectionEvent(action, (chainType: number, electionBlockId:number, level:number) => {
+      this.logEvent(action + ' - event', { 'chainType': chainType, 'electionBlockId' : electionBlockId, 'level' : level });
+      this.propagateEvent(chainType, EventTypes.MiningElected, ResponseResult.Success, {'chainType': chainType, 'electionBlockId' : electionBlockId, 'level' : level});
+    });
+  }
+
+  listenToMiningPrimeElectedMissed() {
+    const cnx = this.connection;
+    const action = 'miningPrimeElectedMissed';
+
+    this.registerConnectionEvent(action, (chainType: number, publicationBlockId:number, electionBlockId:number, level:number) => {
+      this.logEvent(action + ' - event', { 'chainType': chainType, 'publicationBlockId' : publicationBlockId, 'electionBlockId' : electionBlockId, 'level' : level });
+      this.propagateEvent(chainType, EventTypes.MiningPrimeElectedMissed, ResponseResult.Success, {'chainType': chainType, 'publicationBlockId' : publicationBlockId, 'electionBlockId' : electionBlockId, 'level' : level});
     });
   }
 
 
   listenToNeuraliumMiningPrimeElected() {
     const cnx = this.connection;
-    const action = "neuraliumMiningPrimeElected";
+    const action = 'neuraliumMiningPrimeElected';
     
-
-    this.registerConnectionEvent(action, (chainType: number, blockId: number, bounty: number, transactionTip: number, delegateAccountId: string) => {
-      this.logEvent(action + " - event", { 'chainType': chainType , blockId, bounty, transactionTip, delegateAccountId});
-      this.notificationService.showSuccess("You've been elected.", "Elected");
-      this.propagateEvent(chainType, EventTypes.NeuraliumMiningPrimeElected, ResponseResult.Success, {chainType, blockId, bounty, transactionTip, delegateAccountId});
+    this.registerConnectionEvent(action, (chainType: number, blockId: number, bounty: number, transactionTip: number, delegateAccountId: string, level:number) => {
+      this.logEvent(action + ' - event', { 'chainType': chainType , blockId, bounty, transactionTip, delegateAccountId, level});
+      this.propagateEvent(chainType, EventTypes.NeuraliumMiningPrimeElected, ResponseResult.Success, {chainType, blockId, bounty, transactionTip, delegateAccountId, level});
     });
   }
 
   listenToNeuraliumMiningBountyAllocated() {
     const cnx = this.connection;
-    const action = "neuraliumMiningBountyAllocated";
+    const action = 'neuraliumMiningBountyAllocated';
     
 
     this.registerConnectionEvent(action, (chainType: number) => {
-      this.logEvent(action + " - event", { 'chainType': chainType });
-      this.notificationService.showSuccess("Bounty has been allocated.", "Bounty Allocated");
+      this.logEvent(action + ' - event', { 'chainType': chainType });
       this.propagateEvent(chainType, EventTypes.NeuraliumMiningBountyAllocated, ResponseResult.Success);
     });
   }
 
   listenToMiningConnectableStatusChanged(){
     const cnx = this.connection;
-    const action = "connectableStatusChanged";
+    const action = 'connectableStatusChanged';
     
 
     this.registerConnectionEvent(action, (connectable: boolean) => {
-      this.logEvent(action + " - event", { 'connectable': connectable });
+      this.logEvent(action + ' - event', { 'connectable': connectable });
       this.propagateEvent(0, EventTypes.ConnectableStatusChanged, ResponseResult.Success, { connectable });
     });
   }
@@ -1059,23 +1082,32 @@ getMessages(): Array<ServerMessage> {
 
   listenToBlockInserted() {
     const cnx = this.connection;
-    const action = "blockInserted";
+    const action = 'blockInserted';
     
 
     this.registerConnectionEvent(action, (chainType: number, blockId: number, timestamp: Date, hash: string, publicBlockId: number, lifespan: number) => {
-      this.logEvent(action + " - event", { chainType, blockId, publicBlockId, timestamp, hash, lifespan });
+      this.logEvent(action + ' - event', { chainType, blockId, publicBlockId, timestamp, hash, lifespan });
       this.propagateEvent(blockId, EventTypes.BlockInserted, ResponseResult.Success, { chainType, blockId, publicBlockId, timestamp, hash, lifespan });
     });
   }
 
+  listenToRequireNodeUpdate(){
+    const cnx = this.connection;
+    const action = 'requireNodeUpdate';
+    
 
+    this.registerConnectionEvent(action, (chainType: number, chainName:string) => {
+      this.logEvent(action + ' - event', { chainType, chainName  });
+      this.propagateEvent(chainType, EventTypes.RequireNodeUpdate, ResponseResult.Success, { chainType,  chainName });
+    });
+  }
 
   // MESSAGE AND ERROR
 
 
   listenToMessage() {
     const cnx = this.connection;
-    const action = "message";
+    const action = 'message';
     
 
     this.registerConnectionEvent(action, (message: string, timestamp: Date, level:string, properties:Array<Object>) => {
@@ -1085,18 +1117,18 @@ getMessages(): Array<ServerMessage> {
       }
       this.messages.push(new ServerMessage(message, timestamp, level, properties));
 
-      this.logEvent(action + " - event", { 'message': message });
+      this.logEvent(action + ' - event', { 'message': message });
       this.propagateEvent(1, EventTypes.Message, ResponseResult.Success, message);
     });
   }
 
   listenToError() {
     const cnx = this.connection;
-    const action = "error";
+    const action = 'error';
     
 
     this.registerConnectionEvent(action, (correlationId: number, message: string) => {
-      this.logEvent(action + " - event", { 'correlationId': correlationId, 'message': message });
+      this.logEvent(action + ' - event', { 'correlationId': correlationId, 'message': message });
       this.propagateEvent(correlationId, EventTypes.TransactionError, ResponseResult.Error, message);
     });
   }
@@ -1119,8 +1151,8 @@ getMessages(): Array<ServerMessage> {
   propagateEvent(correlationId: number,
     eventType: EventTypes = EventTypes.DefaultEvent,
     eventResponse: ResponseResult = ResponseResult.Success,
-    message: any = "") {
-    var event = ServerConnectionEvent.createNew(correlationId, eventType, eventResponse, message);
+    message: any = '') {
+    let event = ServerConnectionEvent.createNew(correlationId, eventType, eventResponse, message);
     this.eventNotifier.next(event);
   }
 
@@ -1131,7 +1163,7 @@ getMessages(): Array<ServerMessage> {
   public tryConnectToServerTyped<T = any>(): Promise<T> {
     return new Promise<T>((resolve, reject) => {
 
-      if(this.connection.state === HubConnectionState.Connected){
+      if(this.IsConnected){
         this.isCurrentlyConnected = true;
         this.isConnecting = false;
         resolve();
@@ -1168,7 +1200,7 @@ getMessages(): Array<ServerMessage> {
   public invoke<T = any>(methodName: string, ...args: any[]): Promise<T>{
 
     // if we are connected, then go right to the request.
-    if(this.connection.state === HubConnectionState.Connected){
+    if(this.IsConnected){
       return this.connection.invoke<T>(methodName, ...args);
     }
     else{
@@ -1202,24 +1234,24 @@ getMessages(): Array<ServerMessage> {
 
       cnx.start()
         .then(() => {
-          cnx.invoke<string>("ping")
+          cnx.invoke<string>('ping')
             .then(
               response => {
-                if (response === "pong") {
+                if (response === 'pong') {
                   resolve();
                 }
                 else {
-                  reject("Ping error : 'pong' not received => " + response)
+                  reject('Ping error : \'pong\' not received => ' + response)
                 }
               })
             .catch(reason => {
               cnx.stop();
-              reject("Ping error : " + reason);
+              reject('Ping error : ' + reason);
             
             });
         })
         .catch(reason => {
-          reject("Connection error : " + reason);
+          reject('Connection error : ' + reason);
         });
     });
   }

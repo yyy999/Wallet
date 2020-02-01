@@ -52,6 +52,10 @@ export class ServerService implements OnInit {
     this.canManuallyStopServerObs.next(value);
   }
 
+  public get IsRunning(): boolean {
+    return this.childProcess;
+}
+
 
   startServer(): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
@@ -75,23 +79,10 @@ export class ServerService implements OnInit {
 
       let running = false;
       let timeout:any = null;
-
       let completed:boolean = false;
-      this.childProcess.stdout.on('data', function(data) {
-        running = true;
-        completedMethod();
-      });
-      this.childProcess.stderr.on('data', function(data) {
-        running = false;
-        completedMethod();
-      });
-      this.childProcess.on('close', function(code) {
-        running = false;
-        completedMethod();
-      });
 
-      let completedMethod = () => {
-
+      let checksCompleted:boolean = false;
+      const completedMethod = () => {
 
         if(timeout){
           clearTimeout(timeout);
@@ -116,8 +107,47 @@ export class ServerService implements OnInit {
         completed = true;
       };
 
+      const callExit = () => {
+
+        this.exitWindow();
+      };
+      
+      this.childProcess.stdout.on('data', function(data) {
+
+        if(checksCompleted === false){
+          const input:string = data.toString();
+
+          if(input.includes('[EXPIRED DEVNET]') || input.includes('[EXPIRED TESTNET]')){
+            alert('The testing node has expired. Please download a more recent version at https://www.neuralium.com.');
+            callExit();
+            return;
+          }
+          if(input.includes('Current software version')){
+            checksCompleted = true;
+          }
+
+        }
+        running = true;
+        completedMethod();
+      });
+      this.childProcess.stderr.on('data', function(data) {
+        running = false;
+        completedMethod();
+      });
+      this.childProcess.on('close', function(code) {
+        running = false;
+        completedMethod();
+      });
       timeout = setTimeout(completedMethod, 15000);
     });
+  }
+
+  exitWindow() {
+
+    this.childProcess = null;
+    const remote = require('electron').remote;
+    const w = remote.getCurrentWindow();
+    w.close();
   }
 
   stopServer() {

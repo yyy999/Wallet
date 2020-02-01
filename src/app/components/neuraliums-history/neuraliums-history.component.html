@@ -44,8 +44,8 @@
                         </div>
                         <div class="time">{{item.timestamp | formatTimelineTime}}</div>
                         <div class="account" *ngIf="isDebit(item) || isCredit(item)">
-                            <span *ngIf="isDebit(item)">{{item.recipientAccountId | formatAccountNumber}}
-                                {{getAccountName(item.recipientAccountId)}}</span>
+                            <span *ngIf="isDebit(item)">{{item.recipientAccountIds | formatAccountNumber}}
+                                {{getAccountNames(item.recipientAccountIds)}}</span>
                             <span *ngIf="isCredit(item)">{{item.senderAccountId | formatAccountNumber}}
                                 {{getAccountName(item.senderAccountId)}}</span>
                         </div>

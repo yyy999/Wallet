@@ -1,4 +1,4 @@
-import { NeuraliumTransaction, NO_TRANSACTION, NO_NEURALIUM_TRANSACTION } from "./transaction";
+import { NeuraliumTransaction, NO_TRANSACTION, NO_NEURALIUM_TRANSACTION } from './transaction';
 
 export enum EntryType {
     debit = 0,
@@ -24,7 +24,7 @@ export class TimelineHeader {
     private constructor() { }
 
     static create(numberOfDays: number, firstDay: Date) {
-        var header = new TimelineHeader();
+        const header = new TimelineHeader();
         header.numberOfDays = numberOfDays;
         header.firstDay = firstDay;
         return header;
@@ -40,7 +40,7 @@ export class TimelineDay {
     private constructor() { }
 
     static create(day: Date, id: number, endingTotal: number) {
-        var timelineDay = new TimelineDay();
+        const timelineDay = new TimelineDay();
         timelineDay.day = day;
         timelineDay.id = id;
         timelineDay.endingTotal = endingTotal;
@@ -53,7 +53,7 @@ export class TimelineEntry {
     transactionId:string;
     timestamp: Date;
     senderAccountId: string;
-    recipientAccountId: string;
+    recipientAccountIds: string;
     amount: number;
     tips: number;
     total: number;
@@ -61,8 +61,8 @@ export class TimelineEntry {
     confirmed: boolean;
     transaction: NeuraliumTransaction = NO_NEURALIUM_TRANSACTION;
     showDetails:boolean = false;
-    lightState:string = "open";
-    detailsState:string = "close";
+    lightState:string = 'open';
+    detailsState:string = 'close';
 
     private constructor() { }
 
@@ -70,13 +70,13 @@ export class TimelineEntry {
         return this.showDetails && this.transaction !== null && this.transaction !== NO_NEURALIUM_TRANSACTION;
     }
 
-    static create(transactionId:string, timestamp: Date, senderAccountId: string, recipientAccountId: string,
+    static create(transactionId:string, timestamp: Date, senderAccountId: string, recipientAccountIds: string,
         amount: number, tips: number, total: number, direction: EntryDirection, creditType: EntryCreditType, confirmed: boolean) {
-        var timelineEntry = new TimelineEntry();
+        const timelineEntry = new TimelineEntry();
         timelineEntry.transactionId = transactionId;
         timelineEntry.timestamp = timestamp;
         timelineEntry.senderAccountId = senderAccountId;
-        timelineEntry.recipientAccountId = recipientAccountId;
+        timelineEntry.recipientAccountIds = recipientAccountIds;
         timelineEntry.amount = amount;
         timelineEntry.tips = tips;
         timelineEntry.total = total;

@@ -12,19 +12,19 @@ import { TranslateService } from '@ngx-translate/core';
   selector: 'app-neuraliums-history',
   templateUrl: './neuraliums-history.component.html',
   styleUrls: ['./neuraliums-history.component.scss'],
-  animations:[
-    trigger('sizeChange',[
-      state('close',style({
+  animations: [
+    trigger('sizeChange', [
+      state('close', style({
         display: 'none',
-        height:'0%',
-        opacity:0
+        height: '0%',
+        opacity: 0
       })),
-      state('open',style({
-        height:'90%',
-        opacity:1
+      state('open', style({
+        height: '90%',
+        opacity: 1
       })),
-      transition('*=>close',animate(300)),
-      transition('*=>open',animate(300))
+      transition('*=>close', animate(300)),
+      transition('*=>open', animate(300))
     ])
   ]
 })
@@ -38,7 +38,7 @@ export class NeuraliumsHistoryComponent implements OnInit {
     private neuraliumService: NeuraliumService,
     private transactionService: TransactionsService,
     private notificationService: NotificationService,
-    private translateService : TranslateService) {
+    private translateService: TranslateService) {
 
   }
 
@@ -78,17 +78,31 @@ export class NeuraliumsHistoryComponent implements OnInit {
   }
 
   getAccountName(accountId: string) {
-    var contact = this.contactService.getContact(accountId);
+    let contact = this.contactService.getContact(accountId);
     if (contact !== undefined) {
-      return "- " + contact.friendlyName;
-    }
-    else {
-      return "";
+      return '- ' + contact.friendlyName;
+    } else {
+      return '';
     }
   }
 
+  getAccountNames(accountIds: string) {
+
+    const entries = accountIds.split(',');
+
+    const results: Array<string> = [];
+
+    for (let i = 0; i < entries.length; i++) {
+      const entry = this.getAccountName(entries[i].trim());
+
+      results.push(entry);
+    }
+
+    return results.join(',');
+  }
+
   showTransaction(entry: TimelineEntry) {
-    if(this.isMining(entry)){
+    if (this.isMining(entry)) {
       // we do nothing on mining entries
       return;
     }
@@ -101,15 +115,13 @@ export class NeuraliumsHistoryComponent implements OnInit {
             entry.showDetails = true;
             entry.lightState = 'close';
             entry.detailsState = 'open';
-          }
-          else {
-            this.translateService.get("neuralium.NoTransaction").subscribe(message =>{
+          } else {
+            this.translateService.get('neuralium.NoTransaction').subscribe(message => {
               this.notificationService.showWarn(message);
-            })
+            });
           }
-        })
-    }
-    else {
+        });
+    } else {
       entry.showDetails = true;
       entry.lightState = 'close';
       entry.detailsState = 'open';
@@ -118,7 +130,7 @@ export class NeuraliumsHistoryComponent implements OnInit {
 
   hideTransaction(entry: TimelineEntry) {
 
-    if(this.isMining(entry)){
+    if (this.isMining(entry)) {
       // we do nothing on mining entries
       return;
     }

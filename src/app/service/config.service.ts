@@ -11,6 +11,7 @@ class Settings {
   serverPath: string;
   serverFileName: string;
   serverPort: number;
+  miningLogLevel: number;
   currentPlatform: string;
   softwareLicenseAgreementShown: boolean;
   delegateAccount: string;
@@ -82,7 +83,7 @@ export class ConfigService {
 
     
 
-    var os = require('os');
+    const os = require('os');
     if (this.store.has('settings')) {
       this.settings = this.store.get('settings');
     }
@@ -92,19 +93,21 @@ export class ConfigService {
 
     message = `Define default settings if necessary`;
     console.log(message)
-    this.defineDefaultSettingIfNecessary("serverFileName", this.defaultSettings.serverFileName);
-    this.defineDefaultSettingIfNecessary("serverPort", this.defaultSettings.serverPort);
-    this.defineDefaultSettingIfNecessary("currentPlatform", this.defaultSettings.currentPlatform);
-    this.defineDefaultSettingIfNecessary("softwareLicenseAgreementShown", this.defaultSettings.softwareLicenseAgreementShown);
-    this.defineDefaultSettingIfNecessary("delegateAccount", this.defaultSettings.delegateAccount);
+    this.defineDefaultSettingIfNecessary('serverFileName', this.defaultSettings.serverFileName);
+    this.defineDefaultSettingIfNecessary('serverPort', this.defaultSettings.serverPort);
+    this.defineDefaultSettingIfNecessary('miningLogLevel', this.defaultSettings.miningLogLevel);
 
-    this.defineDefaultSettingIfNecessary("serverPath", this.defaultSettings.serverPath);
-    if (!this.validateServerPath(this.settings["serverPath"],this.settings.serverFileName)) {
+    this.defineDefaultSettingIfNecessary('currentPlatform', this.defaultSettings.currentPlatform);
+    this.defineDefaultSettingIfNecessary('softwareLicenseAgreementShown', this.defaultSettings.softwareLicenseAgreementShown);
+    this.defineDefaultSettingIfNecessary('delegateAccount', this.defaultSettings.delegateAccount);
+
+    this.defineDefaultSettingIfNecessary('serverPath', this.defaultSettings.serverPath);
+    if (!this.validateServerPath(this.settings['serverPath'],this.settings.serverFileName)) {
       if (this.defaultServerPathValid) {
-        this.settings["serverPath"] = this.defaultSettings.serverPath;
+        this.settings['serverPath'] = this.defaultSettings.serverPath;
       }
       else {
-        this.settings["serverPath"] = '';
+        this.settings['serverPath'] = '';
       }
       alert('The neuralium server path is invalid. Please ensure it is correctly set in the settings panel.');
     }
@@ -113,12 +116,12 @@ export class ConfigService {
   }
 
   defineDefaultSettings(): Settings {
-    var os = require('os');
+    const os = require('os');
 
-    var settings: Settings = new Settings();
+    const settings: Settings = new Settings();
     settings.currentPlatform = os.platform();
-    settings.delegateAccount = "";
-    settings.language = "en";
+    settings.delegateAccount = '';
+    settings.language = 'en';
     settings.serverFileName = this.getFileName(os.platform());
     settings.serverPath = this.getFilePath(os.platform());
     
@@ -129,14 +132,15 @@ export class ConfigService {
       this.defaultServerPathValid = false;
     }
     
-    settings.serverPort = 12033;
+    settings.serverPort = 12032;
+    settings.miningLogLevel = 1;
     settings.softwareLicenseAgreementShown = false;
 
     return settings;
   }
 
   defineDefaultSettingIfNecessary(setting: string, defaultValue: any) {
-    var message : string = `Define ${setting} if necessary with default value ${defaultValue}`;
+    const message : string = `Define ${setting} if necessary with default value ${defaultValue}`;
     console.log(message)
     if (!this.settings[setting]) {
       this.settings[setting] = defaultValue;
@@ -152,10 +156,10 @@ export class ConfigService {
   }
 
   getFilePath(osPlatform: string): string {
-    var paths = [];
+    const paths = [];
     
     // WINDOWS
-    if (osPlatform.toLowerCase().startsWith("win")) {
+    if (osPlatform.toLowerCase().startsWith('win')) {
       paths.push(
       '..\\neuralium',
       '.\\neuralium',
@@ -163,7 +167,7 @@ export class ConfigService {
       );
     }
     // LINUX
-    else if (osPlatform.toLowerCase().startsWith("linux")) {
+    else if (osPlatform.toLowerCase().startsWith('linux')) {
      paths.push(
       '../../neuralium',
       '../neuralium',
@@ -181,20 +185,20 @@ export class ConfigService {
   }
 
   getExistingNodePath(paths:Array<string>): string {
-    console.log("Start looking for a valid server path");
+    console.log('Start looking for a valid server path');
     const path = require('path');
-    var pathFound: boolean = false;
-    var finalPath: string = undefined;
+    let pathFound: boolean = false;
+    let finalPath: string = undefined;
 
     paths.forEach(pathToCheck => {
       try {
-        let fullpath = path.resolve(remote.process.execPath, pathToCheck)
+        const fullpath = path.resolve(remote.process.execPath, pathToCheck)
         pathFound = this.checkPath(fullpath);
         if (pathFound) {
           finalPath = fullpath;
         }
       } catch (error) {
-        let message: string = `Tried to check if ${pathToCheck} exists but gor error : ${error}`;
+        const message: string = `Tried to check if ${pathToCheck} exists but gor error : ${error}`;
         console.log(message)
       }
     })
@@ -205,7 +209,7 @@ export class ConfigService {
   checkPath(nodeDirectoryPath: string): boolean {
     let message: string = `Check if ${nodeDirectoryPath} exists`;
     console.log(message)
-    let result = FS.existsSync(nodeDirectoryPath);
+    const result = FS.existsSync(nodeDirectoryPath);
     if (result) {
       message = `${nodeDirectoryPath} exists`;
     }
@@ -221,16 +225,16 @@ export class ConfigService {
     // time to test the value
     if (FS.existsSync(nodeDirectoryPath) === false) {
       // this is critical, even the auto path does not work
-      let message: string = `Automatically set server path ${nodeDirectoryPath} does not exist`;
+      const message: string = `Automatically set server path ${nodeDirectoryPath} does not exist`;
       console.log(message);
       nodeDirectoryPath = '';
     }
 
     if (nodeDirectoryPath) {
-      let fullPath: string = path.join(nodeDirectoryPath, exeName);
+      const fullPath: string = path.join(nodeDirectoryPath, exeName);
 
       if (FS.existsSync(fullPath) === false) {
-        let message: string = `Automatically set server executable path ${fullPath} does not exist`;
+        const message: string = `Automatically set server executable path ${fullPath} does not exist`;
         console.log(message);
 
         nodeDirectoryPath = '';
@@ -245,11 +249,11 @@ export class ConfigService {
     return nodeDirectoryPath;
   }
   getFileName(osPlatform: string): string {
-    if (osPlatform.toLowerCase().startsWith("win")) {
-      return "Neuralium.exe";
+    if (osPlatform.toLowerCase().startsWith('win')) {
+      return 'Neuralium.exe';
     }
     else {
-      return "Neuralium";
+      return 'Neuralium';
     }
   }
 
@@ -271,7 +275,7 @@ export class ConfigService {
         }
         else {
 
-          let correctedFolderPath: string = this.validateServerPath(folderPath[0], this.settings.serverFileName);
+          const correctedFolderPath: string = this.validateServerPath(folderPath[0], this.settings.serverFileName);
 
           if (!correctedFolderPath) {
             reject(folderPath);
@@ -346,6 +350,13 @@ export class ConfigService {
 
   get serverPort(): number {
     return this.settings.serverPort;
+  }
+
+  get miningLogLevel(): number {
+    return Number(this.settings.miningLogLevel);
+  }
+  set miningLogLevel(miningLogLevel: number) {
+    this.settings.miningLogLevel = Number(miningLogLevel);
   }
 
   restoreDefaultServerPort() {

@@ -4,6 +4,8 @@ import { WalletAccount, NO_WALLET_ACCOUNT } from '../../model/walletAccount';
 import {  WalletLoadStatus } from '../../model/wallet';
 import { ServerConnectionService } from '../../service/server-connection.service';
 import { BlockchainService } from '../../service/blockchain.service';
+import { NotificationService } from '../../service/notification.service';
+
 import { NO_BLOCKCHAIN } from '../../model/blockchain';
 import { MatDialog } from '@angular/material/dialog';
 import { DialogResult } from '../../config/dialog-result';
@@ -37,6 +39,7 @@ export class DashboardComponent implements OnInit {
     private serverConnectionService: ServerConnectionService,
     private blockchainService: BlockchainService,
     private syncStatusService: SyncStatusService,
+    private notificationService: NotificationService,
     public dialog: MatDialog) { }
 
   ngOnInit() {
@@ -66,6 +69,15 @@ export class DashboardComponent implements OnInit {
           if (!wallet.isLoaded) {
 
             this.walletService.loadWallet(blockchainId).then(isLoaded => {
+
+              let key:string = 'wallet.WalletLoaded';
+              if(isLoaded === false){
+                key = 'wallet.WalletLoadFailed';
+              }
+              this.translateService.get(key).subscribe((res: string) => {
+                this.notificationService.showSuccess(res);
+              });
+              
               if (isLoaded === false) {
                 this.askCreateOrCopyWallet();
               }

@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, OnInit, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, OnDestroy, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 import { ConfigService } from '../../service/config.service';
@@ -15,7 +15,7 @@ import { MatPaginator } from '@angular/material';
   styleUrls: ['./server.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ServerComponent implements OnInit {
+export class ServerComponent implements OnInit, OnDestroy {
 
   @ViewChild('Console', null) private consoleContainer: ElementRef;
   @ViewChild('Paginator', null) private paginator: MatPaginator;
@@ -41,7 +41,8 @@ export class ServerComponent implements OnInit {
     private serverMessagesService: ServerMessagesService,
     private cdr: ChangeDetectorRef,
     private serverService: ServerService,
-    private router: Router) {
+    private router: Router,
+    private ref: ChangeDetectorRef) {
 
       // should we set this?
       this.manuallyOpened = true;
@@ -67,20 +68,35 @@ export class ServerComponent implements OnInit {
     this.scrollToBottom();
 
     this.serverConnectionService.isConnectedToServer().subscribe(connected => {
-      this.showServerNotConnected = !connected;
       if (connected !== CONNECTED) {
-        this.serverConnectionService.tryConnectToServer();
+        if (this.configService.isServerPathValid()) {
+          this.serverConnectionService.tryConnectToServer();
+          this.showServerNotConnected = true;
+          this.consoleEnabled = false;
+          setInterval(() => {
+            if (!this.ref['destroyed']) {
+              this.ref.detectChanges();
+            }
+          });
+        }
       }
       else {
+        this.showServerNotConnected = false;
         
-        if (!this.manuallyOpened) {
-          
-        }
-        
+        setInterval(() => {
+          if (!this.ref['destroyed']) {
+            this.ref.detectChanges();
+          }
+        });
       }
     });
 
     this.paginator.lastPage();
+  }
+  ngOnDestroy() {
+    this.ref.detach(); // do this
+
+
   }
 
   toggleConsole(){

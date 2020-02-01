@@ -7,6 +7,7 @@ import { WalletService } from './wallet.service';
 import { BlockchainService } from './blockchain.service';
 import { EventTypes } from '../model/serverConnectionEvent';
 import { NotificationService } from './notification.service';
+import { TranslateService } from '@ngx-translate/core';
 
 @Injectable({
   providedIn: 'root'
@@ -26,7 +27,8 @@ export class TransactionsService {
     private serverConnectionService: ServerConnectionService,
     private walletService: WalletService,
     private blockchainService: BlockchainService,
-    private notificationService: NotificationService) {
+    private notificationService: NotificationService,
+    private translateService: TranslateService) {
 
       this.serverConnectionService.isConnectedToServer().subscribe(connected => {
         if (connected === CONNECTED) {
@@ -48,7 +50,7 @@ export class TransactionsService {
       else {
         this.accountId = undefined;
       }
-      this.refrechTransactions();
+      this.refreshTransactions();
     })
 
     this.serverConnectionService.eventNotifier.subscribe(event => {
@@ -57,7 +59,7 @@ export class TransactionsService {
         || event.eventType === EventTypes.TransactionReceived
         || event.eventType === EventTypes.TransactionRefused
         || event.eventType === EventTypes.TransactionError) {
-        this.refrechTransactions();
+        this.refreshTransactions();
       };
 
       if (event.eventType === EventTypes.TransactionMessage) {
@@ -65,7 +67,12 @@ export class TransactionsService {
       }
 
       if (event.eventType === EventTypes.TransactionError) {
-        this.notificationService.showError(event.message);
+
+        
+        this.translateService.get('send.TransactionError').subscribe((res: string) => {
+          this.notificationService.showError(res + event.message.errorCodes.join(','));
+        });
+    
       }
 
       if (event.eventType === EventTypes.PeerTotalUpdated) {
@@ -113,7 +120,7 @@ export class TransactionsService {
           note = "";
         }
         this.serverConnectionService.callSendNeuraliums(targetAccountId, amount, tip, note).then(() => {
-          this.refrechTransactions();
+          this.refreshTransactions();
           resolve(true);
         }).catch(reason => {
           reject("Transaction not sent : " + reason);
@@ -122,7 +129,7 @@ export class TransactionsService {
     })
   }
 
-  refrechTransactions() {
+  refreshTransactions() {
     if (this.blockchainId !== 0 && this.accountId !== undefined) {
       this.serverConnectionService.callQueryWalletTransactionHistory(this.blockchainId, this.accountId)
         .then(transactions => {

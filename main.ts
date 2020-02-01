@@ -1,8 +1,8 @@
-import { app, BrowserWindow, screen, ipcRenderer, ipcMain } from 'electron';
+import { app, BrowserWindow, screen, shell, ipcRenderer, ipcMain } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
 import { discardPeriodicTasks } from '@angular/core/testing';
-
+var os = require('os');
 
 let win, serve;
 const args = process.argv.slice(1);
@@ -18,12 +18,14 @@ function createWindow() {
     x: 0,
     y: 0,
     //width: size.width,
-   // height: size.height,
-   width: 1500,
+    // height: size.height,
+    width: 1500,
     height: 900,
     center: true,
     webPreferences: {
       nodeIntegration: true,
+      allowRunningInsecureContent: false,
+      experimentalFeatures: false
     },
     icon: path.join(__dirname, '/assets/icons/Icon-512x512.png')
 
@@ -50,12 +52,12 @@ function createWindow() {
   win.once('close', (event) => {
     event.preventDefault();
     event.sender.send("quit");
-    ipcMain.once("ok-quit",()=>{
+    ipcMain.once("ok-quit", () => {
       win.close();
-    })
+    });
   });
 
-  
+
 
   // Emitted when the window is closed.
   win.on('closed', () => {
@@ -68,7 +70,25 @@ function createWindow() {
 }
 
 try {
-  //console.log(app.getPath('appData'));
+
+  if(os.platform() === 'linux'){
+    app.disableHardwareAcceleration();
+    console.log('Disabling GPU acceleration on Linux');
+  }
+
+  app.on('web-contents-created', (event, contents) => {
+    contents.on('will-navigate', (event, navigationUrl) => {
+
+      event.preventDefault();
+
+    });
+
+    contents.on('new-window', async (event, navigationUrl) => {
+
+      event.preventDefault();
+      // do nothing.
+    });
+  });
 
   // This method will be called when Electron has finished
   // initialization and is ready to create browser windows.

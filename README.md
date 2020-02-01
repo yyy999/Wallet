@@ -1,6 +1,6 @@
 # Neuralium Desktop Wallet
 
-##### Version:  Trial run IV
+##### Version:  Release Candidate 1
 
 The "pro" Neuralium crypto token desktop user interface
 

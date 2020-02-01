@@ -3,6 +3,7 @@ import { NO_WALLET, Wallet, WalletCreation, EncryptionKey } from '../model/walle
 import { BehaviorSubject, Observable } from 'rxjs';
 import { NEURALIUM_BLOCKCHAIN, SECURITY_BLOCKCHAIN, CONTRACT_BLOCKCHAIN, BlockChain } from '../model/blockchain';
 import { SyncStatusService } from './sync-status.service';
+import { NotificationService } from './notification.service';
 import { SyncProcess, ProcessType } from '../model/syncProcess';
 import { ServerConnectionService } from './server-connection.service';
 import { WalletAccount, NO_WALLET_ACCOUNT } from '../model/walletAccount';
@@ -17,7 +18,7 @@ export class WalletService {
   currentBlockchainId: number = 0;
   currentAccount: BehaviorSubject<WalletAccount> = new BehaviorSubject<WalletAccount>(NO_WALLET_ACCOUNT);
 
-  constructor(private syncStatusService: SyncStatusService, private serverConnectionService: ServerConnectionService) {
+  constructor(private syncStatusService: SyncStatusService, private serverConnectionService: ServerConnectionService, private notificationService: NotificationService) {
     this.wallets[NEURALIUM_BLOCKCHAIN.id] = NO_WALLET;
     this.wallets[SECURITY_BLOCKCHAIN.id] = NO_WALLET;
     this.wallets[CONTRACT_BLOCKCHAIN.id] = NO_WALLET;
@@ -133,6 +134,7 @@ export class WalletService {
   }
 
   setWallet(blockchainId: number, wallet: Wallet) {
+
     var syncProcess = SyncProcess.createNew(new Date().getMilliseconds() * Math.random(), "Set wallet to blockchain cache", ProcessType.SyncingWallet);
     this.syncStatusService.startSync(syncProcess);
     this.currentBlockchainId = blockchainId;

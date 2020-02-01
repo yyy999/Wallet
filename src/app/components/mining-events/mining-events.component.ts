@@ -13,30 +13,25 @@ export class MiningEventsComponent implements OnInit {
   miningEventsList: Array<MiningEvent> = [];
   pageSize: number = 10;
   pageEvent: PageEvent;
-
-  constructor(private miningService: MiningService) { }
+  totalMessageCount:number = 0;
+  pageSizeOptions: number[] = [10, 20, 30];
+  sliceStart:number = 0;
+  sliceEnd:number = this.pageSize;
+  constructor(private miningService: MiningService) { 
+    this.pageSize = 10;
+    this.sliceEnd = this.pageSize;
+  }
 
   ngOnInit() {
 
-     this.miningService.getMiningEvents().subscribe(events => {
-       this.miningEventsList = events;
-     });
+    this.miningEventsList = this.miningService.getMiningEvents();
+
   }
 
-  get count(): number {
-    return this.miningEventsList.length;
+  setPage(event){
+
+    this.sliceStart = event.pageIndex * event.pageSize;
+    this.sliceEnd = this.sliceStart + event.pageSize;
   }
 
-  get items(): Array<MiningEvent> {
-    if (this.pageEvent) {
-      var startIndex = this.pageEvent.pageSize * this.pageEvent.pageIndex;
-      var endIndex = startIndex + this.pageEvent.pageSize;
-      return this.miningEventsList.sort((a,b)=> { return b.timestamp.getTime() - a.timestamp.getTime()}).slice(startIndex, endIndex);
-    }
-    else {
-      var startIndex = 0;
-      var endIndex = this.pageSize;
-      return this.miningEventsList.sort((a,b)=> { return b.timestamp.getTime() - a.timestamp.getTime()}).slice(startIndex, endIndex);
-    }
-  }
 }

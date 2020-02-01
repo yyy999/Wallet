@@ -17,3 +17,17 @@ export class PassphraseParameters{
     accountID: string;
     keyname: string;
   }
+
+  export class RequestCopyWalletParameters {
+    correlationId: number;
+    chainType: number;
+
+  }
+
+  export class RequestCopyKeyFileParameters extends RequestCopyWalletParameters{
+
+    keyCorrelationCode: number;
+    attempt: number;
+    accountID: string;
+    keyname: string;
+  }

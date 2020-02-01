@@ -15,7 +15,7 @@
           {{ 'server.StopServer' | translate }}</button>
       </div>
       <div>
-        <button mat-button color="primary" (click)="toggleConsole()"><i class="fas fa-check"></i>
+        <button mat-button color="primary" (click)="toggleConsole()" [disabled]="showServerNotConnected"><i class="fas fa-check"></i>
           {{ consoleEnabled ? ('server.DisableConsole' | translate) : ('server.EnableConsole' | translate) }}</button>
       </div>
     </div>

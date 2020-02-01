@@ -73,6 +73,7 @@ import { ServerConnectionDialogComponent } from './dialogs/server-connection-dia
 import { TransactionDetailsDialogComponent } from './dialogs/transaction-details-dialog/transaction-details-dialog.component';
 import { TestModeAlterDialogComponent } from './dialogs/test-mode-alter-dialog/test-mode-alter-dialog.component';
 import { AskKeyDialogComponent } from './dialogs/ask-key-dialog/ask-key-dialog.component';
+import { AskCopyWalletKeyFileDialogComponent } from './dialogs/ask-copy-key-dialog/ask-copy-key-dialog.component';
 import { FormatTimelineDatePipe } from './pipes/format-timeline-date.pipe';
 import { FormatTimelineTimePipe } from './pipes/format-timeline-time.pipe';
 import { FormatAccountNumberPipe } from './pipes/format-account-number.pipe';
@@ -134,6 +135,7 @@ export function createTranslateLoader(http: HttpClient) {
     NeuraliumsHistoryComponent,
     BlockExplorerComponent,
     AskKeyDialogComponent,
+    AskCopyWalletKeyFileDialogComponent,
     TestPageComponent,
     FormatTimelineDatePipe,
     FormatTimelineTimePipe,
@@ -175,7 +177,8 @@ export function createTranslateLoader(http: HttpClient) {
     ServerConnectionDialogComponent,
     TransactionDetailsDialogComponent,
     TestModeAlterDialogComponent,
-    AskKeyDialogComponent
+    AskKeyDialogComponent,
+    AskCopyWalletKeyFileDialogComponent
   ],
   providers: [],
   bootstrap: [AppComponent]

@@ -63,6 +63,7 @@
 		"PleaseEnterYourPassphrase": "Please enter your password",
 		"PleaseEnterYourPassphraseAgain": "Please enter your password again",
 		"PleaseEnterYourPassphraseLastAttempt": "Please enter your password last attempt",
+		"PleaseCopyYourKeyFile" : "Please copy your keyfile into your wallet.",
 		"Quit": "Quit",
 		"Refresh": "Refresh",
 		"Save": "Save",
@@ -73,7 +74,8 @@
 		"TermsOfServiceClick": "By clicking Yes and/or by using this software you agree to the terms of service",
 		"TestMode": "TestNet Tools",
 		"Version": "System version",
-		"Yes": "Yes"
+		"Yes": "Yes",
+		"ServerRunningStop" : "The Neuralium node server is currently still running. Do you wish to stop it?"
 	},
 	"blockchain": {
 		"BlockId": "Block id",
@@ -116,6 +118,7 @@
 		"MiningElected": "Mining Candidate",
 		"MiningEnded": "Mining Ended",
 		"MiningPrimeElected": "Mining Elected",
+		"MiningPrimeElectedMissed": "We were not elected in election from block: ",
 		"MiningStarted": "Mining Started",
 		"MiningStatusChanged": "Mining Status Changed"
 	},
@@ -185,7 +188,8 @@
 		"SendingValueConfirmation": "{{neuraliums}} neuraliums to account {{id}}",
 		"SendingValueConfirmationWithName": "{{neuraliums}} neuraliums to {{name}} (account {{id}})",
 		"Title": "Send",
-		"WrongFees": "Tip value is not valid"
+		"WrongFees": "Tip value is not valid",
+		"TransactionError" : "Error occured sending transaction. Error codes: " 
 	},
 	"server": {
 		"CheckingServer": "Please wait while we verify if an active server exists...",
@@ -262,6 +266,8 @@
 		"WalletCreated": "Wallet Created",
 		"WalletCreation": "Wallet creation",
 		"WalletDoesNotExist": "Wallet does not exist",
-		"WalletWaitMessage" : "We are now creating your account and security keys. This may take multiple minutes. Thank you for your patience."
+		"WalletWaitMessage" : "We are now creating your account and security keys. This may take multiple minutes. Thank you for your patience.",
+		"WalletLoaded" : "Wallet has been successfully loaded.",
+		"WalletLoadFailed" : "Failed to load wallet."
 	}
 }

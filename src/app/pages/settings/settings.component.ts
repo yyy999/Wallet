@@ -16,6 +16,7 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   selectedLanguage:string;
   serverPath:string;
   serverPort:number;
+  miningLogLevel:number;
 
   public primary:boolean;
   constructor(
@@ -47,12 +48,14 @@ export class SettingsComponent implements OnInit, AfterViewInit {
     this.selectedLanguage = this.configService.language;
     this.serverPath = this.configService.serverPath;
     this.serverPort = this.configService.serverPort;
+    this.miningLogLevel = this.configService.miningLogLevel;
   }
 
   saveSettings(){
     this.configService.language = this.selectedLanguage;
     this.configService.serverPath = this.serverPath;
     this.configService.serverPort = this.serverPort;
+    this.configService.miningLogLevel = this.miningLogLevel;
     this.configService.saveSettings();
     this.translateService.setDefaultLang(this.selectedLanguage);
     this.translateService.use(this.selectedLanguage);
@@ -70,6 +73,9 @@ export class SettingsComponent implements OnInit, AfterViewInit {
         break;
         case "serverPort":
         this.serverPort = this.configService.defaultSettings.serverPort;
+        break;
+        case "miningLogLevel":
+        this.miningLogLevel = this.configService.defaultSettings.miningLogLevel;
         break;
       default:
         break;
