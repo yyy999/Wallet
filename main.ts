@@ -2,6 +2,7 @@ import { app, BrowserWindow, screen, shell, ipcRenderer, ipcMain } from 'electro
 import * as path from 'path';
 import * as url from 'url';
 import { discardPeriodicTasks } from '@angular/core/testing';
+
 var os = require('os');
 
 let win, serve;
@@ -51,8 +52,8 @@ function createWindow() {
 
   win.once('close', (event) => {
     event.preventDefault();
-    event.sender.send("quit");
-    ipcMain.once("ok-quit", () => {
+    event.sender.send('quit');
+    ipcMain.once('ok-quit', () => {
       win.close();
     });
   });
@@ -70,11 +71,6 @@ function createWindow() {
 }
 
 try {
-
-  if(os.platform() === 'linux'){
-    app.disableHardwareAcceleration();
-    console.log('Disabling GPU acceleration on Linux');
-  }
 
   app.on('web-contents-created', (event, contents) => {
     contents.on('will-navigate', (event, navigationUrl) => {

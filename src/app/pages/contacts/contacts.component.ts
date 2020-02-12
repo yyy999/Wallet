@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ContactsService } from '../..//service/contacts.service';
 import { Contact } from '../..//model/contact';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '../..//dialogs/confirm-dialog/confirm-dialog.component';
 import { DialogResult } from '../..//config/dialog-result';
 import { EditContactDialogComponent } from '../..//dialogs/edit-contact-dialog/edit-contact-dialog.component';

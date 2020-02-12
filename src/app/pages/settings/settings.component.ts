@@ -11,18 +11,18 @@ import { Router, ActivatedRoute } from '@angular/router';
   styleUrls: ['./settings.component.css']
 })
 export class SettingsComponent implements OnInit, AfterViewInit {
-  icon = "fas fa-cog";
-  languages : any;
-  selectedLanguage:string;
-  serverPath:string;
-  serverPort:number;
-  miningLogLevel:number;
+  icon = 'fas fa-cog';
+  languages: any;
+  selectedLanguage: string;
+  serverPath: string;
+  serverPort: number;
+  miningLogLevel: number;
 
-  public primary:boolean;
+  public primary: boolean;
   constructor(
-    private notificationService:NotificationService,
-    private configService:ConfigService,
-    private translateService:TranslateService,
+    private notificationService: NotificationService,
+    private configService: ConfigService,
+    private translateService: TranslateService,
     private route: ActivatedRoute) { }
 
   ngOnInit() {
@@ -30,28 +30,28 @@ export class SettingsComponent implements OnInit, AfterViewInit {
     this.loadSettings();
   }
 
-  ngAfterViewInit(){
+  ngAfterViewInit() {
 
     this.route.url.subscribe(url => {
-      if(!this.serverPath && url[0].path === 'settings'){
+      if (!this.serverPath && url[0].path === 'settings') {
         this.ensureServerPath();
       }
 
     });
   }
 
-  searchServerPath(){
+  searchServerPath() {
     this.ensureServerPath();
   }
 
-  loadSettings(){
+  loadSettings() {
     this.selectedLanguage = this.configService.language;
     this.serverPath = this.configService.serverPath;
     this.serverPort = this.configService.serverPort;
     this.miningLogLevel = this.configService.miningLogLevel;
   }
 
-  saveSettings(){
+  saveSettings() {
     this.configService.language = this.selectedLanguage;
     this.configService.serverPath = this.serverPath;
     this.configService.serverPort = this.serverPort;
@@ -59,22 +59,22 @@ export class SettingsComponent implements OnInit, AfterViewInit {
     this.configService.saveSettings();
     this.translateService.setDefaultLang(this.selectedLanguage);
     this.translateService.use(this.selectedLanguage);
-    this.notificationService.showSuccess(this.translateService.instant("settings.SettingsSaved"));
+    this.notificationService.showSuccess(this.translateService.instant('settings.SettingsSaved'));
   }
 
-  refreshSetting(setting:string){
+  refreshSetting(setting: string) {
     switch (setting) {
-      case "language":
+      case 'language':
       this.selectedLanguage = this.configService.defaultSettings.language;
         break;
-        case "serverPath":
+        case 'serverPath':
 
         this.ensureServerPath();
         break;
-        case "serverPort":
+        case 'serverPort':
         this.serverPort = this.configService.defaultSettings.serverPort;
         break;
-        case "miningLogLevel":
+        case 'miningLogLevel':
         this.miningLogLevel = this.configService.defaultSettings.miningLogLevel;
         break;
       default:
@@ -82,17 +82,17 @@ export class SettingsComponent implements OnInit, AfterViewInit {
     }
   }
 
-  ensureServerPath(){
+  ensureServerPath() {
 
     this.serverPath = this.configService.defaultSettings.serverPath;
-    let fileName = this.configService.settings.serverFileName;
-  
-    if(!this.serverPath){
+    const fileName = this.configService.settings.serverFileName;
+
+    if (!this.serverPath) {
       this.configService.restoreDefaultServerPath();
     }
-    this.serverPath = this.configService.validateServerPath(this.serverPath,fileName);
+    this.serverPath = this.configService.validateServerPath(this.serverPath, fileName);
 
-        if(! this.serverPath){
+        if (! this.serverPath) {
           this.configService.openSearchServerPathDialog().then(path => {
 
             this.serverPath = path[0];

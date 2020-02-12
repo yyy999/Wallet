@@ -1,6 +1,6 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { WalletAccount } from '../..//model/walletAccount';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { WalletService } from '../..//service/wallet.service';
 import { BlockchainService } from '../..//service/blockchain.service';
 import { PublishAccountDialogComponent } from '../..//dialogs/publish-account-dialog/publish-account-dialog.component';

@@ -3,7 +3,7 @@ import { SyncStatusService } from '../..//service/sync-status.service';
 import { SyncProcess, ProcessType, SyncStatus } from '../..//model/syncProcess';
 import { SyncUpdate, NO_SYNC_UPDATE } from '../..//model/sync-update';
 import { ServerConnectionService } from '../..//service/server-connection.service';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { ServerConnectionDialogComponent } from '../..//dialogs/server-connection-dialog/server-connection-dialog.component';
 import { CONNECTED } from '../..//model/serverConnectionEvent';
 import { ConfigService } from '../..//service/config.service';
@@ -17,8 +17,8 @@ import { BlockchainSyncDisplayComponent } from '../../components/blockchain-sync
 })
 export class SyncStatusComponent implements OnInit {
 
-  @ViewChild('walletSync', null) private walletSync: WalletSyncDisplayComponent;
-  @ViewChild('blockchainSync', null) private blockchainSync: BlockchainSyncDisplayComponent;
+  @ViewChild('walletSync', { static: false }) private walletSync: WalletSyncDisplayComponent;
+  @ViewChild('blockchainSync', { static: false }) private blockchainSync: BlockchainSyncDisplayComponent;
 
   peersImage: string;
   peersCount: number = 0;

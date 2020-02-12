@@ -1,6 +1,6 @@
 import { Component, OnInit, Optional, Inject } from '@angular/core';
 import { NeuraliumTransaction, NO_NEURALIUM_TRANSACTION } from '../..//model/transaction';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-transaction-details-dialog',

@@ -34,22 +34,29 @@
     
   </span>
   <span class="rowset" *ngIf="!isAccountPublicationRunning && isAccountPublicationEnded">
-    <p>
-      {{ 'accountPublication.AccountPublicationEnded' | translate }}
-    </p>
-    <div class="solutionset">
-      <span class="solutionitem">{{'accountPublication.SolutionNonce' | translate}}: {{finalNonce}}</span>
-      <span class="solutionitem">{{'accountPublication.SolutionsHashes' | translate}}:</span>
-      <ul>
-        <li *ngFor="let solution of solutions">{{ solution.toString(16) }}</li>        
-      </ul>
-    </div>
-    <p>
-      {{ 'accountPublication.WaitingForConfirmation' | translate }}
-    </p>
-    <p>
-        {{ 'accountPublication.CanCloseWindow' | translate }} 
+    <span class="rowset" *ngIf="errorOccured">
+      <p>
+        {{ 'accountPublication.AccountPublicationFailed' | translate }}
       </p>
+    </span>
+    <span class="rowset" *ngIf="!errorOccured">
+      <p>
+        {{ 'accountPublication.AccountPublicationEnded' | translate }}
+      </p>
+      <div class="solutionset">
+        <span class="solutionitem">{{'accountPublication.SolutionNonce' | translate}}: {{finalNonce}}</span>
+        <span class="solutionitem">{{'accountPublication.SolutionsHashes' | translate}}:</span>
+        <ul>
+          <li *ngFor="let solution of solutions">{{ solution.toString(16) }}</li>        
+        </ul>
+      </div>
+      <p>
+        {{ 'accountPublication.WaitingForConfirmation' | translate }}
+      </p>
+      <p>
+          {{ 'accountPublication.CanCloseWindow' | translate }} 
+        </p>
+    </span>
   </span>
   <button *ngIf="!isAccountPublicationRunning && !isAccountPublicationEnded && canPublish && isBlockchainSynced" mat-button color="primary" (click)="startPublishAccount()"><i class="fas fa-check"></i>
     {{ 'accountPublication.StartAccountPublication' | translate }}</button>

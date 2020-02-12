@@ -39,7 +39,7 @@
             ]
           },
           "configurations": {
-            "dev": {
+            "devnet": {
               "optimization": false,
               "outputHashing": "all",
               "sourceMap": true,
@@ -52,11 +52,28 @@
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.dev.ts"
+                  "with": "src/environments/environment.DEVNET.ts"
                 }
               ]
             },
-            "production": {
+            "testnet": {
+              "optimization": false,
+              "outputHashing": "all",
+              "sourceMap": true,
+              "extractCss": true,
+              "namedChunks": false,
+              "aot": false,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "buildOptimizer": false,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.TESTNET.ts"
+                }
+              ]
+            },
+            "mainnet": {
               "optimization": true,
               "outputHashing": "all",
               "sourceMap": false,
@@ -69,7 +86,7 @@
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.prod.ts"
+                  "with": "src/environments/environment.MAINNET.ts"
                 }
               ]
             }
@@ -81,11 +98,14 @@
             "browserTarget": "angular-electron:build"
           },
           "configurations": {
-            "dev": {
-              "browserTarget": "angular-electron:build:dev"
+            "devnet": {
+              "browserTarget": "angular-electron:build:devnet"
             },
-            "production": {
-              "browserTarget": "angular-electron:build:production"
+            "testnet": {
+              "browserTarget": "angular-electron:build:testnet"
+            },
+            "mainnet": {
+              "browserTarget": "angular-electron:build:mainnet"
             }
           }
         },

@@ -34,7 +34,7 @@ export class DebugComponent implements OnInit {
   }
 
   get showMe(): boolean {
-    return AppConfig.testNet && this.showAccountCommands;
+    return !AppConfig.production && this.showAccountCommands;
   }
 
   ngOnInit() {

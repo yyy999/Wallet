@@ -1,5 +1,5 @@
 import { Component, OnInit, Optional, Inject } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { PassphraseParameters, KeyPassphraseParameters, PassphraseRequestType } from '../..//model/passphraseRequiredParameters';
 import { TranslateService } from '@ngx-translate/core';
 

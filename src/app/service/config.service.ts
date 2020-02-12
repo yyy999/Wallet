@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { remote } from 'electron';
 import { TranslateService } from '@ngx-translate/core';
 import * as FS from 'fs-extra';
+import { AppConfig } from '../../environments/environment';
 
 const Store = require('electron-store');
 const app = remote.app;
@@ -29,8 +30,8 @@ export class ConfigService {
   defaultServerPathValid: boolean = false;
   defaultSettingsValue:Settings;
 
-  get defaultSettings():Settings{
-    if(!this.defaultSettingsValue){
+  get defaultSettings():Settings {
+    if(!this.defaultSettingsValue) {
       this.defaultSettingsValue = this.defineDefaultSettings();
     }
     return this.defaultSettingsValue;
@@ -84,10 +85,9 @@ export class ConfigService {
     
 
     const os = require('os');
-    if (this.store.has('settings')) {
-      this.settings = this.store.get('settings');
-    }
-    else {
+    if (this.store.has(this.SettingsSetName)) {
+      this.settings = this.store.get(this.SettingsSetName);
+    } else {
       this.settings = new Settings();
     }
 
@@ -105,8 +105,7 @@ export class ConfigService {
     if (!this.validateServerPath(this.settings['serverPath'],this.settings.serverFileName)) {
       if (this.defaultServerPathValid) {
         this.settings['serverPath'] = this.defaultSettings.serverPath;
-      }
-      else {
+      } else {
         this.settings['serverPath'] = '';
       }
       alert('The neuralium server path is invalid. Please ensure it is correctly set in the settings panel.');
@@ -127,12 +126,18 @@ export class ConfigService {
     
     if (this.validateServerPath(settings.serverPath,settings.serverFileName)) {
       this.defaultServerPathValid = true;
-    }
-    else {
+    } else {
       this.defaultServerPathValid = false;
     }
     
-    settings.serverPort = 12032;
+    if(AppConfig.production === true) {
+      settings.serverPort = 12033;
+    } else if(AppConfig.testnet === true) {
+      settings.serverPort = 12032;
+    } else if(AppConfig.devnet === true) {
+      settings.serverPort = 12031;
+    }
+    
     settings.miningLogLevel = 1;
     settings.softwareLicenseAgreementShown = false;
 
@@ -165,16 +170,12 @@ export class ConfigService {
       '.\\neuralium',
       '..\\..\\..\\..\\neuralium\\win32'
       );
-    }
-    // LINUX
-    else if (osPlatform.toLowerCase().startsWith('linux')) {
+    } else if (osPlatform.toLowerCase().startsWith('linux')) {
      paths.push(
       '../../neuralium',
       '../neuralium',
       '../../../../neuralium\\linux');
-    }
-    // MAC
-    else {
+    } else {
      paths.push(
       '../../neuralium',
       '../neuralium',
@@ -212,8 +213,7 @@ export class ConfigService {
     const result = FS.existsSync(nodeDirectoryPath);
     if (result) {
       message = `${nodeDirectoryPath} exists`;
-    }
-    else {
+    } else {
       message = `${nodeDirectoryPath} does not exist`;
     }
     console.log(message);
@@ -251,8 +251,7 @@ export class ConfigService {
   getFileName(osPlatform: string): string {
     if (osPlatform.toLowerCase().startsWith('win')) {
       return 'Neuralium.exe';
-    }
-    else {
+    } else {
       return 'Neuralium';
     }
   }
@@ -272,15 +271,13 @@ export class ConfigService {
        
         if (folderPath === undefined) {
           reject(folderPath);
-        }
-        else {
+        } else {
 
           const correctedFolderPath: string = this.validateServerPath(folderPath[0], this.settings.serverFileName);
 
           if (!correctedFolderPath) {
             reject(folderPath);
-          }
-          else {
+          } else {
             resolve(folderPath);
           }
 
@@ -293,8 +290,11 @@ export class ConfigService {
 
   }
 
+  private get SettingsSetName():string {
+    return 'settings' + AppConfig.postfix;
+  }
   saveSettings() {
-    this.store.set('settings', this.settings);
+    this.store.set(this.SettingsSetName, this.settings);
   }
 
   set language(language: string) {

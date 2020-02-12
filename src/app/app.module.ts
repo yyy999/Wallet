@@ -2,7 +2,6 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { FlexLayoutModule } from '@angular/flex-layout';
 import { ScrollingModule} from '@angular/cdk/scrolling';
 import { NgxElectronModule } from 'ngx-electron';
 import { NgxJsonViewerModule } from 'ngx-json-viewer';
@@ -153,7 +152,6 @@ export function createTranslateLoader(http: HttpClient) {
     NgbModule,
     FormsModule,
     ReactiveFormsModule,
-    FlexLayoutModule,
     HttpClientModule,
     TranslateModule.forRoot({
       loader: {

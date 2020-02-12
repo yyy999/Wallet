@@ -7,7 +7,7 @@ import { ServerConnectionService, ServerMessage, MESSAGE_BUFFER_SIZE } from '../
 import { ServerMessagesService } from '../..//service/server.messages.service';
 import { CONNECTED, EventTypes } from '../..//model/serverConnectionEvent';
 import { ServerService } from '../..//service/server.service';
-import { MatPaginator } from '@angular/material';
+import { MatPaginator } from '@angular/material/paginator';
 
 @Component({
   selector: 'app-server',
@@ -17,8 +17,8 @@ import { MatPaginator } from '@angular/material';
 })
 export class ServerComponent implements OnInit, OnDestroy {
 
-  @ViewChild('Console', null) private consoleContainer: ElementRef;
-  @ViewChild('Paginator', null) private paginator: MatPaginator;
+  @ViewChild('Console', { static: false }) private consoleContainer: ElementRef;
+  @ViewChild('Paginator', { static: false }) private paginator: MatPaginator;
   
   
   icon = "fas fa-server";

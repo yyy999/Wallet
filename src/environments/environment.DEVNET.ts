@@ -5,6 +5,8 @@
 
 export const AppConfig = {
   production: false,
-  environment: 'DEV',
-  testNet:true
+  environment: 'DEVNET',
+  postfix: '-DEVNET',
+  testnet:false,
+  devnet:true
 };

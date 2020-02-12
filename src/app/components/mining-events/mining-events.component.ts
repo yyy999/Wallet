@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { MiningService, MiningEvent } from '../..//service/mining.service';
-import { PageEvent } from '@angular/material';
+import { PageEvent } from '@angular/material/paginator';
 
 
 

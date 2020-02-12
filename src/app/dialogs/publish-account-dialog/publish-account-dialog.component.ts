@@ -1,7 +1,7 @@
 import { Component, OnInit, Inject } from '@angular/core';
 import { ServerConnectionService } from '../..//service/server-connection.service';
 import { WalletService } from '../..//service/wallet.service';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { EventTypes } from '../..//model/serverConnectionEvent';
 import { SyncStatusService } from '../..//service/sync-status.service';
 import { TransactionsService } from '../..//service/transactions.service';
@@ -20,6 +20,7 @@ export class PublishAccountDialogComponent implements OnInit {
   accountPublicationStep: number;
   accountPublicationStepName: string = "";
   nonceStep: string = "";
+  errorOccured: boolean = false;
   
   message: string = "";
   canPublish:boolean = false;
@@ -64,6 +65,7 @@ export class PublishAccountDialogComponent implements OnInit {
         case EventTypes.AccountPublicationError:
           this.message = event.message;
           this.showCloseButton = true;
+          this.errorOccured = true;
           break;
         case EventTypes.AccountPublicationMessage:
           this.message = event.message;

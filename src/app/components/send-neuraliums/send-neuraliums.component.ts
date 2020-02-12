@@ -5,7 +5,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { ConfirmDialogComponent } from '../..//dialogs/confirm-dialog/confirm-dialog.component';
 import { DialogResult } from '../..//config/dialog-result';
 import { TotalNeuralium } from '../..//model/total-neuralium';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { TransactionsService } from '../..//service/transactions.service';
 import { NotificationService } from '../..//service/notification.service';
 import { AccountsService } from '../..//service/accounts.service';

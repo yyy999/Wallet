@@ -32,6 +32,7 @@
 		"AccountPublicationEnded": "Account publication is complete.",
 		"AccountPublicationProcessExplanation": "Before any operations can be performed on the blockchain, your account must be presented publicly to others. Your account will be confirmed, and will be ready to operate once it is confirmed in a block.",
 		"AccountPublicationProcessRuningExplanation": "",
+		"AccountPublicationFailed": "An error occured while publishing the account. Publication failed.",
 		"CanCloseWindow": "You can now safely close this window while you wait for the confirmation to arrive.",
 		"CloseAccountPublication": "Close",
 		"NeedBlockchainSynced": "Blockchain needs to be synchronized in order to publish account.",

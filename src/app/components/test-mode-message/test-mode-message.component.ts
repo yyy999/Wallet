@@ -1,5 +1,5 @@
 import { Component, OnInit, isDevMode } from '@angular/core';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { TestModeAlterDialogComponent } from '../..//dialogs/test-mode-alter-dialog/test-mode-alter-dialog.component';
 import { AppConfig } from '../../../environments/environment';
 
@@ -15,8 +15,8 @@ export class TestModeMessageComponent implements OnInit {
   ngOnInit() {
   }
 
-  showMe(){
-    return AppConfig.testNet;
+  get showMe(){
+    return !AppConfig.production;
   }
 
   showDetails(){

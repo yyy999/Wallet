@@ -3,7 +3,7 @@ import { Component, OnInit, OnDestroy, Output, EventEmitter } from '@angular/cor
 import { NO_BLOCKCHAIN, BlockChain } from '../..//model/blockchain';
 import { BlockchainService } from '../..//service/blockchain.service';
 import { ServerConnectionService } from '../..//service/server-connection.service';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { SoftwareLicenseAgreementComponent } from '../..//dialogs/terms-of-service-dialog/software-license-agreement-dialog.component';
 import { DialogResult } from '../..//config/dialog-result';
 import { ConfigService } from '../..//service/config.service';

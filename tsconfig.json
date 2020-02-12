@@ -8,11 +8,15 @@
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "target": "es5",
+    "module": "commonjs",
+    "target": "ESNext",
     "typeRoots": [
       "node_modules/@types"
     ],
     "lib": [
+      "ESNext",
+      "es2020",
+      "es2019",
       "es2018",
       "es2017",
       "es2016",
@@ -20,9 +24,11 @@
       "dom"
     ]
   },
+  "files": [
+    "main.ts"
+  ],
   "include": [
-    "main.ts",
-    "src/**/*"
+    "src/**/*.ts"
   ],
   "exclude": [
     "node_modules"

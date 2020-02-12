@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { BlockchainService } from '../..//service/blockchain.service';
 import { ServerConnectionService } from '../..//service/server-connection.service';
 import { NO_BLOCKCHAIN_INFO, BlockchainInfo } from '../..//model/blockchain-info';

@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { BlockChain, NO_BLOCKCHAIN } from './model/blockchain';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from './dialogs/confirm-dialog/confirm-dialog.component';
 import { Observable } from 'rxjs';
 import { BlockchainService } from './service/blockchain.service';
