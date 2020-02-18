@@ -17,8 +17,8 @@ import { TotalNeuralium, NO_NEURALIUM_TOTAL } from '../..//model/total-neuralium
   styleUrls: ['./tools.component.scss']
 })
 export class ToolsComponent implements OnInit {
-  title = this.translateService.instant("tools.Title");
-  icon = "fas fa-sign-out-alt";
+  title = this.translateService.instant('tools.Title');
+  icon = 'fas fa-medkit';
 
   currentAccount: WalletAccount = NO_WALLET_ACCOUNT;
 
@@ -37,14 +37,13 @@ export class ToolsComponent implements OnInit {
     this.serverConnectionService.isConnectedToServer().subscribe(connected => {
       if (connected !== CONNECTED) {
         this.router.navigate(['/dashboard']);
-      }
-      else {
+      } else {
         try {
           this.blockchainService.selectedBlockchain.subscribe(blockchain => {
             this.initialise();
           });
         } catch (error) {
-          this.notificationService.showError(error, "Error");
+          this.notificationService.showError(error, 'Error');
         }
       }
     });

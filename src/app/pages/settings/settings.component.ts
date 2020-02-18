@@ -11,7 +11,7 @@ import { Router, ActivatedRoute } from '@angular/router';
   styleUrls: ['./settings.component.css']
 })
 export class SettingsComponent implements OnInit, AfterViewInit {
-  icon = 'fas fa-cog';
+  icon = 'fas fa-cogs';
   languages: any;
   selectedLanguage: string;
   serverPath: string;

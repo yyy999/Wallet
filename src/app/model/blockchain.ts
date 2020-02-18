@@ -4,6 +4,7 @@ export class ChainStatus {
  
   walletInfo : WalletInfo;
   minRequiredPeerCount: number;
+  miningTier: number;
 }
 
 export class WalletInfo {

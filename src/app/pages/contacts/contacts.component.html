@@ -4,7 +4,7 @@
     <div class="row">
         
 
-        <button mat-button (click)="addContact()" class="addButton"><i
+        <button mat-stroked-button (click)="addContact()" class="addButton"><i
                 class="fas fa-user-plus"></i>{{ 'contact.AddContact' | translate }}</button>
 
         <mat-form-field class="filterBox">
@@ -16,10 +16,10 @@
             <mat-card>
                 <mat-card-title><i class="fas fa-user"></i> {{contact.friendlyName}}</mat-card-title>
                 <mat-card-actions>
-                    <button mat-button color="primary" (click)="showEditContactDialog(contact)"><i
+                    <button mat-stroked-button color="primary" (click)="showEditContactDialog(contact)"><i
                             class="fas fa-user-edit"></i>
                         {{ 'app.Edit' | translate }}</button>
-                    <button mat-button color="warn" (click)="confirmDeleteContact(contact)"><i
+                    <button mat-stroked-button color="warn" (click)="confirmDeleteContact(contact)"><i
                             class="fas fa-user-minus"></i>
                         {{ 'app.Delete' | translate }}</button>
                 </mat-card-actions>

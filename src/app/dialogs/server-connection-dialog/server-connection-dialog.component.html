@@ -10,7 +10,7 @@
     </span>
     <span *ngIf="canStartServer">
         {{ 'server.NoActiveServer' | translate }}
-      <button mat-button color="primary" (click)="startServer()"><i class="fas fa-check"></i>
+      <button mat-button color="primary" (click)="startServer()"><i class=""></i>
         {{ 'server.StartServer' | translate }}</button>
     </span>
     
@@ -18,10 +18,10 @@
   <div *ngIf="!showServerNotConnected">
     {{ 'server.ServerRunning' | translate }}
     <button mat-button color="primary" (click)="stopServer()"><i
-        class="fas fa-check"></i> {{ 'server.StopServer' | translate }}</button>
+        class=""></i> {{ 'server.StopServer' | translate }}</button>
   </div>
 </div>
 <div mat-dialog-actions class="row">
-  <button mat-button color="primary" (click)="close()"><i class="fas fa-check"></i>
+  <button mat-button color="primary" (click)="close()"><i class=""></i>
     {{ 'app.Close' | translate }}</button>
 </div>

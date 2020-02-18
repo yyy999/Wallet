@@ -142,7 +142,7 @@
 		"Start" : "Start Mining",
 		"Stop" : "Stop Mining",
 		"Explain" : "Here you can put your computer to work by making it perform mathematical puzzles to unlock new Neuraliums.",
-		"Miningportalert" : "Note: In order to mine, your TCP port 33888 must be connectible by other nodes on the p2p; in order to mine, we must share. Please ensure you open your firewall.",
+		"Miningportalert" : "Note: In order to mine, your TCP port should be connectible by other nodes on the p2p. Sharing is the proper etiquette on a p2p. If you wish to mine in the second and first mining tiers, the port MUST be connectible otherwise the node will never successfully mine any block. Please ensure you open your firewall and enable port forwarding.",
 		"PortConnectable" : "Port 33888 is connectable.",
 		"PortNotConnectable" : "Port 33888 is not connectable.",
 		"Options" : "Options",
@@ -158,7 +158,10 @@
 		"MostToLess" : "Most to Less",
 		"LessToMost" : "Less to Most",
 		"LargerToSmaller" : "Larger to Smaller",
-		"SmallerToLarger" : "Smaller to Larger"
+		"SmallerToLarger" : "Smaller to Larger",
+		"FirstTier" : "Mining in the 1st tier",
+		"SecondTier" : "Mining in the 2nd tier",
+		"ThirdTier" : "Mining in the 3rd tier"
 	},
 	"neuralium": {
 		"Credit": "Credit",

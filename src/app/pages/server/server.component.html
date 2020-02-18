@@ -4,24 +4,24 @@
   <div class="server-commands">
     <div mat-dialog-content style="float:left;display: flex;">
       <mat-divider></mat-divider>
-      <div *ngIf="showServerNotConnected">
+      <div *ngIf="showServerNotConnected" style="margin-left: 10px;">
         {{ 'server.NotConnectedToServer' | translate }}
-        <button mat-button color="primary" (click)="startServer()"><i class="fas fa-check"></i>
+        <button mat-stroked-button color="primary" (click)="startServer()"><i class=""></i>
           {{ 'server.StartServer' | translate }}</button>
       </div>
-      <div *ngIf="!showServerNotConnected">
+      <div *ngIf="!showServerNotConnected" style="margin-left: 10px;">
         {{ 'server.ServerRunning' | translate }}
-        <button mat-button color="primary" (click)="stopServer()"><i class="fas fa-check"></i>
+        <button mat-stroked-button color="primary" (click)="stopServer()"><i class=""></i>
           {{ 'server.StopServer' | translate }}</button>
       </div>
-      <div>
-        <button mat-button color="primary" (click)="toggleConsole()" [disabled]="showServerNotConnected"><i class="fas fa-check"></i>
+      <div style="margin-left: 10px;">
+        <button mat-stroked-button color="primary" (click)="toggleConsole()" [disabled]="showServerNotConnected"><i class=""></i>
           {{ consoleEnabled ? ('server.DisableConsole' | translate) : ('server.EnableConsole' | translate) }}</button>
       </div>
     </div>
     <div style="float:right; display: inline;">
       <mat-paginator [length]="serverMessages.length" [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions"
-        [showFirstLastButtons]="true" (page)="setPage($event)" #Paginator>
+        [showFirstLastButtons]="true" (page)="setPage($event)" #messagePaginator>
       </mat-paginator>
     </div>
   </div>

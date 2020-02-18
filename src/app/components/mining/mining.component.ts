@@ -3,6 +3,8 @@ import { MiningService } from '../..//service/mining.service';
 import { ConfigService } from '../..//service/config.service';
 import { ServerConnectionService } from '../..//service/server-connection.service';
 import { CONNECTED, EventTypes } from '../..//model/serverConnectionEvent';
+import { TranslateService } from '@ngx-translate/core';
+import { AppConfig } from './../../../environments/environment';
 
 @Component({
   selector: 'app-mining',
@@ -11,19 +13,23 @@ import { CONNECTED, EventTypes } from '../..//model/serverConnectionEvent';
 })
 export class MiningComponent implements OnInit {
 
-  delegateAccount:string;
-  isMining:boolean;
-  isConnectable:boolean;
-  disableMiningButton:boolean = false;
-  selectedStrategy:string;
-  sortingMethod:string = 'OlderToNewer';
-  tipSortingMethod:string = 'MostToLess';
-  timeSortingMethod:string = 'NewerToOlder';
-  sizeSortingMethod:string = 'LargerToSmaller';
+  delegateAccount: string;
+  isMining: boolean;
+  isConnectable: boolean;
+  disableMiningButton = false;
+  selectedStrategy: string;
+  sortingMethod = 'OlderToNewer';
+  tipSortingMethod = 'MostToLess';
+  timeSortingMethod = 'NewerToOlder';
+  sizeSortingMethod = 'LargerToSmaller';
+  connectibleText = '';
+  miningportalert = '';
+  miningTierText = '';
 
-  constructor(private miningService:MiningService,
-    private configService:ConfigService,
-    private serverConnectionService: ServerConnectionService) { 
+  constructor(private miningService: MiningService,
+    private configService: ConfigService,
+    private translateService: TranslateService,
+    private serverConnectionService: ServerConnectionService) {
 
       this.serverConnectionService.isConnectedToServer().subscribe(connected => {
         if (connected === CONNECTED) {
@@ -33,13 +39,29 @@ export class MiningComponent implements OnInit {
     }
 
   ngOnInit() {
-    this.miningService.isMining.subscribe(mining =>{
+    this.miningService.isMining.subscribe(mining => {
       this.isMining = mining;
       this.disableMiningButton = false;
     });
 
-    this.miningService.isConnectable.subscribe(connectable =>{
-      this.isConnectable = connectable;
+    this.miningService.isConnectable.subscribe(connectable => {
+      this.IsConnectible = connectable;
+    });
+
+    this.miningService.miningTier.subscribe(miningTier => {
+      
+      let tierKey = 'mining.ThirdTier';
+
+      if(miningTier === 2){
+        tierKey = 'mining.SecondTier';
+      }
+      else if (miningTier === 3){
+        tierKey = 'mining.FirstTier';
+      }
+      this.translateService.get(tierKey).subscribe(text => {
+        this.miningTierText = text;
+      });
+
     });
 
     this.delegateAccount = this.configService.delegateAccount;
@@ -47,53 +69,79 @@ export class MiningComponent implements OnInit {
 
   private getMiningPortConnectableFromServer() {
     this.serverConnectionService.callQueryMiningPortConnectable().then(connectable => {
-      this.isConnectable = connectable;
+      this.IsConnectible = connectable;
     });
   }
 
-  toggleMining(){
-    if(this.isMining===true){
+  get IsConnectible(): boolean {
+    return this.isConnectable;
+  }
+  set IsConnectible(value: boolean) {
+      this.isConnectable = value;
+
+      let port = '33888';
+
+      if (AppConfig.testnet) {
+        port = '33887';
+      }
+      if (AppConfig.devnet) {
+        port = '33886';
+      }
+      this.translateService.get((this.isConnectable ? 'mining.PortConnectable' : 'mining.PortNotConnectable')).subscribe(text => {
+        this.connectibleText = text.replace('33888', port);
+      });
+
+      // if (this.isConnectable === false) {
+      //   this.translateService.get('mining.Miningportalert').subscribe(text => {
+      //     this.miningportalert = text.replace('33888', port);
+      //   });
+      // } else {
+      //   this.miningportalert = '';
+      // }
+  }
+
+  toggleMining() {
+    if (this.isMining === true) {
       this.stopMining();
-    }
-    else{
+    } else {
       this.startMining();
     }
   }
 
-  startMining(){
+  startMining() {
     this.disableMiningButton = true;
     this.miningService.startMining();
   }
 
-  stopMining(){
+  stopMining() {
     this.disableMiningButton = false;
     this.miningService.stopMining();
   }
 
-  save(){
+  save() {
     this.configService.delegateAccount = this.delegateAccount;
     this.configService.saveSettings();
   }
 
-  showSortingOrder():boolean{
+  showSortingOrder(): boolean {
 
     return this.selectedStrategy === 'CreationTimeStrategy' || this.selectedStrategy === 'TransactionSizeStrategy';
 
   }
 
-  showTimeSortingOrder():boolean{
+  showTimeSortingOrder(): boolean {
 
     return this.selectedStrategy === 'HighestTipStrategy';
 
   }
 
-  showTipSortingOrder():boolean{
+  showTipSortingOrder(): boolean {
 
     return this.selectedStrategy === 'HighestTipStrategy';
 
   }
 
-  showSizeSortingOrder():boolean{
+  showSizeSortingOrder(): boolean {
 
     return this.selectedStrategy === 'TransactionSizeStrategy';
 

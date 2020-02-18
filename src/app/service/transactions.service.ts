@@ -19,8 +19,8 @@ export class TransactionsService {
   walletId: number;
   accountId: string;
 
-  minRequiredPeerCount: number = 0;
-  canSendTransaction: boolean = false;
+  minRequiredPeerCount = 0;
+  canSendTransaction = false;
   canSendTransactionObservable: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(this.canSendTransaction);
 
   constructor(
@@ -32,7 +32,7 @@ export class TransactionsService {
 
       this.serverConnectionService.isConnectedToServer().subscribe(connected => {
         if (connected === CONNECTED) {
-          
+
           this.updateChainStatus();
         }
       });
@@ -42,16 +42,15 @@ export class TransactionsService {
       this.updateChainStatus();
     });
 
-   
+
     this.walletService.getWallet().subscribe(wallet => {
       if (wallet.accounts && wallet.accounts.length > 0) {
         this.accountId = wallet.accounts.filter(account => account.isActive)[0].accountUuid;
-      }
-      else {
+      } else {
         this.accountId = undefined;
       }
       this.refreshTransactions();
-    })
+    });
 
     this.serverConnectionService.eventNotifier.subscribe(event => {
       if (event.eventType === EventTypes.TransactionSent
@@ -60,7 +59,7 @@ export class TransactionsService {
         || event.eventType === EventTypes.TransactionRefused
         || event.eventType === EventTypes.TransactionError) {
         this.refreshTransactions();
-      };
+      }
 
       if (event.eventType === EventTypes.TransactionMessage) {
         this.notificationService.showInfo(event.message);
@@ -68,23 +67,23 @@ export class TransactionsService {
 
       if (event.eventType === EventTypes.TransactionError) {
 
-        
+
         this.translateService.get('send.TransactionError').subscribe((res: string) => {
           this.notificationService.showError(res + event.message.errorCodes.join(','));
         });
-    
+
       }
 
       if (event.eventType === EventTypes.PeerTotalUpdated) {
         this.updateCanSendTransaction();
       }
-    })
+    });
   }
 
-  updateChainStatus(){
+  updateChainStatus() {
     this.blockchainService.updateChainStatus().then(chainStatus => {
       if (chainStatus) {
-        this.minRequiredPeerCount = chainStatus["minRequiredPeerCount"];
+        this.minRequiredPeerCount = chainStatus['minRequiredPeerCount'];
         this.updateCanSendTransaction();
       }
     });
@@ -112,21 +111,20 @@ export class TransactionsService {
   saveTransaction(targetAccountId: string, amount: number, tip: number, note: string): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       if (!this.canSendTransaction) {
-        reject("Can't send transaction. Not enough peer. Need at least " + this.minRequiredPeerCount + " peer.");
-      }
-      else {
+        reject('Can\'t send transaction. Not enough peer. Need at least ' + this.minRequiredPeerCount + ' peer.');
+      } else {
 
-        if(!note){
-          note = "";
+        if (!note) {
+          note = '';
         }
         this.serverConnectionService.callSendNeuraliums(targetAccountId, amount, tip, note).then(() => {
           this.refreshTransactions();
           resolve(true);
         }).catch(reason => {
-          reject("Transaction not sent : " + reason);
-        })
+          reject('Transaction not sent : ' + reason);
+        });
       }
-    })
+    });
   }
 
   refreshTransactions() {
@@ -135,7 +133,7 @@ export class TransactionsService {
         .then(transactions => {
           this.transactions = transactions;
           this.observableTransactions.next(this.transactions);
-        })
+        });
     }
   }
 }

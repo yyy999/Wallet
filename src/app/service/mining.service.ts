@@ -41,6 +41,7 @@ export class MiningService {
   currentBlockchainId: number = NO_BLOCKCHAIN_ID;
   public miningEvents: Array<MiningEvent> = new Array<MiningEvent>();
 
+  miningTier: BehaviorSubject<number> = new BehaviorSubject<number>(null);
   isConnectable: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(null);
 
 
@@ -57,6 +58,7 @@ export class MiningService {
       if (this.currentBlockchainId !== 0) {
         this.checkServerIsMiningEnabled();
         this.startListeningMiningEvents();
+        this.updateChainStatus();
       }
     });
 
@@ -101,6 +103,14 @@ export class MiningService {
         this.miningEvents.length = 0;
       });
     }
+  }
+
+  updateChainStatus() {
+    this.blockchainService.updateChainStatus().then(chainStatus => {
+      if (chainStatus) {
+        this.miningTier.next(chainStatus.miningTier);
+      }
+    });
   }
 
   startListeningMiningEvents() {

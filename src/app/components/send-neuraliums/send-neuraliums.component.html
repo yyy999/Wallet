@@ -32,7 +32,7 @@
             {{ 'send.CantSend' | translate }}
       </span>
       <div *ngIf="canSendTransaction"  class="button-bar">
-          <button mat-button color="primary" [disabled]="sendDisabled" (click)="sendTransaction()"><i class="fas fa-sign-out-alt"></i>{{ 'send.Send' | translate }}</button>
+          <button mat-raised-button color="accent" style="width: 100%;" [disabled]="sendDisabled" (click)="sendTransaction()"><i class="fas fa-sign-out-alt"></i>{{ 'send.Send' | translate }}</button>
       </div>
   </mat-card-actions>
 </mat-card>

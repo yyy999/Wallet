@@ -4,7 +4,6 @@
   }
   
   .column > * {
-    padding-top: 1em;
     flex-grow:1;
   }
 

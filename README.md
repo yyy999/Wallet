@@ -1,6 +1,6 @@
 # Neuralium Desktop Wallet
 
-##### Version:  Release Candidate II
+##### Version:  Release Candidate III
 
 The "pro" Neuralium crypto token desktop user interface
 

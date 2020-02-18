@@ -18,20 +18,20 @@ import { MatPaginator } from '@angular/material/paginator';
 export class ServerComponent implements OnInit, OnDestroy {
 
   @ViewChild('Console', { static: false }) private consoleContainer: ElementRef;
-  @ViewChild('Paginator', { static: false }) private paginator: MatPaginator;
-  
-  
-  icon = "fas fa-server";
-  serverMessages:Array<ServerMessage> = [];
-  showServerNotConnected: boolean = true;
-  canManuallyStopServer: boolean = false;
-  manuallyOpened: boolean = false;
-  pageSize:number = 100;
-  totalMessageCount:number = 0;
+  @ViewChild('messagePaginator', { static: false }) private paginator: MatPaginator;
+
+
+  icon = 'fas fa-server';
+  serverMessages: Array<ServerMessage> = [];
+  showServerNotConnected = true;
+  canManuallyStopServer = false;
+  manuallyOpened = false;
+  pageSize = 100;
+  totalMessageCount = 0;
   pageSizeOptions: number[] = [100, 300, 500, 1000];
-  sliceStart:number = 0;
-  sliceEnd:number = this.pageSize;
-  consoleEnabled:boolean = false;
+  sliceStart = 0;
+  sliceEnd: number = this.pageSize;
+  consoleEnabled = false;
 
   constructor(
     private notificationService: NotificationService,
@@ -64,7 +64,7 @@ export class ServerComponent implements OnInit, OnDestroy {
       }
     });
 
-    this.updateMessages();
+    
     this.scrollToBottom();
 
     this.serverConnectionService.isConnectedToServer().subscribe(connected => {
@@ -79,10 +79,9 @@ export class ServerComponent implements OnInit, OnDestroy {
             }
           });
         }
-      }
-      else {
+      } else {
         this.showServerNotConnected = false;
-        
+
         setInterval(() => {
           if (!this.ref['destroyed']) {
             this.ref.detectChanges();
@@ -90,8 +89,11 @@ export class ServerComponent implements OnInit, OnDestroy {
         });
       }
     });
+  }
 
+  ngAfterViewInit() {
     this.paginator.lastPage();
+    this.updateMessages();
   }
   ngOnDestroy() {
     this.ref.detach(); // do this
@@ -99,12 +101,12 @@ export class ServerComponent implements OnInit, OnDestroy {
 
   }
 
-  toggleConsole(){
+  toggleConsole() {
     this.serverConnectionService.callEnableConsoleMessages(!this.consoleEnabled).then(result => {
       this.consoleEnabled = result;
     });
   }
-  setPage(event){
+  setPage(event) {
 
     this.sliceStart = event.pageIndex * event.pageSize;
     this.sliceEnd = this.sliceStart + event.pageSize;
@@ -115,15 +117,14 @@ export class ServerComponent implements OnInit, OnDestroy {
   }
 
   updateMessages() {
-    if(this.router.isActive){
+    if (this.router.isActive) {
 
       this.paginator.lastPage();
       setTimeout(() => {
-        try{
+        try {
           this.cdr.detectChanges();
           this.scrollToBottom();
-        }
-        catch{
+        } catch {
             // do nothing
         }
       }, 0);
@@ -137,11 +138,11 @@ export class ServerComponent implements OnInit, OnDestroy {
     } catch (err) { }
   }
 
-  startServer():Promise<boolean> {
+  startServer(): Promise<boolean> {
     return this.serverService.startServer();
   }
 
-  stopServer():Promise<boolean>{
+  stopServer(): Promise<boolean> {
     return this.serverService.stopServer();
   }
 }
