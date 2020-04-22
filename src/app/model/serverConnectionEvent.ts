@@ -90,12 +90,15 @@ export enum EventTypes {
     Alert = 157,
     ConnectableStatusChanged = 158,
     RequireNodeUpdate = 159,
+    ImportantWalletUpdate = 160,
+    TransactionHistoryUpdated = 161,
 
 
 
 AccountTotalUpdated = 1001,
 NeuraliumMiningBountyAllocated = 1002,
 NeuraliumMiningPrimeElected = 1003,
+NeuraliumTimelineUpdated = 1004,
 
 // INTERNAL TO WALLET DESKTOP
 ShutdownStarted = 10001,

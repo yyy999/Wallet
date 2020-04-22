@@ -6,7 +6,7 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "module": "commonjs",
-    "target": "ESNext",
+    "target": "ES6",
     "typeRoots": [
       "node"
     ],

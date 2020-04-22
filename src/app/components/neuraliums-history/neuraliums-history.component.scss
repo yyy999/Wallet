@@ -63,6 +63,19 @@ tr{
   padding-right: 1em;
   justify-content: center;
   background-color: white;
+  white-space: nowrap;
+}
+
+.period-header {
+  font-size: medium;
+  font-variant: small-caps;
+  font-weight: normal;
+  display: flex;
+  padding-left: 1em;
+  padding-right: 1em;
+  justify-content: center;
+  background-color: white;
+  white-space: nowrap;
 }
 
 .period-total {

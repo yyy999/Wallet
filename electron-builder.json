@@ -33,7 +33,7 @@
     "icon": "icon.png",
     "artifactName": "${productName}-macos.${ext}",
     "target": [
-      "dir"
+      "zip"
     ],
     "extraFiles" : [{"from": "packaging/neuralium/mac", "to" : "neuralium", "filter": ["**/*"]}]
   },

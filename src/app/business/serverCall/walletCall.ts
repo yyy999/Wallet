@@ -34,11 +34,11 @@ export class WalletCall extends CommonCall {
           });
       }
 
-      callSetWalletPassphrase(correlationId: number, password: string) {
+      callSetWalletPassphrase(correlationId: number, password: string, setKeysToo: boolean) {
         return new Promise<number>((resolve, reject) => {
 
-            this.logEvent("setWalletPassphrase - call", { 'correlationId': correlationId, 'password': password });
-            this.serviceConnectionService.invoke<number>("SetWalletPassphrase", correlationId, password)
+            this.logEvent("setWalletPassphrase - call", { 'correlationId': correlationId, 'password': password, 'setKeysToo': setKeysToo });
+            this.serviceConnectionService.invoke<number>("SetWalletPassphrase", correlationId, password, setKeysToo)
               .then(
                 response => {
                   this.logEvent("setWalletPassphrase - response", response);
@@ -79,9 +79,10 @@ export class WalletCall extends CommonCall {
                     var accountUuid: string = account.accountUuid;
                     var accountId: string = <string>account.accountId;
                     var status: number = <WalletAccountStatus>account.status;
+                    var correlated: boolean = <boolean>account.correlated;
                     var friendlyName: string = account.friendlyName;
                     var isActive: boolean = <boolean>account.isActive;
-                    var walletAccount = WalletAccount.createNew(accountUuid, accountId, status, 0, 1, friendlyName, false, isActive);
+                    var walletAccount = WalletAccount.createNew(accountUuid, accountId, status, 0, correlated, 1, friendlyName, false, isActive);
                     walletAccounts.push(walletAccount);
                   })
                   resolve(walletAccounts);
@@ -104,13 +105,14 @@ export class WalletCall extends CommonCall {
                   var accountId: string = account["accountId"];
                   var status: number = <WalletAccountStatus>account["status"];
                   var declarationBlockId = <number>account["declarationBlockid"];
+                  var correlated = <boolean>account["correlated"];
                   var accountType = <WalletaccountType>account["accountType"];
                   var friendlyName: string = account["friendlyName"];
                   var isEncrypted: boolean = <boolean>account["keysEncrypted"];
                   var isActive: boolean = <boolean>account["isActive"];
                   var accountHash = account["accountHash"];
                   var trustLevel = account["trustLevel"];
-                  var walletAccount = WalletAccount.createNew(accountUuid, accountId, status, declarationBlockId, accountType, friendlyName, isEncrypted, isActive, accountHash, trustLevel);
+                  var walletAccount = WalletAccount.createNew(accountUuid, accountId, status, declarationBlockId, correlated, accountType, friendlyName, isEncrypted, isActive, accountHash, trustLevel);
                   resolve(walletAccount);
                 })
               .catch(reason => {

@@ -307,7 +307,7 @@ export class AppComponent {
       });
 
       dialog.afterClosed().subscribe(result => {
-        this.serverConnectionService.callEnterWalletPassphrase(parameters.correlationId, parameters.chainType, parameters.keyCorrelationCode, result);
+        this.serverConnectionService.callEnterWalletPassphrase(parameters.correlationId, parameters.chainType, parameters.keyCorrelationCode, result, false);
       })
     });
   }

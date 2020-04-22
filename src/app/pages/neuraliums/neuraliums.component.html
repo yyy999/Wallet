@@ -9,7 +9,16 @@
         <div class="row item">
           <div class="item" style="width: 40%">
             <mat-card *ngIf="currentAccount" style="margin-bottom:1em;">
-              {{ 'account.CurrentAccount' | translate }} : <span class="textHighlight">{{currentAccount.accountId}}</span>
+              <table>
+                <tr>
+                  <td style="padding-right: 10px;">{{ 'account.CurrentAccount' | translate }}</td>
+                  <td><span class="textHighlight">{{currentAccount.accountId}}</span></td>
+                </tr>
+                <tr>
+                  <td>{{ 'blockchain.BlockId' | translate }}</td>
+                  <td><span style="font-weight: bold;">{{blockchainInfo.blockInfo.id}}</span></td>
+                </tr>
+              </table>
             </mat-card>
             <mat-card style="flex-grow:1;">
               <mat-card-title>{{ 'mining.Mining' | translate }}&nbsp;<app-help-icon [message]="'mining.Explain'"></app-help-icon></mat-card-title>

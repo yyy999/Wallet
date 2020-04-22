@@ -51,13 +51,19 @@ export class MiningComponent implements OnInit {
     this.miningService.miningTier.subscribe(miningTier => {
       
       let tierKey = 'mining.ThirdTier';
-
-      if(miningTier === 2){
+      if(miningTier === 1){
+        tierKey = 'mining.FirstTier';
+      }
+      else if(miningTier === 2){
         tierKey = 'mining.SecondTier';
       }
       else if (miningTier === 3){
-        tierKey = 'mining.FirstTier';
+        tierKey = 'mining.ThirdTier';
       }
+      else if (miningTier === 4){
+        tierKey = 'mining.Fourth';
+      }
+      
       this.translateService.get(tierKey).subscribe(text => {
         this.miningTierText = text;
       });

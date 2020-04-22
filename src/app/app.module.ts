@@ -58,6 +58,7 @@ import { HelpIconComponent } from './components/help-icon/help-icon.component';
 import { SendNeuraliumsComponent } from './components/send-neuraliums/send-neuraliums.component';
 import { NeuraliumsHistoryComponent } from './components/neuraliums-history/neuraliums-history.component';
 import { BlockExplorerComponent } from './components/blockexplorer/blockexplorer.component';
+import { ApiExplorerComponent } from './components/apiexplorer/apiexplorer.component';
 
 import { SelectBlockchainDialogComponent } from './dialogs/select-blockchain-dialog/select-blockchain-dialog.component';
 import { AskOrCreateWalletDialogComponent } from './dialogs/ask-or-create-wallet-dialog/ask-or-create-wallet-dialog.component';
@@ -133,6 +134,7 @@ export function createTranslateLoader(http: HttpClient) {
     SendNeuraliumsComponent,
     NeuraliumsHistoryComponent,
     BlockExplorerComponent,
+    ApiExplorerComponent,
     AskKeyDialogComponent,
     AskCopyWalletKeyFileDialogComponent,
     TestPageComponent,

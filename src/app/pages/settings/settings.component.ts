@@ -41,7 +41,7 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   }
 
   searchServerPath() {
-    this.ensureServerPath();
+    this.searchDirectoryPath();
   }
 
   loadSettings() {
@@ -65,16 +65,16 @@ export class SettingsComponent implements OnInit, AfterViewInit {
   refreshSetting(setting: string) {
     switch (setting) {
       case 'language':
-      this.selectedLanguage = this.configService.defaultSettings.language;
+        this.selectedLanguage = this.configService.defaultSettings.language;
         break;
-        case 'serverPath':
+      case 'serverPath':
 
         this.ensureServerPath();
         break;
-        case 'serverPort':
+      case 'serverPort':
         this.serverPort = this.configService.defaultSettings.serverPort;
         break;
-        case 'miningLogLevel':
+      case 'miningLogLevel':
         this.miningLogLevel = this.configService.defaultSettings.miningLogLevel;
         break;
       default:
@@ -84,21 +84,41 @@ export class SettingsComponent implements OnInit, AfterViewInit {
 
   ensureServerPath() {
 
-    this.serverPath = this.configService.defaultSettings.serverPath;
-    const fileName = this.configService.settings.serverFileName;
+    let defaultPath = this.configService.defaultSettings.serverPath;
+
+    if (defaultPath) {
+      this.serverPath = defaultPath;
+    }
 
     if (!this.serverPath) {
       this.configService.restoreDefaultServerPath();
     }
-    this.serverPath = this.configService.validateServerPath(this.serverPath, fileName);
+    if (this.serverPath) {
+      this.serverPath = this.configService.validateServerPath(this.serverPath, this.configService.settings.serverFileName);
+    }
 
-        if (! this.serverPath) {
-          this.configService.openSearchServerPathDialog().then(path => {
+    if (!this.serverPath) {
 
-            this.serverPath = path[0];
-          }).catch((path) => {
-              alert('The selected Neuralium server path is invalid. Please select again.');
-          });
+      this.searchDirectoryPath();
+    }
+  }
+
+  searchDirectoryPath() {
+    this.configService.openSearchServerPathDialog().then(path => {
+
+      this.serverPath = path[0];
+    }).catch((path) => {
+      let valid = false;
+
+      if (this.serverPath) {
+        let result = this.configService.validateServerPath(this.serverPath, this.configService.settings.serverFileName);
+        if (result) {
+          valid = true;
         }
+      }
+      if (!valid) {
+        alert('The selected Neuralium server path is invalid. Please select again.');
+      }
+    });
   }
 }

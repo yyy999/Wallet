@@ -221,6 +221,8 @@ getMessages(): Array<ServerMessage> {
     this.listenToTransactionReceived();
     this.listenToTransactionRefused();
     this.listenToTransactionSent();
+    this.listenToTransactionHistoryUpdated();
+    this.listenToNeuraliumTimelineUpdated();
   }
 
   startListeningMiningEvents() {
@@ -260,9 +262,9 @@ getMessages(): Array<ServerMessage> {
     return service.callCreateNewWallet(chainType, wallet);
   }
 
-  callSetWalletPassphrase(correlationId: number, password: string) {
+  callSetWalletPassphrase(correlationId: number, password: string, setKeysToo : boolean) {
     let service = WalletCall.create(this, this.logService);
-    return service.callSetWalletPassphrase(correlationId, password);
+    return service.callSetWalletPassphrase(correlationId, password, setKeysToo);
   }
 
   callSetKeysPassphrase(correlationId: number, password: string) {
@@ -433,9 +435,9 @@ getMessages(): Array<ServerMessage> {
 
   // PASSPHRASES CALL
 
-  callEnterWalletPassphrase(correlationId: number, chainType: number, keyCorrelationCode: number, passphrase: string): Promise<boolean> {
+  callEnterWalletPassphrase(correlationId: number, chainType: number, keyCorrelationCode: number, passphrase: string, setKeysToo: boolean): Promise<boolean> {
     let service = PassphrasesCall.create(this, this.logService);
-    return service.callEnterWalletPassphrase(correlationId, chainType, keyCorrelationCode, passphrase);
+    return service.callEnterWalletPassphrase(correlationId, chainType, keyCorrelationCode, passphrase, setKeysToo);
   }
 
   callEnterKeyPassphrase(correlationId: number, chainType: number, keyCorrelationCode: number, passphrase: string): Promise<boolean> {
@@ -937,6 +939,27 @@ getMessages(): Array<ServerMessage> {
   }
 
   // TRANSACTION EVENT
+
+  
+  listenToNeuraliumTimelineUpdated(){
+    const cnx = this.connection;
+    const action = 'neuraliumTimelineUpdated';
+    
+    this.registerConnectionEvent(action, () => {
+      this.logEvent(action + ' - event', {  });
+      this.propagateEvent(0, EventTypes.NeuraliumTimelineUpdated, ResponseResult.Success, {});
+    });
+  }
+
+  listenToTransactionHistoryUpdated(){
+    const cnx = this.connection;
+    const action = 'transactionHistoryUpdated';
+    
+    this.registerConnectionEvent(action, (chainType: number) => {
+      this.logEvent(action + ' - event', { 'chainType':chainType });
+      this.propagateEvent(0, EventTypes.TransactionHistoryUpdated, ResponseResult.Success, { 'chainType': chainType});
+    });
+  }
 
   listenToTransactionSent() {
     const cnx = this.connection;

@@ -25,7 +25,8 @@
 		"Standard": "Standard",
 		"Status": "Status",
 		"TrustLevel": "Trust Level",
-		"Type": "Type"
+		"Type": "Type",
+		"AccountCorrelated" : "Account Correlated"
 	},
 	"accountPublication": {
 		"AccountPublication": "Account publication",
@@ -161,7 +162,8 @@
 		"SmallerToLarger" : "Smaller to Larger",
 		"FirstTier" : "Mining in the 1st tier",
 		"SecondTier" : "Mining in the 2nd tier",
-		"ThirdTier" : "Mining in the 3rd tier"
+		"ThirdTier" : "Mining in the 3rd tier",
+		"FourthTier" : "Mining in the 4th tier"
 	},
 	"neuralium": {
 		"Credit": "Credit",
@@ -222,10 +224,14 @@
 	"tools": {
 		"Title": "Tools",
 		"Explain": "Useful tools to help improve your Neuralium experience.",
-		"BlockExplorer" : "Block Explorer"
+		"BlockExplorer" : "Block Explorer",
+		"ApiExplorer" : "API Explorer"
 	},
 	"blockexplorer" : {
 		"Search" : "search"
+	},
+	"apiexplorer" : {
+		"ComingSoon" : "Coming Soon"
 	},
 	"sync": {
 		"BlockchainStatus": "Blockchain Status",
@@ -241,7 +247,7 @@
 		"ParagrahThree": "",
 		"ParagrahTwo": "In TESTNET mode, any neuralium tokens gained are for testing purposes only and may not be used in the production 'MainNet' network. Tokens gained in TESTNET mode may also be lost or reset at any time without prior notice.",
 		"Warning": "The node and the wallet are currently in TestNet Mode on a separate network.",
-		"Period": "TESTNET Trial run V will last from November 14th 19:00 (EST) to November 17th 19:00 (EST)"
+		"Period": "this TESTNET build is valid until April 26th 2020."
 	},
 	"wallet": {
 		"AccountCreation": "Account creation",

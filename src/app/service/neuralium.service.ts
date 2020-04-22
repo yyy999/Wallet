@@ -64,16 +64,31 @@ export class NeuraliumService {
 
   timelineStated:boolean = false;
 
+  updateTimer: NodeJS.Timeout;
+
   manageEvent(event:ServerConnectionEvent){
     if(event.eventType === EventTypes.MiningPrimeElected
       || event.eventType === EventTypes.NeuraliumMiningPrimeElected
       || event.eventType === EventTypes.TransactionConfirmed
       || event.eventType === EventTypes.TransactionReceived
       || event.eventType === EventTypes.TransactionSent
-      || event.eventType === EventTypes.TransactionCreated){
+      || event.eventType === EventTypes.TransactionCreated
+      || event.eventType === EventTypes.NeuraliumTimelineUpdated){
 
         if(this.timelineCurrentIndex === CURRENT_DAY_INDEX){
-          this.getMiningTimelineSection(true);
+
+          // make sure we buffer multiple events in sequence and update only once so we dont update too often.
+          if(this.updateTimer){
+            clearTimeout(this.updateTimer);
+            this.updateTimer = null;
+          }
+          this.updateTimer = setTimeout(() => {
+            clearTimeout(this.updateTimer);
+            this.updateTimer = null;
+
+            this.getMiningTimelineSection(true);
+          }, 1000);
+        
         }
 
       }

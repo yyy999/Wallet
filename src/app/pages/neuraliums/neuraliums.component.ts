@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { BlockchainService } from '../..//service/blockchain.service';
 import { WalletService } from '../..//service/wallet.service';
+import { NO_BLOCKCHAIN_INFO, BlockchainInfo } from '../..//model/blockchain-info';
 import { Router } from '@angular/router';
 import { NotificationService } from '../..//service/notification.service';
 import { ServerConnectionService } from '../..//service/server-connection.service';
@@ -23,6 +24,7 @@ export class NeuraliumsComponent implements OnInit {
   currentAccount: WalletAccount = NO_WALLET_ACCOUNT;
 
   neuraliumTotal: TotalNeuralium = NO_NEURALIUM_TOTAL;
+  blockchainInfo: BlockchainInfo = NO_BLOCKCHAIN_INFO;
 
   constructor(
     private translateService: TranslateService,
@@ -39,6 +41,11 @@ export class NeuraliumsComponent implements OnInit {
         this.router.navigate(['/dashboard']);
       }
       else {
+
+        this.blockchainService.getBlockchainInfo().subscribe(blockchainInfo => {
+          this.blockchainInfo = blockchainInfo;
+        })
+
         try {
           this.blockchainService.selectedBlockchain.subscribe(blockchain => {
             if (blockchain === NEURALIUM_BLOCKCHAIN && blockchain.menuConfig.showSend) {

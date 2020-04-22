@@ -39,6 +39,10 @@
               <td>{{account.declarationBlockId}}</td>
             </tr>
             <tr>
+              <td><strong>{{ 'account.AccountCorrelated' | translate }}</strong></td>
+              <td>{{account.correlated}}</td>
+            </tr>
+            <tr>
               <td><strong>{{ 'account.WalletEncryption' | translate }}</strong></td>
               <td>
                 <span *ngIf="!account.isEncrypted"><span class="text-danger"><i class="fas fa-lock-open"></i>

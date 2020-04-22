@@ -16,12 +16,38 @@ export class PassphrasesCall extends CommonCall {
         return new PassphrasesCall(serviceConnectionService, logService)
     }
 
-    callEnterWalletPassphrase(correlationId: number, chainType: number, keyCorrelationCode: number, passphrase: string): Promise<boolean> {
-        return this.callEnterPassphrase('EnterWalletPassphrase', correlationId, chainType, keyCorrelationCode, passphrase);
+    callEnterWalletPassphrase(correlationId: number, chainType: number, keyCorrelationCode: number, passphrase: string, setKeysToo: boolean): Promise<boolean> {
+        return new Promise<boolean>((resolve, reject) => {
+
+            let action : string = 'EnterWalletPassphrase';
+            this.logEvent(action + ' - call', { correlationId, chainType, keyCorrelationCode, passphrase });
+            this.serviceConnectionService.invoke<boolean>(action, correlationId, chainType, keyCorrelationCode, passphrase, setKeysToo)
+                .then(
+                    response => {
+                        this.logEvent(action + ' - response', response);
+                        resolve(response);
+                    })
+                .catch(reason => {
+                    reject(action + ' error : ' + reason);
+                });
+            });
     }
 
     callEnterKeyPassphrase(correlationId: number, chainType: number, keyCorrelationCode: number, passphrase: string): Promise<boolean> {
-        return this.callEnterPassphrase('EnterKeyPassphrase', correlationId, chainType, keyCorrelationCode, passphrase);
+        return new Promise<boolean>((resolve, reject) => {
+
+            let action : string = 'EnterKeyPassphrase';
+                this.logEvent(action + ' - call', { correlationId, chainType, keyCorrelationCode, passphrase });
+                this.serviceConnectionService.invoke<boolean>(action, correlationId, chainType, keyCorrelationCode, passphrase)
+                    .then(
+                        response => {
+                            this.logEvent(action + ' - response', response);
+                            resolve(response);
+                        })
+                    .catch(reason => {
+                        reject(action + ' error : ' + reason);
+                    });
+            });
     }
 
     callWalletKeyFileCopied(correlationId: number, chainType: number, keyCorrelationCode: number): Promise<boolean> {
@@ -40,22 +66,4 @@ export class PassphrasesCall extends CommonCall {
                 });
         });
     }
-
-
-    private callEnterPassphrase(action : string, correlationId: number, chainType: number, keyCorrelationCode: number, passphrase: string): Promise<boolean> {
-        return new Promise<boolean>((resolve, reject) => {
-
-                this.logEvent(action + ' - call', { correlationId, chainType, keyCorrelationCode, passphrase });
-                this.serviceConnectionService.invoke<boolean>(action, correlationId, chainType, keyCorrelationCode, passphrase)
-                    .then(
-                        response => {
-                            this.logEvent(action + ' - response', response);
-                            resolve(response);
-                        })
-                    .catch(reason => {
-                        reject(action + ' error : ' + reason);
-                    });
-            });
-    }
-
 }

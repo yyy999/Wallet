@@ -3,6 +3,7 @@ export class WalletAccount {
     accountId: string;
     status: WalletAccountStatus;
     declarationBlockId: number;
+    correlated: boolean;
     accountType: WalletaccountType;
     friendlyName: string;
     isEncrypted: boolean;
@@ -15,6 +16,7 @@ export class WalletAccount {
         accountId: string,
         status: WalletAccountStatus,
         declarationBlockId: number,
+        correlated: boolean,
         accountType: WalletaccountType,
         friendlyName: string,
         isEncrypted: boolean,
@@ -26,6 +28,7 @@ export class WalletAccount {
         newAccount.accountId = accountId;
         newAccount.status = status;
         newAccount.declarationBlockId = declarationBlockId;
+        newAccount.correlated = correlated;
         newAccount.accountType = accountType;
         newAccount.friendlyName = friendlyName;
         newAccount.isEncrypted = isEncrypted;
@@ -57,6 +60,7 @@ export const NO_WALLET_ACCOUNT = <WalletAccount>{
     accountId: "",
     status: 1,
     declarationBlockId: 0,
+    correlated: false,
     accountType: 1,
     friendlyName: "",
     isEncrypted: false,

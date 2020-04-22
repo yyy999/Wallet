@@ -5,13 +5,28 @@
         <button mat-button (click)="previousPeriod()" color="primary" [disabled]="!canGoPrevious">{{'neuralium.PreviousPeriod' | translate}}
             <i class="fas fa-arrow-circle-right"></i></button>
     </div>
-    <div style="padding: 1em;">
+    <div style="padding: 1em;background-image: linear-gradient(to right, #fbeded 50%, #f3fcff 50%);">
         <table *ngFor="let period of timeline">
             <tr>
                 <td colspan="3" style="padding-bottom:1em;">
-                    <div class="center-content black-line">
-                        <span class="period-day">{{period.day | formatTimelineDate}}</span>
-                    </div>
+                    <table>
+                        <td style="padding: 0; width: 49%;">
+                            <div class="center-content black-line" >
+                                <span class="period-header">{{'history.Sent' | translate}}</span>
+                            </div>
+                        </td>
+                        <td style="padding: 0; width: 2%;">
+                            <div class="center-content black-line" >
+                                <span class="period-day">{{period.day | formatTimelineDate}}</span>
+                            </div>
+                        </td>
+                        <td style="padding: 0; width: 49%;">
+                            <div class="center-content black-line" >
+                                <span class="period-header">{{'history.Received' | translate}}</span>
+                            </div>
+                        </td>
+                    </table>
+                    
                 </td>
             </tr>
             <tr>

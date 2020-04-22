@@ -136,7 +136,7 @@ export class NeuraliumCall extends CommonCall {
 
                                 // since this is UTC, we take the components to take the UTC date.
                                 const utcDay = moment.utc(element['day']);
-                                const Day: Date = moment().day(utcDay.day()).month(utcDay.month()).year(utcDay.month()).toDate();
+                                const Day: Date = moment().day(utcDay.day()).month(utcDay.month()).year(utcDay.year()).toDate();
 
                                 const Id = <number>Number(element['id']);
                                 const EndingTotal = <number>Number(element['endingTotal']);
