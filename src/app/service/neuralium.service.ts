@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { BlockchainService } from './blockchain.service';
 import { ServerConnectionService } from './server-connection.service';
@@ -8,26 +8,30 @@ import { NO_WALLET_ACCOUNT, WalletAccountStatus } from '../model/walletAccount';
 import { TotalNeuralium, NO_NEURALIUM_TOTAL } from '../model/total-neuralium';
 import { CONNECTED, EventTypes, ServerConnectionEvent } from '../model/serverConnectionEvent';
 import { TimelineDay, TimelineHeader } from '../model/timeline';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+
+
 
 const CURRENT_DAY_INDEX : number = 0;
 
 @Injectable({
   providedIn: 'root'
 })
-export class NeuraliumService {
+export class NeuraliumService implements OnDestroy {
 
   constructor(
     private blockchainService: BlockchainService,
     private serverConnectionService: ServerConnectionService,
     private walletService: WalletService
   ) {
-    this.serverConnectionService.isConnectedToServer().subscribe(connected => {
+    this.serverConnectionService.isConnectedToServer().pipe(takeUntil(this.unsubscribe$)).subscribe(connected => {
       if (connected === CONNECTED) {
-        this.blockchainService.getSelectedBlockchain().subscribe(blockchain => {
+        this.blockchainService.getSelectedBlockchain().pipe(takeUntil(this.unsubscribe$)).subscribe(blockchain => {
           this.displayNeuraliums(blockchain);
         });
 
-        this.walletService.getCurrentAccount().subscribe(account => {
+        this.walletService.getCurrentAccount().pipe(takeUntil(this.unsubscribe$)).subscribe(account => {
           this.accountUUid = account.accountUuid;
           if (account !== NO_WALLET_ACCOUNT && account.isActive) {
             this.startTimeline();
@@ -37,6 +41,12 @@ export class NeuraliumService {
     })
   }
 
+  private unsubscribe$ = new Subject<void>();
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
+  }
 
   get neuraliumTimeline(): Observable<Array<TimelineDay>> {
     return this.timeline;
@@ -90,7 +100,6 @@ export class NeuraliumService {
           }, 1000);
         
         }
-
       }
   }
 
@@ -110,12 +119,12 @@ export class NeuraliumService {
 
   private displayNeuraliums(blockchain: BlockChain) {
     if (blockchain === NEURALIUM_BLOCKCHAIN && blockchain.menuConfig.showDashboard) {
-      this.walletService.getCurrentAccount().subscribe(account => {
+      this.walletService.getCurrentAccount().pipe(takeUntil(this.unsubscribe$)).subscribe(account => {
         if (account && account !== NO_WALLET_ACCOUNT && account.isActive && account.status === WalletAccountStatus.Published) {//&& account.isActive && account.status === WalletAccountStatus.Published
           this.updateNeuraliumsTotal(account.accountUuid);
           this.showNeuraliumTotal.next(true);
 
-          this.serverConnectionService.eventNotifier.subscribe(event => {
+          this.serverConnectionService.eventNotifier.pipe(takeUntil(this.unsubscribe$)).subscribe(event => {
             if (event.eventType === EventTypes.AccountTotalUpdated) {
               this.updateNeuraliumsTotal(account.accountUuid);
             }
@@ -130,7 +139,7 @@ export class NeuraliumService {
   startTimeline() {
     if (this.accountUUid && this.timelineStated === false) {
       this.initialiseTimeline(false);
-      this.serverConnectionService.eventNotifier.subscribe(event =>{
+      this.serverConnectionService.eventNotifier.pipe(takeUntil(this.unsubscribe$)).subscribe(event =>{
           this.manageEvent(event);
       });
       this.timelineStated = true;

@@ -1,7 +1,21 @@
 <h1 mat-dialog-title>{{ 'wallet.CreateWallet' | translate }}</h1>
-<div mat-dialog-content class="column">
-  <mat-divider></mat-divider>
 
+<div *ngIf="error === true">
+
+  <div class="errorMessage">
+    {{ errorMessage }}
+  </div>
+  <hr />
+  <div class="errorException">
+    {{ errorException }}
+  </div>
+  <hr />
+  <button mat-button color="warn" [disabled]="isWalletCreationRunning" (click)="cancel()"><i class="fas fa-ban"></i>
+    {{ 'app.Cancel' | translate }}</button>
+</div>
+
+<div mat-dialog-content class="column" *ngIf="error === false">
+  <mat-divider></mat-divider>
 
   <mat-horizontal-stepper #stepper>
     <mat-step>
@@ -54,172 +68,231 @@
         <button mat-button color="warn" [disabled]="isWalletCreationRunning" (click)="cancel()"><i
             class="fas fa-ban"></i>
           {{ 'app.Cancel' | translate }}</button>
-        <button mat-button matStepperNext color="primary">Next</button>
+        <button mat-button matStepperNext color="primary" (click)="runValidate()">Next</button>
       </div>
     </mat-step>
 
     <mat-step
       *ngIf="walletToCreate.encryptWallet || (walletToCreate.encryptKey && !walletToCreate.encryptKeysIndividualy)">
       <ng-template matStepLabel>Wallet Encryption</ng-template>
-      <mat-card class="column">
+      <form [formGroup]="form1">
 
-        <div *ngIf="walletToCreate.encryptWallet">
-          <mat-form-field appearance="legacy">
-            <mat-label>{{ 'app.Passphrase' | translate }}</mat-label>
-            <input [type]="passWordInputType" matInput #passPhrasesWallet placeholder="Passphrase"
-              [(ngModel)]="walletToCreate.passPhrases['0']" name="passPhrasesWallet">
-            <i matSuffix class="fas fa-lock"></i>
-            <mat-hint>{{ 'wallet.PassphraseForWalletEncryption' | translate }}</mat-hint>
-          </mat-form-field>
-          <mat-form-field appearance="legacy">
-            <mat-label>{{ 'app.ConfirmPassphrase' | translate }}</mat-label>
-            <input [type]="passWordInputType" matInput #passPhrasesWallet placeholder="Confirm Passphrase"
-              [(ngModel)]="passPhrasesConfirm[0]" name="confirmPassPhrasesWallet">
-            <i matSuffix class="fas fa-lock"></i>
-            <mat-hint *ngIf="!passPhraseConfirmed('0')" class="text-danger">
-              {{ 'app.PassphraseAreNotTheSame' | translate }}
-            </mat-hint>
-          </mat-form-field>
-          <mat-password-strength #passPhrasesWalletComponent [password]="passPhrasesWallet.value">
-          </mat-password-strength>
-        </div>
+        <mat-card class="column">
 
-        <div *ngIf="walletToCreate.encryptKey && !walletToCreate.encryptKeysIndividualy">
-          <mat-form-field appearance="legacy">
-            <mat-label>{{ 'wallet.PassphraseForKeys' | translate }}</mat-label>
-            <input [type]="passWordInputType" matInput #passPhrasesAll placeholder="Passphrase for keys"
-              [(ngModel)]="walletToCreate.passPhrases['1']" name="passPhrasesAll">
-            <i matSuffix class="fas fa-lock"></i>
-            <mat-hint>{{ 'wallet.PassphraseForEncryptionOfAllKeys' | translate }}</mat-hint>
-          </mat-form-field>
-          <mat-password-strength #passPhrasesAllComponent [password]="passPhrasesAll.value"></mat-password-strength>
-          <mat-form-field appearance="legacy">
-            <mat-label>{{ 'app.ConfirmPassphrase' | translate }}</mat-label>
-            <input [type]="passWordInputType" matInput #passPhrasesWallet placeholder="Confirm Passphrase"
-              [(ngModel)]="passPhrasesConfirm[1]" name="confirmPassPhrasesWallet">
-            <i matSuffix class="fas fa-lock"></i>
-            <mat-hint *ngIf="!passPhraseConfirmed('1')" class="text-danger">
-              {{ 'app.PassphraseAreNotTheSame' | translate }}
-            </mat-hint>
-          </mat-form-field>
+
+          <div *ngIf="walletToCreate.encryptWallet">
+            <mat-form-field appearance="legacy">
+              <mat-label>{{ 'app.Passphrase' | translate }}</mat-label>
+              <input [type]="passWordInputType" matInput #passPhrasesWalletControl placeholder="Passphrase"
+                formControlName="walletPassphrase" name="passPhrasesWallet" (input)="validatePassphrases()">
+              <i matSuffix class="fas fa-lock"></i>
+              <mat-hint>{{ 'wallet.PassphraseForWalletEncryption' | translate }}</mat-hint>
+              <mat-hint align="end" aria-live="polite">
+                {{passPhrasesWalletControl.value.length}} / {{passPhrasesWalletComponent.max}}
+              </mat-hint>
+              <mat-error *ngIf="walletPassphrase.invalid">{{getWalletPassphraseErrorMessage()}}</mat-error>
+
+            </mat-form-field>
+            <mat-form-field appearance="legacy">
+              <mat-label>{{ 'app.ConfirmPassphrase' | translate }}</mat-label>
+              <input [type]="passWordInputType" matInput #passPhrasesWallet placeholder="Confirm Passphrase"
+                formControlName="walletPassphraseConfirm" name="confirmPassPhrasesWallet"
+                (input)="validatePassphrases()">
+              <i matSuffix class="fas fa-lock"></i>
+              <mat-error *ngIf="walletPassphraseConfirm.invalid">{{getWalletPassphraseConfirmErrorMessage()}}
+              </mat-error>
+            </mat-form-field>
+            <div>
+              <mat-password-strength #passPhrasesWalletComponent [password]="passPhrasesWalletControl.value">
+              </mat-password-strength>
+            </div>
+          </div>
+
+          <div *ngIf="walletToCreate.encryptKey && !walletToCreate.encryptKeysIndividualy">
+            <mat-form-field appearance="legacy">
+              <mat-label>{{ 'wallet.PassphraseForKeys' | translate }}</mat-label>
+              <input [type]="passWordInputType" matInput #passPhrasesAllControl placeholder="Passphrase for keys"
+                formControlName="allKeysPassphrase" name="passPhrasesAll" (input)="validatePassphrases()">
+              <i matSuffix class="fas fa-lock"></i>
+              <mat-hint>{{ 'wallet.PassphraseForEncryptionOfAllKeys' | translate }}</mat-hint>
+              <mat-hint align="end" aria-live="polite">
+                {{passPhrasesAllControl.value.length}} / {{passPhrasesAllComponent.max}}
+              </mat-hint>
+              <mat-error *ngIf="allKeysPassphrase.invalid">{{getAllKeysPassphraseErrorMessage()}}</mat-error>
+            </mat-form-field>
+            <mat-form-field appearance="legacy">
+              <mat-label>{{ 'app.ConfirmPassphrase' | translate }}</mat-label>
+              <input [type]="passWordInputType" matInput #passPhrasesWallet placeholder="Confirm Passphrase"
+                formControlName="allKeysPassphraseConfirm" name="confirmPassPhrasesWallet"
+                (input)="validatePassphrases()">
+              <i matSuffix class="fas fa-lock"></i>
+              <mat-error *ngIf="allKeysPassphraseConfirm.invalid">{{getAllKeysPassphraseConfirmErrorMessage()}}
+              </mat-error>
+            </mat-form-field>
+            <div>
+              <mat-password-strength #passPhrasesAllComponent [password]="passPhrasesAllControl.value">
+              </mat-password-strength>
+            </div>
+          </div>
+
+        </mat-card>
+        <div class="row">
+          <button mat-button matStepperPrevious>Back</button>
+          <button mat-button color="warn" [disabled]="isWalletCreationRunning" (click)="cancel()"><i
+              class="fas fa-ban"></i>
+            {{ 'app.Cancel' | translate }}</button>
+          <button mat-button matStepperNext color="primary" [disabled]="form1.invalid"
+            (click)="runValidate()">Next</button>
         </div>
-      </mat-card>
-      <div class="row">
-        <button mat-button matStepperPrevious>Back</button>
-        <button mat-button color="warn" [disabled]="isWalletCreationRunning" (click)="cancel()"><i
-            class="fas fa-ban"></i>
-          {{ 'app.Cancel' | translate }}</button>
-        <button mat-button matStepperNext color="primary">Next</button>
-      </div>
+      </form>
     </mat-step>
 
     <mat-step *ngIf="walletToCreate.encryptKeysIndividualy">
       <ng-template matStepLabel>Keys Encryption</ng-template>
-      <mat-card class="column" *ngIf="walletToCreate.encryptKey">
+      
+        <mat-card class="column" *ngIf="walletToCreate.encryptKey">
+          <form [formGroup]="form2">
+          <div>
+            <mat-card>
+              <mat-form-field appearance="legacy">
+                <mat-label>{{ 'wallet.TransactionKeyPassphrase' | translate }}</mat-label>
+                <input [type]="passWordInputType" matInput #transactionKeyPassphraseControl
+                  placeholder="Passphrase for keys" formControlName="transactionKeyPassphrase"
+                  name="transactionKeyPassphrase" (input)="validateIndividualKeysPassphrases()">
+                <i matSuffix class="fas fa-lock"></i>
+                <mat-hint>{{ 'wallet.PassphraseForEncryptionOfTransactionKey' | translate }}</mat-hint>
+                <mat-hint align="end" aria-live="polite">
+                  {{transactionKeyPassphraseControl.value.length}} / {{transactionKeyPassphraseStrength.max}}
+                </mat-hint>
+                <mat-error *ngIf="transactionKeyPassphrase.invalid">{{getTransactionKeyPassphraseErrorMessage()}}
+                </mat-error>
+              </mat-form-field>
+              <mat-form-field appearance="legacy">
+                <mat-label>{{ 'app.ConfirmPassphrase' | translate }}</mat-label>
+                <input [type]="passWordInputType" matInput #passPhrasesWallet placeholder="Confirm Passphrase"
+                  formControlName="transactionKeyPassphraseConfirm" name="transactionKeyPassphraseConfirm"
+                  (input)="validateIndividualKeysPassphrases()">
+                <i matSuffix class="fas fa-lock"></i>
+                <mat-error *ngIf="transactionKeyPassphraseConfirm.invalid">
+                  {{getTransactionKeyPassphraseConfirmErrorMessage()}}
+                </mat-error>
+              </mat-form-field>
+              <div>
+                <mat-password-strength #transactionKeyPassphraseStrength
+                  [password]="transactionKeyPassphraseControl.value">
+                </mat-password-strength>
+              </div>
 
-        <div>
-          <mat-card>
-            <mat-form-field appearance="legacy">
-              <mat-label>{{ 'wallet.TransactionKeyPassphrase' | translate }}</mat-label>
-              <input [type]="passWordInputType" matInput #passPhrasesTransactionkey placeholder="Transaction Key"
-                [(ngModel)]="walletToCreate.passPhrases['1']" name="passPhrasesTransactionkey">
-              <i matSuffix class="fas fa-lock"></i>
-              <mat-hint>{{ 'wallet.PassphraseForEncryptionOfTransactionKey' | translate }}</mat-hint>
-            </mat-form-field>
-            <mat-password-strength #passPhrasesTransactionkeyComponent [password]="passPhrasesTransactionkey.value">
-            </mat-password-strength>
-            <mat-form-field appearance="legacy">
-              <mat-label>{{ 'app.ConfirmPassphrase' | translate }}</mat-label>
-              <input [type]="passWordInputType" matInput #passPhrasesWallet placeholder="Confirm Passphrase"
-                [(ngModel)]="passPhrasesConfirm[1]" name="confirmPassPhrasesWallet">
-              <i matSuffix class="fas fa-lock"></i>
-              <mat-hint *ngIf="!passPhraseConfirmed('1')" class="text-danger">
-                {{ 'app.PassphraseAreNotTheSame' | translate }}
-              </mat-hint>
-            </mat-form-field>
-          </mat-card>
+            </mat-card>
+          </div>
+
+          <div>
+            <mat-card>
+              <mat-form-field appearance="legacy">
+                <mat-label>{{ 'wallet.CommunicationKeyPassphrase' | translate }}</mat-label>
+                <input [type]="passWordInputType" matInput #communicationKeyPassphraseControl
+                  placeholder="Passphrase for keys" formControlName="communicationKeyPassphrase"
+                  name="communicationKeyPassphrase" (input)="validateIndividualKeysPassphrases()">
+                <i matSuffix class="fas fa-lock"></i>
+                <mat-hint>{{ 'wallet.PassphraseForEncryptionOfAllKeys' | translate }}</mat-hint>
+                <mat-hint align="end" aria-live="polite">
+                  {{communicationKeyPassphraseControl.value.length}} / {{communicationKeyPassphraseStrength.max}}
+                </mat-hint>
+                <mat-error *ngIf="communicationKeyPassphrase.invalid">{{getCommunicationKeyPassphraseErrorMessage()}}
+                </mat-error>
+              </mat-form-field>
+              <mat-form-field appearance="legacy">
+                <mat-label>{{ 'app.ConfirmPassphrase' | translate }}</mat-label>
+                <input [type]="passWordInputType" matInput #passPhrasesWallet placeholder="Confirm Passphrase"
+                  formControlName="communicationKeyPassphraseConfirm" name="communicationKeyPassphraseConfirm"
+                  (input)="validateIndividualKeysPassphrases()">
+                <i matSuffix class="fas fa-lock"></i>
+                <mat-error *ngIf="communicationKeyPassphraseConfirm.invalid">
+                  {{getCommunicationKeyPassphraseConfirmErrorMessage()}}
+                </mat-error>
+              </mat-form-field>
+              <div>
+                <mat-password-strength #communicationKeyPassphraseStrength
+                  [password]="communicationKeyPassphraseControl.value">
+                </mat-password-strength>
+              </div>
+
+            </mat-card>
+          </div>
+
+          <div>
+            <mat-card>
+              <mat-form-field appearance="legacy">
+                <mat-label>{{ 'wallet.ChangeKeyPassphrase' | translate }}</mat-label>
+                <input [type]="passWordInputType" matInput #changeKeyPassphraseControl placeholder="Passphrase for keys"
+                  formControlName="changeKeyPassphrase" name="changeKeyPassphrase"
+                  (input)="validateIndividualKeysPassphrases()">
+                <i matSuffix class="fas fa-lock"></i>
+                <mat-hint>{{ 'wallet.PassphraseForEncryptionOfAllKeys' | translate }}</mat-hint>
+                <mat-hint align="end" aria-live="polite">
+                  {{changeKeyPassphraseControl.value.length}} / {{changeKeyPassphraseStrength.max}}
+                </mat-hint>
+                <mat-error *ngIf="changeKeyPassphrase.invalid">{{getChangeKeyPassphraseErrorMessage()}}</mat-error>
+              </mat-form-field>
+              <mat-form-field appearance="legacy">
+                <mat-label>{{ 'app.ConfirmPassphrase' | translate }}</mat-label>
+                <input [type]="passWordInputType" matInput #passPhrasesWallet placeholder="Confirm Passphrase"
+                  formControlName="changeKeyPassphraseConfirm" name="changeKeyPassphraseConfirm"
+                  (input)="validateIndividualKeysPassphrases()">
+                <i matSuffix class="fas fa-lock"></i>
+                <mat-error *ngIf="changeKeyPassphraseConfirm.invalid">{{getChangeKeyPassphraseConfirmErrorMessage()}}
+                </mat-error>
+              </mat-form-field>
+              <div>
+                <mat-password-strength #changeKeyPassphraseStrength [password]="changeKeyPassphraseControl.value">
+                </mat-password-strength>
+              </div>
+
+
+            </mat-card>
+          </div>
+
+          <div>
+            <mat-card>
+              <mat-form-field appearance="legacy">
+                <mat-label>{{ 'wallet.BackupKeyPassphrase' | translate }}</mat-label>
+                <input [type]="passWordInputType" matInput #backupKeyPassphraseControl placeholder="Passphrase for keys"
+                  formControlName="backupKeyPassphrase" name="backupKeyPassphrase"
+                  (input)="validateIndividualKeysPassphrases()">
+                <i matSuffix class="fas fa-lock"></i>
+                <mat-hint>{{ 'wallet.PassphraseForEncryptionOfAllKeys' | translate }}</mat-hint>
+                <mat-hint align="end" aria-live="polite">
+                  {{backupKeyPassphraseControl.value.length}} / {{backupKeyPassphraseStrength.max}}
+                </mat-hint>
+                <mat-error *ngIf="backupKeyPassphrase.invalid">{{getBackupKeyPassphraseErrorMessage()}}</mat-error>
+              </mat-form-field>
+              <mat-form-field appearance="legacy">
+                <mat-label>{{ 'app.ConfirmPassphrase' | translate }}</mat-label>
+                <input [type]="passWordInputType" matInput #passPhrasesWallet placeholder="Confirm Passphrase"
+                  formControlName="backupKeyPassphraseConfirm" name="backupKeyPassphraseConfirm"
+                  (input)="validateIndividualKeysPassphrases()">
+                <i matSuffix class="fas fa-lock"></i>
+                <mat-error *ngIf="backupKeyPassphraseConfirm.invalid">{{getBackupKeyPassphraseConfirmErrorMessage()}}
+                </mat-error>
+              </mat-form-field>
+              <div>
+                <mat-password-strength #backupKeyPassphraseStrength [password]="backupKeyPassphraseControl.value">
+                </mat-password-strength>
+              </div>
+
+            </mat-card>
+          </div>
+        </form>
+        </mat-card>
+
+        <div class="row">
+          <button mat-button matStepperPrevious>Back</button>
+          <button mat-button color="warn" [disabled]="isWalletCreationRunning" (click)="cancel()"><i
+              class="fas fa-ban"></i>
+            {{ 'app.Cancel' | translate }}</button>
+          <button mat-button matStepperNext color="primary" [disabled]="form2.invalid">Next</button>
         </div>
-
-        <div>
-          <mat-card>
-            <mat-form-field appearance="legacy">
-              <mat-label>{{ 'wallet.CommunicationKeyPassphrase' | translate }}</mat-label>
-              <input [type]="passWordInputType" type="password" matInput #passPhrasesCommunicationkey
-                placeholder="Communication Key" [(ngModel)]="walletToCreate.passPhrases['2']"
-                name="passPhrasesCommunicationkey">
-              <i matSuffix class="fas fa-lock"></i>
-              <mat-hint>{{ 'wallet.PassphraseForEncryptionOfCommunicationKey' | translate }}</mat-hint>
-            </mat-form-field>
-            <mat-password-strength #passPhrasesCommunicationkeyComponent [password]="passPhrasesCommunicationkey.value">
-            </mat-password-strength>
-            <mat-form-field appearance="legacy">
-              <mat-label>{{ 'app.ConfirmPassphrase' | translate }}</mat-label>
-              <input [type]="passWordInputType" matInput #confirmPassPhrasesCommunicationkey
-                placeholder="Confirm Passphrase" [(ngModel)]="passPhrasesConfirm[2]"
-                name="confirmPassPhrasesCommunicationkey">
-              <i matSuffix class="fas fa-lock"></i>
-              <mat-hint *ngIf="!passPhraseConfirmed('2')" class="text-danger">
-                {{ 'app.PassphraseAreNotTheSame' | translate }}
-              </mat-hint>
-            </mat-form-field>
-          </mat-card>
-        </div>
-
-        <div>
-          <mat-card>
-            <mat-form-field appearance="legacy">
-              <mat-label>{{ 'wallet.ChangeKeyPassphrase' | translate }}</mat-label>
-              <input [type]="passWordInputType" matInput #passPhrasesChangekey placeholder="Change Key"
-                [(ngModel)]="walletToCreate.passPhrases['3']" name="passPhrasesChangekey">
-              <i matSuffix class="fas fa-lock"></i>
-              <mat-hint>{{ 'wallet.PassphraseForEncryptionOfChangeKey' | translate }}</mat-hint>
-            </mat-form-field>
-            <mat-password-strength #passPhrasesChangekeyComponent [password]="passPhrasesChangekey.value">
-            </mat-password-strength>
-            <mat-form-field appearance="legacy">
-              <mat-label>{{ 'app.ConfirmPassphrase' | translate }}</mat-label>
-              <input [type]="passWordInputType" matInput #passPhrasesWallet placeholder="Confirm Passphrase"
-                [(ngModel)]="passPhrasesConfirm[3]" name="confirmPassPhrasesWallet">
-              <i matSuffix class="fas fa-lock"></i>
-              <mat-hint *ngIf="!passPhraseConfirmed('3')" class="text-danger">
-                {{ 'app.PassphraseAreNotTheSame' | translate }}
-              </mat-hint>
-            </mat-form-field>
-          </mat-card>
-        </div>
-
-        <div>
-          <mat-card>
-            <mat-form-field appearance="legacy">
-              <mat-label>{{ 'wallet.BackupKeyPassphrase' | translate }}</mat-label>
-              <input [type]="passWordInputType" matInput #passPhrasesBackupkey placeholder="Super Key"
-                [(ngModel)]="walletToCreate.passPhrases['4']" name="passPhrasesBackupkey">
-              <i matSuffix class="fas fa-lock"></i>
-              <mat-hint>{{ 'wallet.PassphraseForEncryptionOfBackupKey' | translate }}</mat-hint>
-            </mat-form-field>
-            <mat-password-strength #passPhrasesBackupkeyComponent [password]="passPhrasesBackupkey.value">
-            </mat-password-strength>
-            <mat-form-field appearance="legacy">
-              <mat-label>{{ 'app.ConfirmPassphrase' | translate }}</mat-label>
-              <input [type]="passWordInputType" matInput #passPhrasesWallet placeholder="Confirm Passphrase"
-                [(ngModel)]="passPhrasesConfirm[4]" name="confirmPassPhrasesWallet">
-              <i matSuffix class="fas fa-lock"></i>
-              <mat-hint *ngIf="!passPhraseConfirmed('4')" class="text-danger">
-                {{ 'app.PassphraseAreNotTheSame' | translate }}
-              </mat-hint>
-            </mat-form-field>
-          </mat-card>
-        </div>
-
-      </mat-card>
-
-      <div class="row">
-        <button mat-button matStepperPrevious>Back</button>
-        <button mat-button color="warn" [disabled]="isWalletCreationRunning" (click)="cancel()"><i
-            class="fas fa-ban"></i>
-          {{ 'app.Cancel' | translate }}</button>
-        <button mat-button matStepperNext color="primary">Next</button>
-      </div>
+      
     </mat-step>
 
     <mat-step>
@@ -268,55 +341,55 @@
           &nbsp;{{ 'account.PublishAccountAutomatically' | translate }}
         </mat-list-item>
         <mat-list-item role="listitem" *ngIf="walletToCreate.encryptWallet">
-          <span *ngIf="passPhraseValid('0')">
+          <span *ngIf="!walletPassphrase.invalid">
             <mat-icon fontSet="fas" fontIcon="fa-check" color="primary"></mat-icon>
           </span>
-          <span *ngIf="!passPhraseValid('0')">
+          <span *ngIf="walletPassphrase.invalid">
             <mat-icon fontSet="fas" fontIcon="fa-ban" color="warn"></mat-icon>
           </span>
           &nbsp;{{ 'wallet.EncryptWallet' | translate }}
         </mat-list-item>
         <mat-list-item role="listitem" *ngIf="walletToCreate.encryptKey && !walletToCreate.encryptKeysIndividualy">
-          <span *ngIf="passPhraseValid('1')">
+          <span *ngIf="!allKeysPassphrase.invalid">
             <mat-icon fontSet="fas" fontIcon="fa-check" color="primary"></mat-icon>
           </span>
-          <span *ngIf="!passPhraseValid('1')">
+          <span *ngIf="allKeysPassphrase.invalid">
             <mat-icon fontSet="fas" fontIcon="fa-ban" color="warn"></mat-icon>
           </span>
           &nbsp;{{ 'wallet.EncryptKeys' | translate }}
         </mat-list-item>
         <mat-list-item role="listitem" *ngIf="walletToCreate.encryptKey && walletToCreate.encryptKeysIndividualy">
-          <span *ngIf="passPhraseValid('1')">
+          <span *ngIf="!transactionKeyPassphrase.invalid">
             <mat-icon fontSet="fas" fontIcon="fa-check" color="primary"></mat-icon>
           </span>
-          <span *ngIf="!passPhraseValid('1')">
+          <span *ngIf="transactionKeyPassphrase.invalid">
             <mat-icon fontSet="fas" fontIcon="fa-ban" color="warn"></mat-icon>
           </span>
           &nbsp;{{ 'wallet.TransactionKeyPassphrase' | translate }}
         </mat-list-item>
         <mat-list-item role="listitem" *ngIf="walletToCreate.encryptKey && walletToCreate.encryptKeysIndividualy">
-          <span *ngIf="passPhraseValid('2')">
+          <span *ngIf="!communicationKeyPassphrase.invalid">
             <mat-icon fontSet="fas" fontIcon="fa-check" color="primary"></mat-icon>
           </span>
-          <span *ngIf="!passPhraseValid('2')">
+          <span *ngIf="communicationKeyPassphrase.invalid">
             <mat-icon fontSet="fas" fontIcon="fa-ban" color="warn"></mat-icon>
           </span>
           &nbsp;{{ 'wallet.CommunicationKeyPassphrase' | translate }}
         </mat-list-item>
         <mat-list-item role="listitem" *ngIf="walletToCreate.encryptKey && walletToCreate.encryptKeysIndividualy">
-          <span *ngIf="passPhraseValid('3')">
+          <span *ngIf="!changeKeyPassphrase.invalid">
             <mat-icon fontSet="fas" fontIcon="fa-check" color="primary"></mat-icon>
           </span>
-          <span *ngIf="!passPhraseValid('3')">
+          <span *ngIf="changeKeyPassphrase.invalid">
             <mat-icon fontSet="fas" fontIcon="fa-ban" color="warn"></mat-icon>
           </span>
           &nbsp;{{ 'wallet.ChangeKeyPassphrase' | translate }}
         </mat-list-item>
         <mat-list-item role="listitem" *ngIf="walletToCreate.encryptKey && walletToCreate.encryptKeysIndividualy">
-          <span *ngIf="passPhraseValid('4')">
+          <span *ngIf="!backupKeyPassphrase.invalid">
             <mat-icon fontSet="fas" fontIcon="fa-check" color="primary"></mat-icon>
           </span>
-          <span *ngIf="!passPhraseValid('4')">
+          <span *ngIf="backupKeyPassphrase.invalid">
             <mat-icon fontSet="fas" fontIcon="fa-ban" color="warn"></mat-icon>
           </span>
           &nbsp;{{ 'wallet.BackupKeyPassphrase' | translate }}

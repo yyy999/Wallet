@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { NO_WALLET, Wallet, WalletCreation, EncryptionKey } from '../model/wallet';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { NEURALIUM_BLOCKCHAIN, SECURITY_BLOCKCHAIN, CONTRACT_BLOCKCHAIN, BlockChain } from '../model/blockchain';
@@ -8,27 +8,38 @@ import { SyncProcess, ProcessType } from '../model/syncProcess';
 import { ServerConnectionService } from './server-connection.service';
 import { WalletAccount, NO_WALLET_ACCOUNT } from '../model/walletAccount';
 import { EventTypes } from '../model/serverConnectionEvent';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
-export class WalletService {
+export class WalletService implements OnDestroy {
   selectedWallet: BehaviorSubject<Wallet> = new BehaviorSubject<Wallet>(NO_WALLET);
   wallets: Object = new Object();
   currentBlockchainId: number = 0;
   currentAccount: BehaviorSubject<WalletAccount> = new BehaviorSubject<WalletAccount>(NO_WALLET_ACCOUNT);
+
 
   constructor(private syncStatusService: SyncStatusService, private serverConnectionService: ServerConnectionService, private notificationService: NotificationService) {
     this.wallets[NEURALIUM_BLOCKCHAIN.id] = NO_WALLET;
     this.wallets[SECURITY_BLOCKCHAIN.id] = NO_WALLET;
     this.wallets[CONTRACT_BLOCKCHAIN.id] = NO_WALLET;
 
-    this.serverConnectionService.eventNotifier.subscribe(event => {
+    this.serverConnectionService.eventNotifier.pipe(takeUntil(this.unsubscribe$)).subscribe(event => {
       if (event.eventType === EventTypes.AccountPublicationEnded) {
         this.refreshWallet(this.currentBlockchainId);
       }
     })
   }
+
+  private unsubscribe$ = new Subject<void>();
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
+  }
+
 
   startCreateWalletProcess(blockchainId: number, walletToCreate: WalletCreation): Promise<SyncProcess> {
     return new Promise<SyncProcess>((resolve, reject) => {
@@ -106,7 +117,7 @@ export class WalletService {
               this.serverConnectionService.callLoadWallet(blockChainId, '')
                 .then(longRunningContextId => {
 
-                  this.serverConnectionService.eventNotifier.subscribe((event) => {
+                  this.serverConnectionService.eventNotifier.pipe(takeUntil(this.unsubscribe$)).subscribe((event) => {
                     if(event.correlationId === longRunningContextId){
                       switch (event.eventType) {
                         case EventTypes.WalletLoadingEnded:

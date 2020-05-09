@@ -1,4 +1,4 @@
-import { Component, OnInit, isDevMode } from '@angular/core';
+import { Component, OnInit, isDevMode, OnDestroy } from '@angular/core';
 import { ServerConnectionService } from '../..//service/server-connection.service';
 import { WalletService } from '../..//service/wallet.service';
 import { NO_WALLET_ACCOUNT, WalletAccountStatus } from '../..//model/walletAccount';
@@ -8,14 +8,16 @@ import { SyncStatusService } from '../..//service/sync-status.service';
 import { EventTypes, ResponseResult } from '../..//model/serverConnectionEvent';
 import { PassphraseParameters, KeyPassphraseParameters } from '../..//model/passphraseRequiredParameters';
 import { AppConfig } from '../../../environments/environment';
-import * as moment from 'moment';
+import moment, * as momentObj from 'moment';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-debug',
   templateUrl: './debug.component.html',
   styleUrls: ['./debug.component.scss']
 })
-export class DebugComponent implements OnInit {
+export class DebugComponent implements OnInit, OnDestroy {
   currentPlatform: string;
   accountUuid: string;
   addNeuraliumsEnabled: boolean = true;
@@ -40,7 +42,7 @@ export class DebugComponent implements OnInit {
   ngOnInit() {
     this.currentPlatform = this.config.currentPlatform;
 
-    this.walletService.getCurrentAccount().subscribe(account => {
+    this.walletService.getCurrentAccount().pipe(takeUntil(this.unsubscribe$)).subscribe(account => {
       if (account !== NO_WALLET_ACCOUNT) {
         this.accountUuid = account.accountUuid;
         this.showAccountCommands = true;
@@ -51,6 +53,15 @@ export class DebugComponent implements OnInit {
       }
     })
   }
+
+  private unsubscribe$ = new Subject<void>();
+
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
+  }
+
 
   addNeuraliums() {
     if (this.addNeuraliumsEnabled) {

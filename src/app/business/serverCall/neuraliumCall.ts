@@ -4,7 +4,7 @@ import { CommonCall } from './commonCall';
 import { LogService } from '../..//service/log.service';
 import { TimelineEntry, TimelineDay, TimelineHeader, EntryDirection, EntryCreditType } from '../..//model/timeline';
 import { NeuraliumTransaction, TransactionStatuses, TransactionVersion, TransactionType } from '../..//model/transaction';
-import * as moment from 'moment';
+import moment, * as momentObj from 'moment';
 
 export class NeuraliumCall extends CommonCall {
 
@@ -58,7 +58,6 @@ export class NeuraliumCall extends CommonCall {
 
     callQueryNeuraliumTimelineHeader(accountUuid: string): Promise<TimelineHeader> {
 
-
         return new Promise<TimelineHeader>((resolve, reject) => {
             if (accountUuid === undefined) {
                 reject();
@@ -69,7 +68,7 @@ export class NeuraliumCall extends CommonCall {
                     .then(
                         response => {
                             this.logEvent('QueryNeuraliumTimelineHeader - response', response);
-                            const firstDay =  moment(response['firstDay']).toDate();
+                            const firstDay =  moment.utc(response['firstDay']).toDate();
                             const numberOfDays = <number>Number(response['numberOfDays']);
                             const header = TimelineHeader.create(numberOfDays, firstDay);
                             resolve(header);

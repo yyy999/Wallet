@@ -1,16 +1,18 @@
-import { Injectable, OnInit } from '@angular/core';
+import { Injectable, OnInit, OnDestroy } from '@angular/core';
 import { BlockChain, NO_BLOCKCHAIN, NEURALIUM_BLOCKCHAIN, CONTRACT_BLOCKCHAIN, SECURITY_BLOCKCHAIN, ChainStatus } from '../model/blockchain';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { WalletService } from './wallet.service';
 import { ServerConnectionService } from './server-connection.service';
 import { BlockchainInfo, NO_BLOCKCHAIN_INFO, BlockInfo, DigestInfo } from '../model/blockchain-info';
 import { EventTypes } from '../model/serverConnectionEvent';
-import * as moment from 'moment';
+import moment, * as momentObj from 'moment';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
-export class BlockchainService implements OnInit {
+export class BlockchainService implements OnInit, OnDestroy {
   blockchains: Array<BlockChain>;
   selectedBlockchain: BehaviorSubject<BlockChain> = new BehaviorSubject<BlockChain>(NO_BLOCKCHAIN);
   currentBlockchain: BlockChain = NO_BLOCKCHAIN;
@@ -31,7 +33,7 @@ export class BlockchainService implements OnInit {
   constructor(private walletService: WalletService, private serverConnectionService: ServerConnectionService) {
     this.subscribeToBlockchainEvents();
 
-    this.remainingTimeForNextBlock.subscribe(seconds => {
+    this.remainingTimeForNextBlock.pipe(takeUntil(this.unsubscribe$)).subscribe(seconds => {
       this.totalRemainingTime = seconds;
       this.tempTime = seconds;
       
@@ -72,6 +74,32 @@ export class BlockchainService implements OnInit {
 
   }
 
+  private unsubscribe$ = new Subject<void>();
+
+
+  ngOnDestroy(): void {
+       this.unsubscribe$.next();
+       this.unsubscribe$.complete();
+     }
+
+  runApiQuery(method:string, parameters:string): Promise<string>{
+
+    return new Promise<string>((resolve, reject) => {
+      if(this.currentBlockchain && this.currentBlockchain.id && this.currentBlockchain.id !== 0){
+        this.serverConnectionService.callQueryApi(this.currentBlockchain.id, method, parameters).then(json => {
+          resolve(json);
+        }).catch(error => {
+          reject(error);
+        });
+      }
+      else{
+        resolve(null);
+      }
+    });
+
+
+  }
+
   queryBlockJson(blockId:number): Promise<string>{
 
     return new Promise<string>((resolve, reject) => {
@@ -87,12 +115,10 @@ export class BlockchainService implements OnInit {
         resolve(null);
       }
     });
-
-
   }
 
   subscribeToBlockchainEvents() {
-    this.serverConnectionService.eventNotifier.subscribe(event => {
+    this.serverConnectionService.eventNotifier.pipe(takeUntil(this.unsubscribe$)).subscribe(event => {
       switch (event.eventType) {
         case EventTypes.BlockInserted:
           this.updateBlockInfos(event.message);
@@ -114,7 +140,7 @@ export class BlockchainService implements OnInit {
     var blockHash: string = infos["hash"];
     var publicBlockId: number = infos["publicBlockId"];
 
-    var blockTimestamp: Date =  moment(infos["timestamp"]).toDate();
+    var blockTimestamp: Date =  moment.utc(infos["timestamp"]).toDate();
     var lifespan: number = infos["lifespan"];
     var blockInfo = BlockInfo.create(blockId, blockTimestamp, blockHash, publicBlockId, lifespan);
     this.currentBlockchainInfo.blockInfo = blockInfo;
@@ -126,7 +152,7 @@ export class BlockchainService implements OnInit {
     var digestId: number = infos["digestId"];
     var digestHash: string = infos["digestHash"];
     var digestBlockId: number = infos["digestBlockId"];
-    var digestTimestamp: Date =  moment(infos["digestTimestamp"]).toDate();
+    var digestTimestamp: Date =  moment.utc(infos["digestTimestamp"]).toDate();
     var publicDigestId: number = infos["publicDigestId"];
     var digestInfo = DigestInfo.create(digestId, digestBlockId, digestTimestamp, digestHash, publicDigestId);
     this.currentBlockchainInfo.digestInfo = digestInfo;

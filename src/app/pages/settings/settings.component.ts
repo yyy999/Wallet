@@ -1,8 +1,10 @@
-import { Component, OnInit, AfterViewInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { ConfigService } from '../..//service/config.service';
 import { NotificationService } from '../..//service/notification.service';
 import { Router, ActivatedRoute } from '@angular/router';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 
 @Component({
@@ -10,7 +12,7 @@ import { Router, ActivatedRoute } from '@angular/router';
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.css']
 })
-export class SettingsComponent implements OnInit, AfterViewInit {
+export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
   icon = 'fas fa-cogs';
   languages: any;
   selectedLanguage: string;
@@ -30,9 +32,17 @@ export class SettingsComponent implements OnInit, AfterViewInit {
     this.loadSettings();
   }
 
+  private unsubscribe$ = new Subject<void>();
+
+
+  ngOnDestroy(): void {
+ this.unsubscribe$.next();
+ this.unsubscribe$.complete();
+ }
+
   ngAfterViewInit() {
 
-    this.route.url.subscribe(url => {
+    this.route.url.pipe(takeUntil(this.unsubscribe$)).subscribe(url => {
       if (!this.serverPath && url[0].path === 'settings') {
         this.ensureServerPath();
       }

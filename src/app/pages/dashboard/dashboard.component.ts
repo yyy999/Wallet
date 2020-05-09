@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { WalletService } from '../../service/wallet.service';
 import { WalletAccount, NO_WALLET_ACCOUNT } from '../../model/walletAccount';
 import {  WalletLoadStatus } from '../../model/wallet';
@@ -16,6 +16,9 @@ import { PublishAccountDialogComponent } from '../../dialogs/publish-account-dia
 import { CONNECTED } from '../..//model/serverConnectionEvent';
 import { SyncStatusService } from '../..//service/sync-status.service';
 import { EventTypes } from '../../model/serverConnectionEvent';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+
 
 
 @Component({
@@ -23,7 +26,7 @@ import { EventTypes } from '../../model/serverConnectionEvent';
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   title = this.translateService.instant("dashboard.Title");
   icon = "fas fa-wallet";
 
@@ -43,15 +46,22 @@ export class DashboardComponent implements OnInit {
     public dialog: MatDialog) { }
 
   ngOnInit() {
-    this.serverConnectionService.isConnectedToServer().subscribe(connected => {
+    this.serverConnectionService.isConnectedToServer().pipe(takeUntil(this.unsubscribe$)).subscribe(connected => {
       if (connected === CONNECTED) {
         this.initialise();
       }
     })
   }
 
+  private unsubscribe$ = new Subject<void>();
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
+  }
+
   initialise() {
-    this.blockchainService.getSelectedBlockchain().subscribe(blockchain => {
+    this.blockchainService.getSelectedBlockchain().pipe(takeUntil(this.unsubscribe$)).subscribe(blockchain => {
       if (blockchain !== NO_BLOCKCHAIN) {
         let currentBlockchainId = this.blockchainService.getCurrentBlockchain().id;
         this.tryInitialiseWallet(currentBlockchainId).then(() => {
@@ -63,7 +73,7 @@ export class DashboardComponent implements OnInit {
 
   tryInitialiseWallet(blockchainId: number): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
-      this.walletService.getWallet().subscribe(wallet => {
+      this.walletService.getWallet().pipe(takeUntil(this.unsubscribe$)).subscribe(wallet => {
 
         if (blockchainId !== 0) {
           if (!wallet.isLoaded) {
@@ -88,7 +98,7 @@ export class DashboardComponent implements OnInit {
           }
           else {
             this.walletAccounts = wallet.accounts;
-            this.walletService.getCurrentAccount().subscribe(account => {
+            this.walletService.getCurrentAccount().pipe(takeUntil(this.unsubscribe$)).subscribe(account => {
               this.currentAccount = account;
             });
           }
@@ -122,20 +132,23 @@ export class DashboardComponent implements OnInit {
     if (!this.walletDialogOpen && !this.createLoadDialogOpen) {
       this.createLoadDialogOpen = true;
       setTimeout(() => {
-        const dialogRef = this.dialog.open(AskOrCreateWalletDialogComponent, {
-          width: '450px'
-        });
-        dialogRef.afterClosed().subscribe(dialogResult => {
-          this.createLoadDialogOpen = false;
-          if (dialogResult === DialogResult.CreateWallet) {
-            setTimeout(() => {
-              this.showCreateWalletDialog();
-            }, 1000);
-          }
-          else {
-            this.initialise();
-          }
-        })
+        if (!this.walletDialogOpen) {
+
+          const dialogRef = this.dialog.open(AskOrCreateWalletDialogComponent, {
+            width: '450px'
+          });
+          dialogRef.afterClosed().subscribe(dialogResult => {
+            this.createLoadDialogOpen = false;
+            if (dialogResult === DialogResult.CreateWallet) {
+              setTimeout(() => {
+                this.showCreateWalletDialog();
+              }, 1000);
+            }
+            else {
+              this.initialise();
+            }
+          })
+        }
       });
     }
   }

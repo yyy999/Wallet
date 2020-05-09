@@ -1,13 +1,16 @@
-import { Injectable, OnInit } from '@angular/core';
+import { Injectable, OnInit, OnDestroy } from '@angular/core';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { WalletService } from './wallet.service';
 import { ServerConnectionService } from './server-connection.service';
 import { EventTypes } from '../model/serverConnectionEvent';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+
 
 @Injectable({
   providedIn: 'root'
 })
-export class ServerMessagesService implements OnInit {
+export class ServerMessagesService implements OnInit, OnDestroy {
   
   messages: BehaviorSubject<string> = new BehaviorSubject<string>('');
 
@@ -20,12 +23,21 @@ export class ServerMessagesService implements OnInit {
   ngOnInit() {
 
   }
+
+  private unsubscribe$ = new Subject<void>();
+
+
+  ngOnDestroy(): void {
+       this.unsubscribe$.next();
+       this.unsubscribe$.complete();
+     }
+
   subscribe(callback:(message: string) => void){
       this.callback = callback;
   }
 
   subscribeToServerEvents() {
-    this.serverConnectionService.eventNotifier.subscribe(event => {
+    this.serverConnectionService.eventNotifier.pipe(takeUntil(this.unsubscribe$)).subscribe(event => {
       switch (event.eventType) {
         case EventTypes.Message:
           if( this.callback){

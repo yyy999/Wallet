@@ -1,7 +1,9 @@
-import { Component, OnInit, Optional, Inject } from '@angular/core';
+import { Component, OnInit, Optional, Inject, OnDestroy } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { PassphraseParameters, KeyPassphraseParameters, PassphraseRequestType } from '../..//model/passphraseRequiredParameters';
 import { TranslateService } from '@ngx-translate/core';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 class DialogParameters{
   public parameters: PassphraseParameters;
@@ -12,7 +14,7 @@ class DialogParameters{
   templateUrl: './ask-key-dialog.component.html',
   styleUrls: ['./ask-key-dialog.component.scss']
 })
-export class AskKeyDialogComponent implements OnInit {
+export class AskKeyDialogComponent implements OnInit, OnDestroy {
   keyName:string;
   attempt:number;
   showPasswords:boolean = false;
@@ -38,6 +40,14 @@ export class AskKeyDialogComponent implements OnInit {
 
   ngOnInit() {
   }
+
+  private unsubscribe$ = new Subject<void>();
+  
+  
+    ngOnDestroy(): void {
+      this.unsubscribe$.next();
+      this.unsubscribe$.complete();
+    }
 
   ok(){
     this.dialogRef.close(this.password);

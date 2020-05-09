@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { ServerConnectionService } from './server-connection.service';
 import { BlockchainService } from './blockchain.service';
@@ -6,9 +6,14 @@ import { ConfigService } from './config.service';
 
 import { TranslateService } from '@ngx-translate/core';
 import { EventTypes } from '../model/serverConnectionEvent';
-import * as moment from 'moment';
+import moment, * as momentObj from 'moment';
 import { NotificationService } from './notification.service';
 import { MiningHistory } from '../model/mining-history';
+import { MiningStatistics } from '../model/mining-statistics';
+import { IpMode } from '../model/enums';
+
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 const NO_BLOCKCHAIN_ID = 0;
 const MAXIMUM_MESSAGE_COUNT = 30;
@@ -36,13 +41,18 @@ export enum MiningStatus {
 @Injectable({
   providedIn: 'root'
 })
-export class MiningService {
+export class MiningService implements OnDestroy {
   isMining: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
   currentBlockchainId: number = NO_BLOCKCHAIN_ID;
   public miningEvents: Array<MiningEvent> = new Array<MiningEvent>();
 
   miningTier: BehaviorSubject<number> = new BehaviorSubject<number>(null);
   isConnectable: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(null);
+
+  get isCurrentlyMining(): boolean {
+    return this.isMining.value;
+  }
+
 
 
   constructor(
@@ -51,7 +61,7 @@ export class MiningService {
     private translate: TranslateService,
     private notificationService: NotificationService,
     private configService: ConfigService) {
-    this.blockchainService.selectedBlockchain.subscribe(blockchain => {
+    this.blockchainService.selectedBlockchain.pipe(takeUntil(this.unsubscribe$)).subscribe(blockchain => {
 
       this.currentBlockchainId = blockchain.id;
 
@@ -64,6 +74,14 @@ export class MiningService {
 
   }
 
+  private unsubscribe$ = new Subject<void>();
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
+  }
+
+
   queryMiningHistory() {
 
     this.serverConnection.callQueryMiningHistory(this.currentBlockchainId, 0, 0, this.LogLevel).then(result => {
@@ -72,6 +90,26 @@ export class MiningService {
         this.formatEvent(result[i]);
       }
     });
+  }
+
+  queryCurrentDifficulty():Promise<number> {
+
+    return this.serverConnection.callQueryCurrentDifficulty(this.currentBlockchainId);
+  }
+
+  callQueryMiningIPMode():Promise<IpMode> {
+
+    return this.serverConnection.callQueryMiningIPMode(this.currentBlockchainId);
+  }
+
+
+  queryMiningStatistics():Promise<MiningStatistics> {
+
+    return this.serverConnection.callQueryMiningStatistics(this.currentBlockchainId);
+  }
+
+  clearCachedCredentials():Promise<Boolean>{
+    return this.serverConnection.callClearCachedCredentials(this.currentBlockchainId);
   }
 
   checkServerIsMiningEnabled() {
@@ -114,7 +152,7 @@ export class MiningService {
   }
 
   startListeningMiningEvents() {
-    this.serverConnection.eventNotifier.subscribe(event => {
+    this.serverConnection.eventNotifier.pipe(takeUntil(this.unsubscribe$)).subscribe(event => {
       switch (event.eventType) {
 
         case EventTypes.NeuraliumMiningBountyAllocated:

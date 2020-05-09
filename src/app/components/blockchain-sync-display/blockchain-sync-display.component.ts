@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, OnDestroy } from '@angular/core';
 import { SyncStatusService } from '../../service/sync-status.service';
 import { BlockchainService } from '../../service/blockchain.service';
 import { SyncUpdate, NO_SYNC_UPDATE } from '../../model/sync-update';
@@ -6,13 +6,15 @@ import { SyncProcess, ProcessType, SyncStatus } from '../../model/syncProcess';
 import { TranslateService } from '@ngx-translate/core';
 import { EventTypes } from '../../model/serverConnectionEvent';
 import { BlockInfo } from '../../model/blockchain-info';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-blockchain-sync-display',
   templateUrl: './blockchain-sync-display.component.html',
   styleUrls: ['./blockchain-sync-display.component.scss']
 })
-export class BlockchainSyncDisplayComponent implements OnInit {
+export class BlockchainSyncDisplayComponent implements OnInit, OnDestroy {
 
   @Input() lightDisplay: boolean;
 
@@ -43,23 +45,23 @@ export class BlockchainSyncDisplayComponent implements OnInit {
   ngOnInit() {
 
     this.updateTitleTranslations();
-    this.translateService.onLangChange.subscribe((event) => {
+    this.translateService.onLangChange.pipe(takeUntil(this.unsubscribe$)).subscribe((event) => {
       this.updateTitleTranslations();
     });
-    this.blockchainService.getBlockchainInfo().subscribe((blockchainInfo) => {
+    this.blockchainService.getBlockchainInfo().pipe(takeUntil(this.unsubscribe$)).subscribe((blockchainInfo) => {
       try {
         this.currentBlockchainInfo = blockchainInfo.blockInfo;
       } catch {}
     });
     this.defineCurrentSyncStatus(SyncStatus.Unknown);
 
-    this.syncStatusService.getCurrentBlockchainSyncStatus().subscribe(status => {
+    this.syncStatusService.getCurrentBlockchainSyncStatus().pipe(takeUntil(this.unsubscribe$)).subscribe(status => {
       try {
       this.defineCurrentSyncStatus(status);
     } catch {}
     });
 
-    this.syncStatusService.getCurrentBlockchainSyncUpdate().subscribe(update => {
+    this.syncStatusService.getCurrentBlockchainSyncUpdate().pipe(takeUntil(this.unsubscribe$)).subscribe(update => {
       try {
         this.currentSyncUpdate = update;
         if (this.currentSyncUpdate.eventType === EventTypes.BlockchainSyncEnded && this.currentStatus !== SyncStatus.Synced) {
@@ -79,10 +81,18 @@ export class BlockchainSyncDisplayComponent implements OnInit {
       } catch {}
     });
 
-    this.syncStatusService.getSyncList().subscribe(syncList => {
+    this.syncStatusService.getSyncList().pipe(takeUntil(this.unsubscribe$)).subscribe(syncList => {
       this.syncingList = syncList;
     });
   }
+
+  private unsubscribe$ = new Subject<void>();
+  
+  
+    ngOnDestroy(): void {
+      this.unsubscribe$.next();
+      this.unsubscribe$.complete();
+    }
 
   updateTitleTranslations() {
     this.translateService.get('sync.Unknown').subscribe((res: string) => {

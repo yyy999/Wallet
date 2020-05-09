@@ -1,10 +1,12 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import {MatSnackBar} from '@angular/material/snack-bar';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
-export class NotificationService {
+export class NotificationService implements OnDestroy {
 
   constructor(private snackBar: MatSnackBar) {}
 
@@ -55,4 +57,12 @@ export class NotificationService {
         }, 100);
         
     }
+
+    private unsubscribe$ = new Subject<void>();
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
+  }
+
 }

@@ -1,6 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { MiningService, MiningEvent } from '../..//service/mining.service';
 import { PageEvent } from '@angular/material/paginator';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+
 
 
 
@@ -9,7 +12,7 @@ import { PageEvent } from '@angular/material/paginator';
   templateUrl: './mining-events.component.html',
   styleUrls: ['./mining-events.component.scss']
 })
-export class MiningEventsComponent implements OnInit {
+export class MiningEventsComponent implements OnInit, OnDestroy {
   miningEventsList: Array<MiningEvent> = [];
   pageSize: number = 10;
   pageEvent: PageEvent;
@@ -27,6 +30,15 @@ export class MiningEventsComponent implements OnInit {
     this.miningEventsList = this.miningService.getMiningEvents();
 
   }
+
+  private unsubscribe$ = new Subject<void>();
+
+
+  ngOnDestroy(): void {
+       this.unsubscribe$.next();
+       this.unsubscribe$.complete();
+     }
+ 
 
   setPage(event){
 

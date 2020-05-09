@@ -49,3 +49,18 @@
 .mat-tab-body-wrapper{
   flex-grow: 1;
 }
+
+mat-expansion-panel-header{
+  font-size: 15px;
+  color: #673ab7;
+  font-variant: small-caps;
+}
+
+.centerMiningButton{
+  height: 200px;
+  display: flex;
+  align-content: center;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}

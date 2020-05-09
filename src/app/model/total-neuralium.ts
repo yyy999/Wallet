@@ -5,7 +5,7 @@ export class TotalNeuralium {
     frozen:number = 0;
 
     get usable(): number {
-        return this.total - this.debit - this.frozen;
+        return this.total - (this.debit + this.frozen);
     }
 
     static create(total: number = 0, credit: number = 0, debit: number = 0, frozen:number = 0): TotalNeuralium {

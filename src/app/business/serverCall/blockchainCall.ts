@@ -4,7 +4,7 @@ import { ServerConnectionService } from '../..//service/server-connection.servic
 import { BlockchainInfo, BlockInfo, DigestInfo } from '../..//model/blockchain-info';
 import { WalletAccountStatus } from '../..//model/walletAccount';
 import { ChainStatus, WalletInfo } from '../..//model/blockchain';
-import * as moment from 'moment';
+import moment, * as momentObj from 'moment';
 
 export class BlockchainCall extends CommonCall {
 
@@ -31,12 +31,12 @@ export class BlockchainCall extends CommonCall {
                   let blockId: number = account['blockId'];
                   let blockHash: string = account['blockHash'];
                   let publicBlockId: number = <WalletAccountStatus>account['publicBlockId'];
-                  let blockTimestamp:Date =  moment(account['blockTimestamp']).toDate();
+                  let blockTimestamp:Date =  moment.utc(account['blockTimestamp']).toDate();
                   let blockLifespan: number = account['blockLifespan'];
                   let digestId: number = account['digestId'];
                   let digestHash: string = account['digestHash'];
                   let digestBlockId: number = account['digestBlockId'];
-                  let digestTimestamp: Date =  moment(account["digestTimestamp"]).toDate();
+                  let digestTimestamp: Date =  moment.utc(account["digestTimestamp"]).toDate();
                   let publicDigestId: number = account['publicDigestId'];
     
                   let blockInfo = BlockInfo.create(blockId, blockTimestamp, blockHash, publicBlockId, blockLifespan);

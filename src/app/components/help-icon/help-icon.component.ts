@@ -1,12 +1,14 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, OnDestroy } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-help-icon',
   templateUrl: './help-icon.component.html',
   styleUrls: ['./help-icon.component.scss']
 })
-export class HelpIconComponent implements OnInit {
+export class HelpIconComponent implements OnInit, OnDestroy {
   @Input() message:string;
   messageTranslated:string = "";
 
@@ -17,5 +19,14 @@ export class HelpIconComponent implements OnInit {
       this.messageTranslated = response;
     });
   }
+
+  private unsubscribe$ = new Subject<void>();
+  
+  
+    ngOnDestroy(): void {
+      this.unsubscribe$.next();
+      this.unsubscribe$.complete();
+    }
+  
 
 }

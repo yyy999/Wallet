@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Transaction, NeuraliumTransaction, NO_TRANSACTION } from '../..//model/transaction';
 import { TransactionsService } from '../..//service/transactions.service';
 import { WalletService } from '../..//service/wallet.service';
@@ -12,7 +12,10 @@ import {   PageEvent } from '@angular/material/paginator';
 import { TranslateService } from '@ngx-translate/core';
 import { ServerConnectionService } from '../..//service/server-connection.service';
 import { TransactionDetailsDialogComponent } from '../..//dialogs/transaction-details-dialog/transaction-details-dialog.component';
-import { CONNECTED } from '../..//model/serverConnectionEvent';
+import { CONNECTED,EventTypes } from '../..//model/serverConnectionEvent';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+
 
 enum Tabs {
   All = 0,
@@ -25,7 +28,7 @@ enum Tabs {
   templateUrl: './history.component.html',
   styleUrls: ['./history.component.css']
 })
-export class HistoryComponent implements OnInit {
+export class HistoryComponent implements OnInit, OnDestroy {
   title = this.translateService.instant("history.Title");
   icon = "fas fa-list-ul";
   displayedColumns: string[] = ['local', 'status', 'id', 'source', 'recipient', 'version', 'date', 'action'];
@@ -47,12 +50,12 @@ export class HistoryComponent implements OnInit {
 
   ngOnInit() {
 
-    this.serverConnectionService.isConnectedToServer().subscribe(connected => {
+    this.serverConnectionService.isConnectedToServer().pipe(takeUntil(this.unsubscribe$)).subscribe(connected => {
       if (connected !== CONNECTED) {
         this.router.navigate(['/dashboard']);
       }
       else {
-        this.walletService.getCurrentAccount().subscribe(account => {
+        this.walletService.getCurrentAccount().pipe(takeUntil(this.unsubscribe$)).subscribe(account => {
           if (!account || account === NO_WALLET_ACCOUNT) {
             var errorMessage = this.translateService.instant('account.PleaseImportOrCreateWalletAccount');
             var errorTitle = this.translateService.instant('account.NoAccount');
@@ -60,7 +63,7 @@ export class HistoryComponent implements OnInit {
             this.router.navigate(["/"]);
           }
           else {
-            this.transactionsService.getTransactions().subscribe(transactions => {
+            this.transactionsService.getTransactions().pipe(takeUntil(this.unsubscribe$)).subscribe(transactions => {
 
               transactions.sort((b, a) => {
                 if (a.date < b.date) { return -1; }
@@ -72,8 +75,21 @@ export class HistoryComponent implements OnInit {
             });
           }
         });
+
+        this.serverConnectionService.eventNotifier.pipe(takeUntil(this.unsubscribe$)).subscribe(event =>{
+          if(event.eventType === EventTypes.NeuraliumTimelineUpdated){
+            this.transactionsService.refreshTransactions();  
+        }
+      });
       }
     });
+  }
+
+  private unsubscribe$ = new Subject<void>();
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
   }
 
   filteredTransactions: Transaction[] = [];

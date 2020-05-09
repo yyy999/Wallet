@@ -767,7 +767,7 @@
     .social-line .btn{
         margin: $margin-bottom;
     }
-    .subscribe-line .form-control{
+    .pipe(takeUntil(this.unsubscribe$)).subscribe-line .form-control{
         margin: $margin-bottom;
     }
     .social-line.pull-right{

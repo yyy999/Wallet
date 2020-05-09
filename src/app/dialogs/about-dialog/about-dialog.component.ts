@@ -1,13 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
-import * as moment from 'moment';
+import moment, * as momentObj from 'moment';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+
 
 @Component({
   selector: 'app-about-dialog',
   templateUrl: './about-dialog.component.html',
   styleUrls: ['./about-dialog.component.scss']
 })
-export class AboutDialogComponent implements OnInit {
+export class AboutDialogComponent implements OnInit, OnDestroy {
 
   public Year:number;
 
@@ -18,6 +21,15 @@ export class AboutDialogComponent implements OnInit {
   ngOnInit() {
   }
 
+  private unsubscribe$ = new Subject<void>();
+
+
+  ngOnDestroy(): void {
+       this.unsubscribe$.next();
+       this.unsubscribe$.complete();
+     }
+
+     
   close(){
     this.dialogRef.close();
   }

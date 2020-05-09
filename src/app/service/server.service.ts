@@ -1,15 +1,17 @@
-import { Injectable, OnInit } from '@angular/core';
+import { Injectable, OnInit, OnDestroy } from '@angular/core';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { ServerConnectionService } from './server-connection.service';
 import { NotificationService } from './notification.service';
 import { ConfigService } from './config.service';
 import { CONNECTED, EventTypes } from '../model/serverConnectionEvent';
 import { TranslateService } from '@ngx-translate/core';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
-export class ServerService implements OnInit {
+export class ServerService implements OnInit, OnDestroy {
 
   childPid: number;
   childProcess: any;
@@ -23,7 +25,7 @@ export class ServerService implements OnInit {
     private configService: ConfigService,
     private translateService: TranslateService) {
 
-    this.serverConnectionService.eventNotifier.subscribe(event => {
+    this.serverConnectionService.eventNotifier.pipe(takeUntil(this.unsubscribe$)).subscribe(event => {
       if (event.eventType === EventTypes.ShutdownStarted) {
 
         if (this.shutdownStartedCallback) {
@@ -38,6 +40,14 @@ export class ServerService implements OnInit {
       }
     })
   }
+
+  private unsubscribe$ = new Subject<void>();
+
+
+  ngOnDestroy(): void {
+       this.unsubscribe$.next();
+       this.unsubscribe$.complete();
+     }
 
 
   ngOnInit() {

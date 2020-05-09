@@ -1,13 +1,16 @@
-import { Component, OnInit, Inject, Optional } from '@angular/core';
+import { Component, OnInit, Inject, Optional, OnDestroy } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { DialogResult } from '../../config/dialog-result';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+
 
 @Component({
   selector: 'app-confirm-dialog',
   templateUrl: './confirm-dialog.component.html',
   styleUrls: ['./confirm-dialog.component.scss']
 })
-export class ConfirmDialogComponent implements OnInit {
+export class ConfirmDialogComponent implements OnInit, OnDestroy {
   message:string;
 
   constructor(
@@ -18,6 +21,15 @@ export class ConfirmDialogComponent implements OnInit {
 
   ngOnInit() {
   }
+
+  private unsubscribe$ = new Subject<void>();
+
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
+  }
+
 
   yes(){
     this.dialogRef.close(DialogResult.Yes);

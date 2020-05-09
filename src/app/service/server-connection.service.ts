@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { NotificationService } from './notification.service';
 
 import { HubConnectionBuilder, HttpTransportType, HubConnection, LogLevel, HubConnectionState } from '@microsoft/signalr';
@@ -18,7 +18,8 @@ import { DebugCall } from '../business/serverCall/debugCall';
 import { KeyPassphraseParameters, PassphraseParameters } from '../model/passphraseRequiredParameters';
 import { PassphrasesCall } from '../business/serverCall/passphrasesCall';
 import { remote } from 'electron';
-import * as moment from 'moment';
+import moment, * as momentObj from 'moment';
+import { takeUntil } from 'rxjs/operators';
 
 const RETRY_DURATION = 3000;
 export const MESSAGE_BUFFER_SIZE = 4000;
@@ -45,7 +46,7 @@ public properties: Array<Object>;
 @Injectable({
   providedIn: 'root'
 })
-export class ServerConnectionService {
+export class ServerConnectionService implements OnDestroy {
 
   get showServerNotConnected(): Observable<boolean> {
     return this.showServerNotConnectedObs;
@@ -61,6 +62,14 @@ export class ServerConnectionService {
 
     this.beginConnection();
   }
+
+  private unsubscribe$ = new Subject<void>();
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
+  }
+
 
   public get IsConnected(): boolean {
     return this.connection && this.connection.state === HubConnectionState.Connected;
@@ -233,6 +242,9 @@ getMessages(): Array<ServerMessage> {
     this.listenToMiningPrimeElectedMissed();
     this.listenToMiningEnded();
     this.listenToMiningStarted();
+    this.listenToElectionContextCached();
+    this.listenToElectionProcessingCompleted();
+    
   }
 
   
@@ -328,6 +340,14 @@ getMessages(): Array<ServerMessage> {
     return service.callQueryChainStatus(chainType);
   }
 
+
+
+  callQueryApi(chainType: number, method:string, parameters:string){
+    let service = ServerCall.create(this, this.logService);
+    return service.callApiQuery(chainType, method, parameters);
+  }
+
+
   callQueryBlock(chainType: number, blockId:number){
     let service = BlockchainCall.create(this, this.logService);
     return service.callQueryBlock(chainType, blockId);
@@ -358,6 +378,22 @@ getMessages(): Array<ServerMessage> {
     return service.callQueryMiningHistory(chainType, page, pageSize, maxLevel);
   }
 
+  callQueryMiningStatistics(chainType: number) {
+    let service = MiningCall.create(this, this.logService);
+    return service.callQueryMiningStatistics(chainType);
+  }
+
+  callClearCachedCredentials(chainType: number) {
+    let service = MiningCall.create(this, this.logService);
+    return service.callClearCachedCredentials(chainType);
+  }
+
+
+  callQueryCurrentDifficulty(chainType: number) {
+    let service = MiningCall.create(this, this.logService);
+    return service.callQueryCurrentDifficulty(chainType);
+  }
+
   callQueryTotalConnectedPeersCount() {
     let service = ServerCall.create(this, this.logService);
     return service.callQueryTotalConnectedPeersCount();
@@ -367,7 +403,12 @@ getMessages(): Array<ServerMessage> {
     let service = ServerCall.create(this, this.logService);
     return service.callQueryMiningPortConnectable();
   }
-
+  
+  callQueryMiningIPMode(chainType: number){
+    let service = MiningCall.create(this, this.logService);
+    return service.callQueryMiningIPMode(chainType);
+  }
+  
   callQueryBlockchainSynced(chainType: number) {
     let service = BlockchainCall.create(this, this.logService);
     return service.callQueryBlockchainSynced(chainType);
@@ -622,7 +663,7 @@ getMessages(): Array<ServerMessage> {
 
   listenToWalletCreationMessage() {
     const cnx = this.connection;
-    const action = 'aalletCreationMessage';
+    const action = 'walletCreationMessage';
     
 
     this.registerConnectionEvent(action, (correlationId: number, message: string) => {
@@ -633,7 +674,7 @@ getMessages(): Array<ServerMessage> {
 
   listenToWalletCreationStep() {
     const cnx = this.connection;
-    const action = 'aalletCreationStep';
+    const action = 'walletCreationStep';
     
 
     this.registerConnectionEvent(action, (correlationId: number, stepName: string, stepIndex: number, stepTotal: number) => {
@@ -644,7 +685,7 @@ getMessages(): Array<ServerMessage> {
 
   listenToWalletCreationError() {
     const cnx = this.connection;
-    const action = 'aalletCreationError';
+    const action = 'walletCreationError';
     
 
     this.registerConnectionEvent(action, (correlationId: number, error: string) => {
@@ -1047,6 +1088,31 @@ getMessages(): Array<ServerMessage> {
       this.propagateEvent(chainType, EventTypes.MiningEnded, ResponseResult.Success, {chainType, status});
     });
   }
+
+  listenToElectionContextCached() {
+    const cnx = this.connection;
+    const action = 'electionContextCached';
+    
+
+    this.registerConnectionEvent(action, (chainType: number, blockId: number, maturityId: number, difficulty:number) => {
+      this.logEvent(action + ' - event', { 'chainType': chainType, 'blockId': blockId, 'maturityId': maturityId, 'difficulty': difficulty });
+      this.propagateEvent(chainType, EventTypes.ElectionContextCached, ResponseResult.Success, {chainType, blockId, maturityId, difficulty});
+    });
+  }
+
+  listenToElectionProcessingCompleted() {
+    const cnx = this.connection;
+    const action = 'electionProcessingCompleted';
+    
+
+    this.registerConnectionEvent(action, (chainType: number, blockId: number, electionResultCount:number) => {
+      this.logEvent(action + ' - event', { 'chainType': chainType, 'blockId': blockId, 'electionResultCount': electionResultCount });
+      this.propagateEvent(chainType, EventTypes.ElectionProcessingCompleted, ResponseResult.Success, {chainType, blockId, electionResultCount});
+    });
+  }
+
+  
+  
 
   listenToMiningElected() {
     const cnx = this.connection;

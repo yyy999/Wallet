@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core';
 import { SyncStatusService } from '../..//service/sync-status.service';
 import { SyncProcess, ProcessType, SyncStatus } from '../..//model/syncProcess';
 import { SyncUpdate, NO_SYNC_UPDATE } from '../..//model/sync-update';
@@ -9,13 +9,15 @@ import { CONNECTED } from '../..//model/serverConnectionEvent';
 import { ConfigService } from '../..//service/config.service';
 import { WalletSyncDisplayComponent } from '../../components/wallet-sync-display/wallet-sync-display.component';
 import { BlockchainSyncDisplayComponent } from '../../components/blockchain-sync-display/blockchain-sync-display.component';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-sync-status',
   templateUrl: './sync-status.component.html',
   styleUrls: ['./sync-status.component.css']
 })
-export class SyncStatusComponent implements OnInit {
+export class SyncStatusComponent implements OnInit, OnDestroy {
 
   @ViewChild('walletSync', { static: false }) private walletSync: WalletSyncDisplayComponent;
   @ViewChild('blockchainSync', { static: false }) private blockchainSync: BlockchainSyncDisplayComponent;
@@ -51,7 +53,7 @@ export class SyncStatusComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.serverConnectionService.isConnectedToServer().subscribe(connected => {
+    this.serverConnectionService.isConnectedToServer().pipe(takeUntil(this.unsubscribe$)).subscribe(connected => {
       if (connected !== CONNECTED) {
         if (this.configService.isServerPathValid()) {
           this.showServerConnectionDialog(false);
@@ -66,11 +68,11 @@ export class SyncStatusComponent implements OnInit {
       }
     })
 
-    this.syncStatusService.getSyncList().subscribe(syncList => {
+    this.syncStatusService.getSyncList().pipe(takeUntil(this.unsubscribe$)).subscribe(syncList => {
       this.syncingList = syncList;
     });
 
-    this.syncStatusService.getPeerCount().subscribe(count => {
+    this.syncStatusService.getPeerCount().pipe(takeUntil(this.unsubscribe$)).subscribe(count => {
       this.peersCount = count;
       let basePath = "./assets/img/";
       if (count >= 4) {
@@ -89,6 +91,14 @@ export class SyncStatusComponent implements OnInit {
         this.peersImage = basePath + "pp1.png";
       }
     })
+  }
+
+  private unsubscribe$ = new Subject<void>();
+
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
   }
 
   get isSyncingWallet(): boolean {

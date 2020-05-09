@@ -1,14 +1,16 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { Contact, NO_CONTACT } from '../model/contact';
 import { Observable, of, BehaviorSubject, throwError } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 const Store = require('electron-store');
 
 @Injectable({
   providedIn: 'root'
 })
-export class ContactsService {
+export class ContactsService implements OnDestroy {
   store = new Store();
   contacts: Array<Contact> = [];
   observableContacts: BehaviorSubject<Array<Contact>> = new BehaviorSubject<Array<Contact>>(this.contacts);
@@ -16,6 +18,14 @@ export class ContactsService {
   constructor(private translateService: TranslateService) {
     this.loadContacts();
   }
+
+  private unsubscribe$ = new Subject<void>();
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
+  }
+
 
   private loadContacts() {
     if (this.store.has('contacts')) {

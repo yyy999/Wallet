@@ -1,16 +1,17 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, OnDestroy } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { BlockchainService } from '../..//service/blockchain.service';
 import { ServerConnectionService } from '../..//service/server-connection.service';
 import { NO_BLOCKCHAIN_INFO, BlockchainInfo } from '../..//model/blockchain-info';
-
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-tools-blockexplorer',
   templateUrl: './blockexplorer.component.html',
   styleUrls: ['./blockexplorer.component.scss']
 })
-export class BlockExplorerComponent implements OnInit {
+export class BlockExplorerComponent implements OnInit, OnDestroy {
  
   blockSource:object;
   blockId:number;
@@ -25,14 +26,22 @@ export class BlockExplorerComponent implements OnInit {
   ngOnInit() {
     this.initialiseValues();
 
-    this.serverConnection.serverConnection.subscribe((connected) => {
+    this.serverConnection.serverConnection.pipe(takeUntil(this.unsubscribe$)).subscribe((connected) => {
       if(connected === true){
-        this.blockchainService.getBlockchainInfo().subscribe(blockchainInfo => {
+        this.blockchainService.getBlockchainInfo().pipe(takeUntil(this.unsubscribe$)).subscribe(blockchainInfo => {
           this.blockchainInfo = blockchainInfo;
         })
       }
     });
   }
+
+  private unsubscribe$ = new Subject<void>();
+  
+  
+    ngOnDestroy(): void {
+      this.unsubscribe$.next();
+      this.unsubscribe$.complete();
+    }
 
   canSearch(){
     return this.blockId > 0 && ((!this.blockchainInfo || this.blockchainInfo.blockInfo.id == 0) || this.blockId <= this.blockchainInfo.blockInfo.id);

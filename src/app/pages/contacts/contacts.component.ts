@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ContactsService } from '../..//service/contacts.service';
 import { Contact } from '../..//model/contact';
 import { MatDialog } from '@angular/material/dialog';
@@ -12,13 +12,16 @@ import { NotificationService } from '../..//service/notification.service';
 import { NO_WALLET_ACCOUNT } from '../..//model/walletAccount';
 import { ServerConnectionService } from '../..//service/server-connection.service';
 import { CONNECTED } from '../..//model/serverConnectionEvent';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+
 
 @Component({
   selector: 'app-contacts',
   templateUrl: './contacts.component.html',
   styleUrls: ['./contacts.component.css']
 })
-export class ContactsComponent implements OnInit {
+export class ContactsComponent implements OnInit, OnDestroy {
   title = this.translateService.instant("contact.Title");
   icon = "fas fa-user-circle";
 
@@ -38,17 +41,17 @@ export class ContactsComponent implements OnInit {
     private serverConnectionService: ServerConnectionService) { }
 
   ngOnInit() {
-    this.serverConnectionService.isConnectedToServer().subscribe(connected => {
+    this.serverConnectionService.isConnectedToServer().pipe(takeUntil(this.unsubscribe$)).subscribe(connected => {
       if (connected !== CONNECTED) {
         this.router.navigate(['/dashboard']);
       }
       else {
-        this.walletService.getCurrentAccount().subscribe(account => {
+        this.walletService.getCurrentAccount().pipe(takeUntil(this.unsubscribe$)).subscribe(account => {
           if (!account || account === NO_WALLET_ACCOUNT) {
             this.router.navigate(["/"]);
           }
           else {
-            this.contactService.getContacts().subscribe(contacts => {
+            this.contactService.getContacts().pipe(takeUntil(this.unsubscribe$)).subscribe(contacts => {
               this.contacts = contacts.sort((a, b) => {
                 if (a.friendlyName < b.friendlyName) { return -1; }
                 if (a.friendlyName > b.friendlyName) { return 1; }
@@ -61,6 +64,13 @@ export class ContactsComponent implements OnInit {
         });
       }
     });
+  }
+
+  private unsubscribe$ = new Subject<void>();
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
   }
 
   onFilter(filter: string) {

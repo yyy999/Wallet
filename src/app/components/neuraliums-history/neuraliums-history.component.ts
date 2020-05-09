@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { trigger, state, style, animate, transition } from '@angular/animations';
 import { NeuraliumService } from '../..//service/neuralium.service';
 import { TimelineDay, TimelineEntry, EntryType } from '../..//model/timeline';
@@ -7,6 +7,9 @@ import { NO_NEURALIUM_TRANSACTION, NeuraliumTransaction } from '../..//model/tra
 import { TransactionsService } from '../..//service/transactions.service';
 import { NotificationService } from '../..//service/notification.service';
 import { TranslateService } from '@ngx-translate/core';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+
 
 @Component({
   selector: 'app-neuraliums-history',
@@ -28,7 +31,7 @@ import { TranslateService } from '@ngx-translate/core';
     ])
   ]
 })
-export class NeuraliumsHistoryComponent implements OnInit {
+export class NeuraliumsHistoryComponent implements OnInit, OnDestroy {
   timeline: TimelineDay[];
   canGoNext: boolean;
   canGoPrevious: boolean;
@@ -43,19 +46,28 @@ export class NeuraliumsHistoryComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.neuraliumService.neuraliumTimeline.subscribe(timeline => {
+    this.neuraliumService.neuraliumTimeline.pipe(takeUntil(this.unsubscribe$)).subscribe(timeline => {
       this.timeline = timeline;
     });
 
-    this.neuraliumService.canIncrementIndex.subscribe(response => {
+    this.neuraliumService.canIncrementIndex.pipe(takeUntil(this.unsubscribe$)).subscribe(response => {
       this.canGoPrevious = response;
 
     });
 
-    this.neuraliumService.canDecrementIndex.subscribe(response => {
+    this.neuraliumService.canDecrementIndex.pipe(takeUntil(this.unsubscribe$)).subscribe(response => {
       this.canGoNext = response;
     });
   }
+
+  private unsubscribe$ = new Subject<void>();
+
+
+  ngOnDestroy(): void {
+       this.unsubscribe$.next();
+       this.unsubscribe$.complete();
+     }
+ 
 
   isDebit(entry: TimelineEntry): boolean {
     return entry.type === EntryType.debit;

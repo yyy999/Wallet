@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { NotificationService } from '../..//service/notification.service';
 import { NEURALIUM_BLOCKCHAIN } from '../..//model/blockchain';
@@ -10,13 +10,16 @@ import { ServerConnectionService } from '../..//service/server-connection.servic
 import { NeuraliumService } from '../..//service/neuralium.service';
 import { TotalNeuralium, NO_NEURALIUM_TOTAL } from '../..//model/total-neuralium';
 import { CONNECTED } from '../..//model/serverConnectionEvent';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+
 
 @Component({
   selector: 'app-send',
   templateUrl: './send.component.html',
   styleUrls: ['./send.component.css']
 })
-export class SendComponent implements OnInit {
+export class SendComponent implements OnInit, OnDestroy {
   title = this.translateService.instant("send.Title");
   icon = "fas fa-sign-out-alt";
 
@@ -36,15 +39,15 @@ export class SendComponent implements OnInit {
     private neuraliumService: NeuraliumService) { }
 
   ngOnInit() {
-    this.serverConnectionService.isConnectedToServer().subscribe(connected => {
+    this.serverConnectionService.isConnectedToServer().pipe(takeUntil(this.unsubscribe$)).subscribe(connected => {
       if (connected !== CONNECTED) {
         this.router.navigate(['/dashboard']);
       }
       else {
         try {
-          this.blockchainService.selectedBlockchain.subscribe(blockchain => {
+          this.blockchainService.selectedBlockchain.pipe(takeUntil(this.unsubscribe$)).subscribe(blockchain => {
             if (blockchain === NEURALIUM_BLOCKCHAIN && blockchain.menuConfig.showSend) {
-              this.walletService.getCurrentAccount().subscribe(account => {
+              this.walletService.getCurrentAccount().pipe(takeUntil(this.unsubscribe$)).subscribe(account => {
                 if (account && account !== NO_WALLET_ACCOUNT && account.isActive && account.status === WalletAccountStatus.Published) { //
                   this.initialise(account);
                 }
@@ -68,8 +71,15 @@ export class SendComponent implements OnInit {
     });
   }
 
+  private unsubscribe$ = new Subject<void>();
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
+  }
+
   initialise(account: WalletAccount) {
-    this.neuraliumService.getNeuraliumTotal().subscribe(total => this.neuraliumTotal = total);
+    this.neuraliumService.getNeuraliumTotal().pipe(takeUntil(this.unsubscribe$)).subscribe(total => this.neuraliumTotal = total);
 
     this.currentAccountUuId = account.accountUuid;
     

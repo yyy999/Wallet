@@ -1,17 +1,21 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { MiningService } from '../..//service/mining.service';
 import { ConfigService } from '../..//service/config.service';
 import { ServerConnectionService } from '../..//service/server-connection.service';
 import { CONNECTED, EventTypes } from '../..//model/serverConnectionEvent';
 import { TranslateService } from '@ngx-translate/core';
 import { AppConfig } from './../../../environments/environment';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { IpMode } from '../../model/enums';
+
 
 @Component({
   selector: 'app-mining',
   templateUrl: './mining.component.html',
   styleUrls: ['./mining.component.scss']
 })
-export class MiningComponent implements OnInit {
+export class MiningComponent implements OnInit, OnDestroy {
 
   delegateAccount: string;
   isMining: boolean;
@@ -25,30 +29,47 @@ export class MiningComponent implements OnInit {
   connectibleText = '';
   miningportalert = '';
   miningTierText = '';
+  ipmodeText = '';
 
   constructor(private miningService: MiningService,
     private configService: ConfigService,
     private translateService: TranslateService,
     private serverConnectionService: ServerConnectionService) {
 
-      this.serverConnectionService.isConnectedToServer().subscribe(connected => {
+      this.serverConnectionService.isConnectedToServer().pipe(takeUntil(this.unsubscribe$)).subscribe(connected => {
         if (connected === CONNECTED) {
             this.getMiningPortConnectableFromServer();
         }
        });
     }
 
+    private unsubscribe$ = new Subject<void>();
+
+
+    ngOnDestroy(): void {
+         this.unsubscribe$.next();
+         this.unsubscribe$.complete();
+       }
+   
   ngOnInit() {
-    this.miningService.isMining.subscribe(mining => {
+
+    this.serverConnectionService.eventNotifier.pipe(takeUntil(this.unsubscribe$)).subscribe(event => {
+
+      if (event.eventType === EventTypes.MiningStarted) {
+        this.queryIpMode();
+      }
+    });
+
+    this.miningService.isMining.pipe(takeUntil(this.unsubscribe$)).subscribe(mining => {
       this.isMining = mining;
       this.disableMiningButton = false;
     });
 
-    this.miningService.isConnectable.subscribe(connectable => {
+    this.miningService.isConnectable.pipe(takeUntil(this.unsubscribe$)).subscribe(connectable => {
       this.IsConnectible = connectable;
     });
 
-    this.miningService.miningTier.subscribe(miningTier => {
+    this.miningService.miningTier.pipe(takeUntil(this.unsubscribe$)).subscribe(miningTier => {
       
       let tierKey = 'mining.ThirdTier';
       if(miningTier === 1){
@@ -71,8 +92,29 @@ export class MiningComponent implements OnInit {
     });
 
     this.delegateAccount = this.configService.delegateAccount;
+
+    if (this.miningService.isCurrentlyMining) {
+      this.queryIpMode();
+    }
   }
 
+  queryIpMode(){
+    this.miningService.callQueryMiningIPMode().then(ipmode => {
+      let mode:number = ipmode;
+      this.ipmodeText = '';
+      if(ipmode === IpMode.IPv4){
+
+        this.ipmodeText = 'Ipv4';
+      }
+      if(ipmode === IpMode.IPv6){
+        this.ipmodeText = 'Ipv6';
+      }
+      if(ipmode === IpMode.Both){
+        this.ipmodeText = 'Ipv4 & Ipv6';
+      }
+
+    });
+  }
   private getMiningPortConnectableFromServer() {
     this.serverConnectionService.callQueryMiningPortConnectable().then(connectable => {
       this.IsConnectible = connectable;
@@ -97,6 +139,7 @@ export class MiningComponent implements OnInit {
         this.connectibleText = text.replace('33888', port);
       });
 
+    
       // if (this.isConnectable === false) {
       //   this.translateService.get('mining.Miningportalert').subscribe(text => {
       //     this.miningportalert = text.replace('33888', port);
@@ -115,6 +158,13 @@ export class MiningComponent implements OnInit {
   }
 
   startMining() {
+    if(this.isConnectable === false){
+      this.translateService.get('mining.PortNotConnectableCantMine').subscribe(message => {
+        alert(message);
+      });
+      
+      return;
+    }
     this.disableMiningButton = true;
     this.miningService.startMining();
   }

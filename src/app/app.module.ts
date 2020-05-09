@@ -5,6 +5,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ScrollingModule} from '@angular/cdk/scrolling';
 import { NgxElectronModule } from 'ngx-electron';
 import { NgxJsonViewerModule } from 'ngx-json-viewer';
+import { MatPasswordStrengthModule } from '@angular-material-extensions/password-strength';
 
 
 import { AppRoutingModule } from './modules/app-routing.module';
@@ -162,7 +163,8 @@ export function createTranslateLoader(http: HttpClient) {
         deps: [HttpClient]
       }
     }),
-    NgxMaskModule.forRoot()
+    NgxMaskModule.forRoot(),
+    MatPasswordStrengthModule.forRoot()
   ],
   entryComponents: [
     SelectBlockchainDialogComponent,

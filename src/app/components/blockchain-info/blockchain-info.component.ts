@@ -1,18 +1,21 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { BlockchainService } from '../..//service/blockchain.service';
 import { NO_BLOCKCHAIN_INFO, BlockchainInfo } from '../..//model/blockchain-info';
 import { WalletAccount, NO_WALLET_ACCOUNT } from '../..//model/walletAccount';
 import { WalletService } from '../..//service/wallet.service';
 import { SyncStatusService } from '../..//service/sync-status.service';
 import { ServerConnectionService } from '../..//service/server-connection.service';
-import * as moment from 'moment';
+import moment, * as momentObj from 'moment';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+
 
 @Component({
   selector: 'app-blockchain-info',
   templateUrl: './blockchain-info.component.html',
   styleUrls: ['./blockchain-info.component.scss']
 })
-export class BlockchainInfoComponent implements OnInit {
+export class BlockchainInfoComponent implements OnInit, OnDestroy {
   blockchainInfo: BlockchainInfo = NO_BLOCKCHAIN_INFO;
   account: WalletAccount = NO_WALLET_ACCOUNT;
   peerCount: number = 0;
@@ -35,17 +38,17 @@ export class BlockchainInfoComponent implements OnInit {
 
   ngOnInit() {
 
-    this.serverConnection.serverConnection.subscribe((connected) => {
+    this.serverConnection.serverConnection.pipe(takeUntil(this.unsubscribe$)).subscribe((connected) => {
       if(connected === true){
-        this.blockchainService.getBlockchainInfo().subscribe(blockchainInfo => {
+        this.blockchainService.getBlockchainInfo().pipe(takeUntil(this.unsubscribe$)).subscribe(blockchainInfo => {
           this.blockchainInfo = blockchainInfo;
         })
     
-        this.walletService.getCurrentAccount().subscribe(account => {
+        this.walletService.getCurrentAccount().pipe(takeUntil(this.unsubscribe$)).subscribe(account => {
           this.account = account;
         })
     
-        this.syncService.getPeerCount().subscribe(count => {
+        this.syncService.getPeerCount().pipe(takeUntil(this.unsubscribe$)).subscribe(count => {
           this.peerCount = count;
         })
     
@@ -55,6 +58,13 @@ export class BlockchainInfoComponent implements OnInit {
       }
     });
     
+  }
+
+  private unsubscribe$ = new Subject<void>();
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
   }
 
   

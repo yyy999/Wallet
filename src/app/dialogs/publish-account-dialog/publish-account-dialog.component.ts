@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit, Inject, OnDestroy } from '@angular/core';
 import { ServerConnectionService } from '../..//service/server-connection.service';
 import { WalletService } from '../..//service/wallet.service';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -6,24 +6,26 @@ import { EventTypes } from '../..//model/serverConnectionEvent';
 import { SyncStatusService } from '../..//service/sync-status.service';
 import { TransactionsService } from '../..//service/transactions.service';
 import { SyncStatus } from '../..//model/syncProcess';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-publish-account-dialog',
   templateUrl: './publish-account-dialog.component.html',
   styleUrls: ['./publish-account-dialog.component.scss']
 })
-export class PublishAccountDialogComponent implements OnInit {
-  isBlockchainSynced:boolean = false;
+export class PublishAccountDialogComponent implements OnInit, OnDestroy {
+  isBlockchainSynced: boolean = false;
   isAccountPublicationRunning: boolean = false;
   isAccountPublicationEnded: boolean = false;
-  showCloseButton:boolean = true;
+  showCloseButton: boolean = true;
   accountPublicationStep: number;
   accountPublicationStepName: string = "";
   nonceStep: string = "";
   errorOccured: boolean = false;
-  
+
   message: string = "";
-  canPublish:boolean = false;
+  canPublish: boolean = false;
 
   finalNonce: number = 0;
   solutions: Array<number>;
@@ -31,25 +33,34 @@ export class PublishAccountDialogComponent implements OnInit {
   constructor(
     private serverConnectionService: ServerConnectionService,
     private walletService: WalletService,
-    private synStatusService:SyncStatusService,
-    private transactionService:TransactionsService,
+    private synStatusService: SyncStatusService,
+    private transactionService: TransactionsService,
     public dialogRef: MatDialogRef<PublishAccountDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public accountUuid: string) {
-      
-    }
+
+  }
 
   ngOnInit() {
-    this.transactionService.getCanSendTransactions().subscribe(canSend =>{
+    this.transactionService.getCanSendTransactions().pipe(takeUntil(this.unsubscribe$)).subscribe(canSend => {
       this.canPublish = canSend;
     });
 
-    this.synStatusService.getCurrentBlockchainSyncStatus().subscribe(syncStatus =>{
+    this.synStatusService.getCurrentBlockchainSyncStatus().pipe(takeUntil(this.unsubscribe$)).subscribe(syncStatus => {
       this.isBlockchainSynced = syncStatus === SyncStatus.Synced;
     });
   }
 
+
+  private unsubscribe$ = new Subject<void>();
+
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
+  }
+
   startListeningToAccountPublicationEvents() {
-    this.serverConnectionService.eventNotifier.subscribe(event => {
+    this.serverConnectionService.eventNotifier.pipe(takeUntil(this.unsubscribe$)).subscribe(event => {
       switch (event.eventType) {
         case EventTypes.AccountPublicationStarted:
           this.isAccountPublicationRunning = true;

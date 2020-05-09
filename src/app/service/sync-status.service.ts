@@ -1,16 +1,18 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { SyncProcess, SyncStatus, ProcessType } from '../model/syncProcess';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { ServerConnectionService } from './server-connection.service';
 import { SyncUpdate, NO_SYNC_UPDATE } from '../model/sync-update';
 import { CONNECTED, EventTypes } from '../model/serverConnectionEvent';
 import { LogService } from './log.service';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 
 @Injectable({
   providedIn: 'root'
 })
-export class SyncStatusService {
+export class SyncStatusService implements OnDestroy {
   blockchainId: number = 0;
 
   currentBlockchainSyncStatus: BehaviorSubject<SyncStatus> = new BehaviorSubject<SyncStatus>(SyncStatus.Unknown);
@@ -35,7 +37,7 @@ export class SyncStatusService {
     this.blockchainId = 0;
     this.clearSync();
 
-    this.serverConnectionService.isConnectedToServer().subscribe(connected => {
+    this.serverConnectionService.isConnectedToServer().pipe(takeUntil(this.unsubscribe$)).subscribe(connected => {
       if (connected === CONNECTED) {
         this.getPeerCountFromServer();
         this.initialiseBlockchainSyncStatus();
@@ -44,6 +46,14 @@ export class SyncStatusService {
 
     this.subscribeToEvents();
   }
+
+  private unsubscribe$ = new Subject<void>();
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
+  }
+
 
 
   initialiseStatus(blockchainId: number) {
@@ -86,7 +96,7 @@ export class SyncStatusService {
 
   private subscribeToEvents() {
 
-    this.serverConnectionService.eventNotifier.subscribe(event => {
+    this.serverConnectionService.eventNotifier.pipe(takeUntil(this.unsubscribe$)).subscribe(event => {
 
       let chainType: number;
       let currentBlockId: number;

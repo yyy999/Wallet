@@ -3,6 +3,7 @@ import { LogService } from '../..//service/log.service';
 import { ServerConnectionService } from '../..//service/server-connection.service';
 import { SystemInfo } from '../..//model/systemInfo';
 
+
 export class ServerCall extends CommonCall {
 
     private constructor(
@@ -81,6 +82,42 @@ export class ServerCall extends CommonCall {
               reject('QueryMiningPortConnectable error : ' + reason);
             });
         });
+      }
+
+      callApiQuery(chainType: number, method:string, parameters:string) {
+        return new Promise<string>((resolve, reject) => {
+
+          let parametersArray = parameters.split(" "); 
+          var filteredParametersArray = parametersArray.filter(function (value) {
+            if(value){
+              return true;
+            }
+            return false;
+          });
+
+          let finalParametersArray :Array<any> = [];
+          for(let i:number = 0; i < filteredParametersArray.length; i++){
+            let value = filteredParametersArray[i];
+
+            if(value.startsWith('"') && value.endsWith('"')){
+              finalParametersArray[i] = value;
+            }
+            else{
+              finalParametersArray[i] = Number(value);
+            }
+          }
+          
+            this.logEvent(method + ' - call', { 'parameters': finalParametersArray });
+
+            this.serviceConnectionService.invoke<string>(method, ...finalParametersArray).then(
+                response => {
+                  this.logEvent('completeLongRunningEvent - response', response);
+                  resolve(response);
+                })
+              .catch(reason => {
+                reject('CompleteLongRunningEvent error : ' + reason);
+              });
+          });
       }
 
       callCompleteLongRunningEvent(correlationId: number) {

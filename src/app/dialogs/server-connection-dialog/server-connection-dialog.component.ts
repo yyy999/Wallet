@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject, Optional } from '@angular/core';
+import { Component, OnInit, Inject, Optional, OnDestroy } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { ServerConnectionService } from '../../service/server-connection.service';
 import { NotificationService } from '../../service/notification.service';
@@ -6,6 +6,8 @@ import { ConfigService } from '../../service/config.service';
 import { ServerService } from '../../service/server.service';
 import { TranslateService } from '@ngx-translate/core';
 import { CONNECTED, EventTypes } from '../..//model/serverConnectionEvent';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 export class ServerConnectionDialog {
   canManuallyStop: boolean = false;
@@ -17,7 +19,7 @@ export class ServerConnectionDialog {
   templateUrl: './server-connection-dialog.component.html',
   styleUrls: ['./server-connection-dialog.component.scss']
 })
-export class ServerConnectionDialogComponent implements OnInit {
+export class ServerConnectionDialogComponent implements OnInit, OnDestroy {
 
   showServerNotConnected: boolean = true;
   canManuallyStopServer: boolean = false;
@@ -40,12 +42,12 @@ export class ServerConnectionDialogComponent implements OnInit {
     
 
     /*
-    this.serverConnectionService.manuallyOpened.subscribe(manuallyOpened =>{
+    this.serverConnectionService.manuallyOpened.pipe(takeUntil(this.unsubscribe$)).subscribe(manuallyOpened =>{
       this.manuallyOpened = manuallyOpened;
     })
     */
 
-    this.serverConnectionService.isConnectedToServer().subscribe(connected => {
+    this.serverConnectionService.isConnectedToServer().pipe(takeUntil(this.unsubscribe$)).subscribe(connected => {
       this.showServerNotConnected = !connected;
       if (connected !== CONNECTED) {
         this.serverConnectionService.tryConnectToServer();
@@ -62,6 +64,15 @@ export class ServerConnectionDialogComponent implements OnInit {
       }
     })
   }
+
+  private unsubscribe$ = new Subject<void>();
+  
+  
+    ngOnDestroy(): void {
+      this.unsubscribe$.next();
+      this.unsubscribe$.complete();
+    }
+
 
   startServer() {
     this.serverService.startServer().then(success => {

@@ -8,6 +8,8 @@ import { ServerMessagesService } from '../..//service/server.messages.service';
 import { CONNECTED, EventTypes } from '../..//model/serverConnectionEvent';
 import { ServerService } from '../..//service/server.service';
 import { MatPaginator } from '@angular/material/paginator';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-server',
@@ -32,7 +34,8 @@ export class ServerComponent implements OnInit, OnDestroy {
   sliceStart = 0;
   sliceEnd: number = this.pageSize;
   consoleEnabled = false;
-
+  private unsubscribe$ = new Subject<void>();
+  
   constructor(
     private notificationService: NotificationService,
     private configService: ConfigService,
@@ -54,7 +57,7 @@ export class ServerComponent implements OnInit, OnDestroy {
 
     this.serverMessages = this.serverConnectionService.getMessages();
 
-    this.serverConnectionService.isConsoleMessagesEnabled().subscribe(enabled => {
+    this.serverConnectionService.isConsoleMessagesEnabled().pipe(takeUntil(this.unsubscribe$)).subscribe(enabled => {
       this.consoleEnabled = enabled;
     });
     this.serverMessagesService.subscribe((message) => {
@@ -67,7 +70,7 @@ export class ServerComponent implements OnInit, OnDestroy {
     
     this.scrollToBottom();
 
-    this.serverConnectionService.isConnectedToServer().subscribe(connected => {
+    this.serverConnectionService.isConnectedToServer().pipe(takeUntil(this.unsubscribe$)).subscribe(connected => {
       if (connected !== CONNECTED) {
         if (this.configService.isServerPathValid()) {
           this.serverConnectionService.tryConnectToServer();
@@ -97,7 +100,8 @@ export class ServerComponent implements OnInit, OnDestroy {
   }
   ngOnDestroy() {
     this.ref.detach(); // do this
-
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
 
   }
 

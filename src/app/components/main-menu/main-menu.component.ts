@@ -9,6 +9,8 @@ import { DialogResult } from '../..//config/dialog-result';
 import { ConfigService } from '../..//service/config.service';
 import { Router } from '@angular/router';
 import { CONNECTED } from '../..//model/serverConnectionEvent';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'main-menu',
@@ -36,12 +38,12 @@ export class MainMenuComponent implements OnInit, OnDestroy {
     }
 
   ngOnInit() {
-    this.serverConnectionService.isConnectedToServer().subscribe(connected => {
+    this.serverConnectionService.isConnectedToServer().pipe(takeUntil(this.unsubscribe$)).subscribe(connected => {
       if (connected !== CONNECTED) {
         // nothing to do
       }
       else{
-        this.blockchainService.getSelectedBlockchain().subscribe(blockchain => {
+        this.blockchainService.getSelectedBlockchain().pipe(takeUntil(this.unsubscribe$)).subscribe(blockchain => {
           this.currentBlockchain = blockchain;
           this.displayMenu(blockchain);
         })
@@ -53,7 +55,12 @@ export class MainMenuComponent implements OnInit, OnDestroy {
     this.currentBlockchainClicked.emit(null);
   }
 
-  ngOnDestroy() {
+  private unsubscribe$ = new Subject<void>();
+
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
   }
 
   displayMenu(blockchain: BlockChain) {

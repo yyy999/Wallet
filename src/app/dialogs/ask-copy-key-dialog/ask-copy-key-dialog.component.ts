@@ -1,7 +1,9 @@
-import { Component, OnInit, Optional, Inject } from '@angular/core';
+import { Component, OnInit, Optional, Inject, OnDestroy} from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { RequestCopyKeyFileParameters, PassphraseRequestType } from '../..//model/passphraseRequiredParameters';
 import { TranslateService } from '@ngx-translate/core';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 class DialogParameters{
   public parameters: RequestCopyKeyFileParameters;
@@ -12,7 +14,7 @@ class DialogParameters{
   templateUrl: './ask-copy-key-dialog.component.html',
   styleUrls: ['./ask-copy-key-dialog.component.scss']
 })
-export class AskCopyWalletKeyFileDialogComponent implements OnInit {
+export class AskCopyWalletKeyFileDialogComponent implements OnInit, OnDestroy {
   keyName:string;
   accountUuid:string;
   attempt:number;
@@ -31,6 +33,14 @@ export class AskCopyWalletKeyFileDialogComponent implements OnInit {
      }
 
   ngOnInit() {
+  }
+
+  private unsubscribe$ = new Subject<void>();
+
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
   }
 
   ok(){

@@ -1,6 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import * as moment from 'moment';
+import moment, * as momentObj from 'moment';
 
 @Pipe({
   name: 'formatTimestamp'

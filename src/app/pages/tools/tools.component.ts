@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { BlockchainService } from '../..//service/blockchain.service';
 import { WalletService } from '../..//service/wallet.service';
@@ -10,13 +10,16 @@ import { CONNECTED } from '../..//model/serverConnectionEvent';
 import { NEURALIUM_BLOCKCHAIN } from '../..//model/blockchain';
 import { NO_WALLET_ACCOUNT, WalletAccountStatus, WalletAccount } from '../..//model/walletAccount';
 import { TotalNeuralium, NO_NEURALIUM_TOTAL } from '../..//model/total-neuralium';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+
 
 @Component({
   selector: 'app-tools',
   templateUrl: './tools.component.html',
   styleUrls: ['./tools.component.scss']
 })
-export class ToolsComponent implements OnInit {
+export class ToolsComponent implements OnInit, OnDestroy {
   title = this.translateService.instant('tools.Title');
   icon = 'fas fa-medkit';
 
@@ -34,12 +37,12 @@ export class ToolsComponent implements OnInit {
     private neuraliumService: NeuraliumService) { }
 
   ngOnInit() {
-    this.serverConnectionService.isConnectedToServer().subscribe(connected => {
+    this.serverConnectionService.isConnectedToServer().pipe(takeUntil(this.unsubscribe$)).subscribe(connected => {
       if (connected !== CONNECTED) {
         this.router.navigate(['/dashboard']);
       } else {
         try {
-          this.blockchainService.selectedBlockchain.subscribe(blockchain => {
+          this.blockchainService.selectedBlockchain.pipe(takeUntil(this.unsubscribe$)).subscribe(blockchain => {
             this.initialise();
           });
         } catch (error) {
@@ -47,6 +50,13 @@ export class ToolsComponent implements OnInit {
         }
       }
     });
+  }
+
+  private unsubscribe$ = new Subject<void>();
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
   }
 
   initialise() {

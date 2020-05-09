@@ -29,3 +29,13 @@
   .mat-dialog-content{
     max-height: 90vh;
   }
+
+  .errorMessage{
+
+  }
+
+  .errorException{
+    background: #ffe9e9;
+    overflow: scroll;
+    color: red;
+  }

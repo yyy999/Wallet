@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { Transaction, NO_TRANSACTION } from '../model/transaction';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { ServerConnectionService } from './server-connection.service';
@@ -8,11 +8,14 @@ import { BlockchainService } from './blockchain.service';
 import { EventTypes } from '../model/serverConnectionEvent';
 import { NotificationService } from './notification.service';
 import { TranslateService } from '@ngx-translate/core';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+
 
 @Injectable({
   providedIn: 'root'
 })
-export class TransactionsService {
+export class TransactionsService implements OnDestroy {
   transactions: Array<Transaction> = [];
   observableTransactions: BehaviorSubject<Array<Transaction>> = new BehaviorSubject<Array<Transaction>>(this.transactions);
   blockchainId: number;
@@ -30,20 +33,20 @@ export class TransactionsService {
     private notificationService: NotificationService,
     private translateService: TranslateService) {
 
-      this.serverConnectionService.isConnectedToServer().subscribe(connected => {
+      this.serverConnectionService.isConnectedToServer().pipe(takeUntil(this.unsubscribe$)).subscribe(connected => {
         if (connected === CONNECTED) {
 
           this.updateChainStatus();
         }
       });
 
-    this.blockchainService.getSelectedBlockchain().subscribe(blockchain => {
+    this.blockchainService.getSelectedBlockchain().pipe(takeUntil(this.unsubscribe$)).subscribe(blockchain => {
       this.blockchainId = blockchain.id;
       this.updateChainStatus();
     });
 
 
-    this.walletService.getWallet().subscribe(wallet => {
+    this.walletService.getWallet().pipe(takeUntil(this.unsubscribe$)).subscribe(wallet => {
       if (wallet.accounts && wallet.accounts.length > 0) {
         this.accountId = wallet.accounts.filter(account => account.isActive)[0].accountUuid;
       } else {
@@ -52,7 +55,7 @@ export class TransactionsService {
       this.refreshTransactions();
     });
 
-    this.serverConnectionService.eventNotifier.subscribe(event => {
+    this.serverConnectionService.eventNotifier.pipe(takeUntil(this.unsubscribe$)).subscribe(event => {
       if (event.eventType === EventTypes.TransactionSent
         || event.eventType === EventTypes.TransactionConfirmed
         || event.eventType === EventTypes.TransactionReceived
@@ -80,6 +83,14 @@ export class TransactionsService {
     });
   }
 
+  private unsubscribe$ = new Subject<void>();
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
+  }
+
+  
   updateChainStatus() {
     this.blockchainService.updateChainStatus().then(chainStatus => {
       if (chainStatus) {

@@ -12983,7 +12983,7 @@ Copyright (c) 2015 Daniel Eden
     overflow-x: hidden; }
   .social-line .btn {
     margin: 0 0 10px 0; }
-  .subscribe-line .form-control {
+  .pipe(takeUntil(this.unsubscribe$)).subscribe-line .form-control {
     margin: 0 0 10px 0; }
   .social-line.pull-right {
     float: none; }

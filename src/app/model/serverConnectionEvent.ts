@@ -92,6 +92,9 @@ export enum EventTypes {
     RequireNodeUpdate = 159,
     ImportantWalletUpdate = 160,
     TransactionHistoryUpdated = 161,
+    ElectionContextCached = 162,
+    ElectionProcessingCompleted = 163,
+    RequestShutdown = 164,
 
 
 

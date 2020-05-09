@@ -1,8 +1,10 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { remote } from 'electron';
 import { TranslateService } from '@ngx-translate/core';
 import * as FS from 'fs-extra';
 import { AppConfig } from '../../environments/environment';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 const Store = require('electron-store');
 const app = remote.app;
@@ -23,7 +25,7 @@ class Settings {
 @Injectable({
   providedIn: 'root'
 })
-export class ConfigService {
+export class ConfigService implements OnDestroy {
   settings: Settings;
   store = new Store();
 
@@ -39,6 +41,13 @@ export class ConfigService {
 
   constructor(private translateService: TranslateService) {
     this.loadSettings();
+  }
+
+  private unsubscribe$ = new Subject<void>();
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
   }
 
   getLanguagesList() {

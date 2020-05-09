@@ -2,7 +2,7 @@ import { CommonCall } from './commonCall';
 import { LogService } from '../..//service/log.service';
 import { ServerConnectionService } from '../..//service/server-connection.service';
 import { TransactionStatuses, TransactionVersion, Transaction, NeuraliumTransaction, NO_TRANSACTION } from '../..//model/transaction';
-import * as moment from 'moment';
+import moment, * as momentObj from 'moment';
 
 export class TransactionsCall extends CommonCall {
 
@@ -33,7 +33,7 @@ export class TransactionsCall extends CommonCall {
                       const id = transaction['transactionId'];
                       const source = transaction['sender'];
 
-                      const date =  moment(transaction['timestamp']).toDate();
+                      const date =  moment.utc(transaction['timestamp']).toDate();
                       const status = <TransactionStatuses>transaction['status'];
                       const version = <TransactionVersion>transaction['version'];
                       const amount = <number>Number(transaction['amount']);
@@ -67,7 +67,7 @@ export class TransactionsCall extends CommonCall {
                     try {
                       const id = response['transactionId'];
                       const source = response['sender'];
-                      const date =  moment(response['timestamp']).toDate();
+                      const date =  moment.utc(response['timestamp']).toDate();
                       const details = JSON.parse(response['contents']); // {details:"détails to show"};
                       const status = <TransactionStatuses>response['status'];
                       const version = <TransactionVersion>response['version'];

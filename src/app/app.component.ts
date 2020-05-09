@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { BlockChain, NO_BLOCKCHAIN } from './model/blockchain';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from './dialogs/confirm-dialog/confirm-dialog.component';
@@ -27,14 +27,15 @@ import { AskKeyDialogComponent } from './dialogs/ask-key-dialog/ask-key-dialog.c
 import { AskCopyWalletKeyFileDialogComponent } from './dialogs/ask-copy-key-dialog/ask-copy-key-dialog.component';
 
 import { PassphraseParameters, KeyPassphraseParameters, PassphraseRequestType, RequestCopyWalletParameters, RequestCopyKeyFileParameters } from './model/passphraseRequiredParameters';
-
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent {
+export class AppComponent implements OnInit, OnDestroy {
   displayChangeBlockchain: boolean = false;
   serverName: string = '';
   serverPath: string = '';
@@ -86,7 +87,7 @@ export class AppComponent {
 
     // when quitting, we may ask if the user also wants to shut down the node, or let it run
     this.electronService.ipcRenderer.on('quit', (event) => {
-      this.serverService.canManuallyStopServer.subscribe(canStop => {
+      this.serverService.canManuallyStopServer.pipe(takeUntil(this.unsubscribe$)).subscribe(canStop => {
 
         this.translateService.get('app.ServerRunningStop').subscribe(stopMessage => {
           if (this.serverConnectionService.IsConnected || this.serverService.IsRunning) {
@@ -173,6 +174,14 @@ export class AppComponent {
 
   }
 
+  private unsubscribe$ = new Subject<void>();
+
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
+  }
+
   defineMenu(dialog: MatDialog, help: string, refresh: string, quit: string, about: string, sla: string) {
 
     let local = this;
@@ -224,7 +233,7 @@ export class AppComponent {
       this.showSoftwareLicenseAgreement();
     }
     else {
-      this.serverConnectionService.isConnectedToServer().subscribe(connected => {
+      this.serverConnectionService.isConnectedToServer().pipe(takeUntil(this.unsubscribe$)).subscribe(connected => {
         if (connected !== CONNECTED) {
           if (!this.configService.isServerPathValid()) {
             this.router.navigate(['/settings']);
@@ -237,7 +246,7 @@ export class AppComponent {
         else {
           this.selectedBlockchain = this.blockchainService.getSelectedBlockchain();
 
-          this.selectedBlockchain.subscribe(blockchain => {
+          this.selectedBlockchain.pipe(takeUntil(this.unsubscribe$)).subscribe(blockchain => {
             if (blockchain === NO_BLOCKCHAIN) {
               this.blockchainService.getAvailableBlockchains().then(blockchains => {
                 const availableBlockchainsCount = blockchains.length
@@ -265,7 +274,7 @@ export class AppComponent {
   }
 
   listenToEvents() {
-    this.serverConnectionService.eventNotifier.subscribe(event => {
+    this.serverConnectionService.eventNotifier.pipe(takeUntil(this.unsubscribe$)).subscribe(event => {
       switch (event.eventType) {
         case EventTypes.RequestWalletPassphrase:
           this.askForWalletPassphrase(event.message);
